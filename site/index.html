@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Base Era: pinned historical execution workers. Architecture, acceptance results, benchmarks and reproduction commands."
+      content="Retire historical fork logic from the active Base client without losing verifiable history. A version-isolated execution demo with source audits and measured results."
     />
-    <title>Base Era — historical execution benchmarks</title>
+    <title>Base Era — retire fork code, keep history</title>
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23174aff%22/></svg>"
@@ -20,7 +20,8 @@
     <header class="topbar">
       <a class="wordmark" href="#main">BASE / ERA</a>
       <nav aria-label="Primary">
-        <a href="#performance">Benchmarks</a>
+        <a href="#retirement">Source audit</a>
+        <a href="#evidence">Devnet</a>
         <a href="#architecture">Architecture</a>
         <a href="#run">Reproduce</a>
         <a href="https://github.com/refcell/base-era">GitHub ↗</a>
@@ -29,13 +30,13 @@
     <main id="main">
       <section class="intro" aria-labelledby="title">
         <div class="heading">
-          <h1 id="title">Version-isolated execution</h1>
+          <h1 id="title">Retire fork code. Keep verifiable history.</h1>
           <span class="status" id="header-status">Loading evidence</span>
         </div>
         <p>
-          Base executes pre-Isthmus blocks in a pinned, sandboxed worker;
-          Isthmus+ stays in-process. The host retains canonical state,
-          validation, forkchoice and unwind.
+          Each upgrade adds another set of rules to maintain. Base Era moves
+          historical execution into pinned workers, creating a path to remove
+          superseded logic from the active client—not stop verifying old blocks.
         </p>
         <div class="links">
           <a
@@ -53,11 +54,87 @@
         </div>
       </section>
 
-      <section class="acceptance" aria-label="Acceptance results">
-        <div class="stats" id="stats"><p>Loading recorded results…</p></div>
-        <p class="note" id="provenance">
-          Recorded local devnet results, not a live browser benchmark.
+      <section id="retirement" aria-labelledby="audit-title">
+        <div class="heading">
+          <h2 id="audit-title">What could leave Base trunk?</h2>
+          <a
+            class="note"
+            href="https://github.com/refcell/base-era/blob/main/docs/history-deletion.md"
+            >Line-by-line audit ↗</a
+          >
+        </div>
+        <div class="stats">
+          <div class="stat">
+            <b>60</b><span>production LoC candidates</span
+            ><small>pre-Isthmus subset</small>
+          </div>
+          <div class="stat">
+            <b>+96</b><span>conditional production LoC</span
+            ><small>requires a wider boundary</small>
+          </div>
+          <div class="stat">
+            <b>0</b><span>legacy LoC removed today</span
+            ><small>isolation demonstrated first</small>
+          </div>
+        </div>
+        <p class="note">
+          Bounded audit of the pinned Base revision, not a whole-trunk estimate
+          or net savings. Physical lines include comments and blanks. Tests are
+          separate: 105 candidate + 392 conditional lines.
         </p>
+        <p>
+          Candidates cover Bedrock parsing, old fee paths and pre-Isthmus block
+          fields. Receipt quirks and the Canyon transition need more host
+          consumers migrated first. Predecessor parsing at the activation block
+          stays.
+        </p>
+        <p class="bottleneck">
+          <strong
+            >The value is a repeatable retirement path, not a large deletion
+            claim yet.</strong
+          >
+          Pin an era → route and verify its history → migrate remaining
+          consumers → delete superseded host bodies. Repeat at each fork.
+          Historical source and tests remain available with the worker; routing,
+          validation and canonical state stay in Base.
+        </p>
+      </section>
+
+      <section id="evidence">
+        <div class="heading">
+          <h2>A historical call, through the worker</h2>
+          <a class="note" href="./data/historical-call.json"
+            >Captured request + logs ↗</a
+          >
+        </div>
+        <figure class="waterfall" id="waterfall">
+          <figcaption id="call-context">
+            Loading recorded local devnet call…
+          </figcaption>
+          <div class="waterfall-row">
+            <span>HTTP round trip</span>
+            <div class="track"><div class="bar envelope"></div></div>
+            <b id="http-time">—</b>
+          </div>
+          <div class="waterfall-row">
+            <span>Worker exchange</span>
+            <div class="track">
+              <div class="bar worker" id="worker-bar"></div>
+            </div>
+            <b id="worker-time">—</b>
+          </div>
+          <p class="note" id="call-detail"></p>
+        </figure>
+        <p class="note">
+          One recorded warm sample, not a live dashboard. Exchange includes IPC,
+          state reads and execution; remaining round-trip time is unattributed.
+          <a
+            href="https://github.com/refcell/base-era/blob/main/docs/history-performance.md#recorded-call-waterfall"
+            >Capture method ↗</a
+          >
+        </p>
+        <p class="check-summary" id="stats">Loading acceptance results…</p>
+        <p class="note" id="provenance"></p>
       </section>
 
       <section id="performance">
@@ -82,7 +159,10 @@
             </tr>
           </tbody>
         </table>
-        <p class="note" id="measurement-note"></p>
+        <p class="note">
+          Warm medians, 20 samples. Hardware, build profiles and CPU/memory
+          measurements are in the linked report.
+        </p>
         <p class="bottleneck">
           <strong>223× faster historical calls; 254× faster estimation.</strong>
           Versus the original debug-build demo, including optimized compilation.
@@ -170,25 +250,17 @@
         <section id="run">
           <div class="heading">
             <h2>Reproduce</h2>
-            <button id="copy" type="button">Copy commands</button>
+            <button id="copy" type="button">Copy command</button>
           </div>
-          <pre><code id="commands">git clone https://github.com/refcell/base-era.git
-cd base-era
-./demo setup
-./demo build
-./demo test
-./demo start &amp;&amp; ./demo exercise
-./demo verify
-./demo evidence
-./demo stop</code></pre>
+          <pre><code id="commands">just demo</code></pre>
           <p class="note">
-            x86-64 Linux, Landlock ABI 3+, Docker, Rust 1.96, Foundry and ≥70
-            GiB build space.
+            From a clone of this repository: builds both implementations, runs
+            the devnet and acceptance suite, then exports evidence. Leaves the
+            network running and prints endpoints and a stop command.
             <a
               href="https://github.com/refcell/base-era/blob/main/docs/history-spike-build.md"
-              >Build guide ↗</a
-            >. Source-build demo; no binary release. Runtime image/package
-            inputs are not fully hermetic.
+              >Prerequisites + build guide ↗</a
+            >. Linux source-build demo; no binary release yet.
           </p>
         </section>
         <section id="context">
@@ -230,9 +302,9 @@ cd base-era
       <aside class="limits" aria-label="Limitations">
         <strong>Scope limits</strong> — Historical bodies remain in host source;
         selected paths bypass them. No zkVM proof or verifier changes. Only
-        supported RPC methods/tracers are isolated. Production work:
-        configuration caching, worker batching, resource budgets, broader fork
-        coverage and artifact governance.
+        supported RPC methods/tracers are isolated. Production work: source
+        retirement, worker batching, resource budgets, broader fork coverage and
+        artifact governance.
       </aside>
     </main>
     <footer>

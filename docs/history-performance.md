@@ -69,8 +69,10 @@ artifact removal/replacement with an unchanged manifest, and crash/recovery with
 
 ## Measurement method and remaining costs
 
-Run `./demo build`, `./demo test`, then `./demo start && ./demo exercise`, `./demo verify`,
-and `./demo evidence` with a fresh `BASE_ERA_RUN_DIR`. Benchmarking uses fresh host/reference
+Environment: AMD Ryzen AI MAX+ 395, x86-64 Linux 7.1.8, Rust 1.96.0.
+
+Run `just demo` (setup, build, tests, live network and evidence in a fresh run directory).
+Benchmarking uses fresh host/reference
 processes and owned database copies, records the first request separately, then takes 20 repeated
 samples. The OS page cache is **not** dropped. Both results and real fork-dependent return values
 must match the independent reference. Logs record request/PID identity, state-read traffic and
@@ -92,3 +94,29 @@ The accepted network is left running in `target/demo-performance` (launcher PID 
 These are local-only, ephemeral endpoints. Inspect/stop with
 `BASE_ERA_RUN_DIR="$PWD/target/demo-performance" ./demo status` or `./demo stop` using the same
 environment variable. Restart using a fresh directory and the build/start/exercise commands above.
+
+## Recorded call waterfall
+
+The site renders [a real captured call](../site/data/historical-call.json), not a Grafana mockup.
+It was captured from the successful `just demo` network on September 18, 2026, after warming
+the historical session. `GasPriceOracle.isIsthmus()` at block 19 returns false; the sequencer and
+independently following verifier agree on that block's hash and state root.
+
+The single sample measured **10.879 ms HTTP round trip**, containing a **0.677 ms worker
+exchange** beginning 9.397 ms after the client timer started. The correlated worker events record
+PID 607443, request binding, artifact/configuration identities, 12 state-read requests, 2,598 bytes
+of read-request frames, and a 2,000-byte operation request. Byte counts are directional, not total
+traffic. The exchange includes IPC, state reads and execution; it is not EVM-only time. Remaining
+round-trip time is deliberately unattributed. This sample is separate from the 20-sample benchmark.
+
+Recreate the capture after `just demo`, using the run directory printed by that command:
+
+```sh
+RUN_DIR=target/demo-one-command-... # replace with the printed run directory
+python3 tools/capture-history-call.py "$RUN_DIR" call.json
+```
+
+The capture script uses a monotonic HTTP timer and same-machine wall-clock log timestamps for the
+worker offset, checks interval containment, correlates request identity, and publishes only selected
+fields. It does not export the devnet's runtime credentials. A concurrent historical request causes
+capture to fail rather than silently attribute another operation's measurements.

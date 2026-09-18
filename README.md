@@ -11,6 +11,19 @@ This explores the versioned-execution direction described in
 [EIP-4444](https://eips.ethereum.org/EIPS/eip-4444#full-syncing-from-genesis).
 It is **not** an Era/Era1 archive-format implementation or an official Base project.
 
+## Why
+
+Every fork leaves historical rules in the active client. The goal is a repeatable retirement
+path: freeze a reviewed implementation, route its history to a pinned worker, migrate remaining
+consumers, then remove superseded host code. History stays executable; the current implementation
+has less historical behavior to maintain.
+
+The [bounded source audit](docs/history-deletion.md) identifies **60 gross production lines** as
+pre-Isthmus extraction candidates and **96 more conditional lines** requiring a wider boundary.
+Dedicated tests are separate (105 candidate / 392 conditional lines). **Zero legacy lines have
+been removed today.** These are physical-line inventories at the pinned Base revision, not net
+savings or a whole-trunk estimate. Source-copy pruning is not historical-logic retirement.
+
 ## Status
 
 **The migrated demo passed its complete local acceptance run on September 18, 2026.** This
@@ -27,21 +40,19 @@ The optimized in-process reference is still faster. See [measurements and limita
 
 ## Run it
 
-Requires x86-64 Linux with Landlock ABI 3+, Docker, Rust 1.96, Foundry `cast`, and a native build
+Requires x86-64 Linux with Landlock ABI 3+, Docker, Rust 1.96, Foundry `cast`, `just`, and a native build
 toolchain. Allow at least 70 GiB for build outputs. See [the build guide](docs/history-spike-build.md)
 for prerequisites, pins, profiles and fresh-run handling.
 
 ```sh
 git clone https://github.com/refcell/base-era.git
 cd base-era
-./demo setup
-./demo build
-./demo test
-./demo start && ./demo exercise
-./demo verify
-./demo evidence
-./demo stop
+just demo
 ```
+
+One command builds, tests, starts, exercises and verifies a fresh network, then exports evidence.
+It leaves the devnet running and prints its endpoints, evidence directory and exact stop command.
+Set `BASE_ERA_RUN_DIR` to choose a fresh output directory; otherwise each invocation creates one.
 
 The harness creates content-addressed local executables; no downloadable binary release is
 published yet. Runtime images and package downloads are not fully hermetic. The selected upstream

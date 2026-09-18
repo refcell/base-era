@@ -1,0 +1,37 @@
+{
+  "capturedAt": "2026-09-18T23:00:35.419196+00:00",
+  "method": "eth_call",
+  "params": [
+    {
+      "to": "0x420000000000000000000000000000000000000f",
+      "data": "0xb54501bc"
+    },
+    {
+      "blockHash": "0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+      "requireCanonical": true
+    }
+  ],
+  "result": "0x0000000000000000000000000000000000000000000000000000000000000000",
+  "blockNumber": 19,
+  "blockHash": "0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+  "parentHash": "0xbd37850a30b083b6826c4cc40cd8b1733051ca3f785c0f9a99592d72a69ad56a",
+  "stateRoot": "0x1ab4727cc9c4dd9c1feb2757b4230bfcc6f37de96acb8010e94fcf65f1f87636",
+  "builderVerifierMatch": true,
+  "requestId": "rpc-605792-3-0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+  "workerPid": 607443,
+  "artifact": "0xdd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff",
+  "configuration": "0x84437f455af000fa18d2cf7faa4580cefed571d69d9b97579e17513599c705a6",
+  "binding": "0xd0567f84de301375deb1ea80408df26fa0e3517c6a72deefbcdfc08b0b9ee7b2",
+  "era": "holocene",
+  "httpMs": 10.878706,
+  "workerOffsetMs": 9.397268295288086,
+  "workerMs": 0.677,
+  "stateReads": 12,
+  "readBytes": 2598,
+  "requestBytes": 2000,
+  "logLines": [
+    "2026-09-18T23:00:35.428593Z  INFO base_execution_history::client: historical worker execution started request=rpc-605792-3-0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0 worker_pid=607443 era=holocene operation=Some(Object {\"call_gas_limit\": Number(50000000), \"method\": String(\"eth_call\"), \"params\": Array [Object {\"data\": String(\"0xb54501bc\"), \"to\": String(\"0x420000000000000000000000000000000000000f\")}, Null, Null]}) artifact=0xdd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff configuration=0x84437f455af000fa18d2cf7faa4580cefed571d69d9b97579e17513599c705a6 binding=0xd0567f84de301375deb1ea80408df26fa0e3517c6a72deefbcdfc08b0b9ee7b2",
+    "2026-09-18T23:00:35.429268Z  INFO base_execution_history::client: historical worker execution completed request=rpc-605792-3-0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0 worker_pid=607443 operation=Some(Object {\"call_gas_limit\": Number(50000000), \"method\": String(\"eth_call\"), \"params\": Array [Object {\"data\": String(\"0xb54501bc\"), \"to\": String(\"0x420000000000000000000000000000000000000f\")}, Null, Null]}) elapsed_us=677 requests=12 read_bytes=2598 request_bytes=2000"
+  ],
+  "methodology": "One warm loopback sample. HTTP envelope uses a monotonic timer; worker offset uses same-machine wall-clock log timestamps. Worker exchange includes state reads, IPC and execution, not EVM-only time. Remaining time is unattributed; no phase breakdown inferred."
+}

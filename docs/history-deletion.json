@@ -1,0 +1,134 @@
+{
+  "schema": 2,
+  "base_revision": "1eda0f7f4cebb823522e62f34fc3e513b1c450b1",
+  "source_root": "etc/history-worker/historical/base",
+  "horizon": "host executes Isthmus and later; blocks before Isthmus are delegated to pinned workers",
+  "counting": "Inclusive physical lines. blank is whitespace-only; comment_only starts with // after leading whitespace. Gross production and test inventories are separate and are not net savings.",
+  "actual_removed": { "physical": 0 },
+  "files": [
+    {
+      "path": "crates/execution/evm/src/l1.rs",
+      "sha256": "ee7a99627b6edbc2d7f818b6262c48dd5f1f1604b091fb28f453920107ccc874",
+      "ranges": [
+        {
+          "start": 76,
+          "end": 107,
+          "kind": "production_candidate",
+          "counts": { "physical": 32, "blank": 2, "comment_only": 11 },
+          "evidence": "Bedrock L1 attributes parser; Ecotone predecessor parser remains required by the first Isthmus block."
+        },
+        {
+          "start": 378,
+          "end": 395,
+          "kind": "tests_candidate",
+          "counts": { "physical": 18, "blank": 1, "comment_only": 0 },
+          "evidence": "Dedicated Bedrock parser fixture."
+        }
+      ]
+    },
+    {
+      "path": "crates/common/evm/src/l1block.rs",
+      "sha256": "b82e298e1eb5d80070d483b95c4bf57464ca076307396c54367f4b6b9c643cb2",
+      "ranges": [
+        {
+          "start": 190,
+          "end": 197,
+          "kind": "production_candidate",
+          "counts": { "physical": 8, "blank": 1, "comment_only": 1 },
+          "evidence": "Pre-Ecotone storage fallback."
+        },
+        {
+          "start": 304,
+          "end": 307,
+          "kind": "production_candidate",
+          "counts": { "physical": 4, "blank": 0, "comment_only": 0 },
+          "evidence": "Bedrock/Ecotone fee dispatch alternatives; Fjord branch remains."
+        },
+        {
+          "start": 329,
+          "end": 337,
+          "kind": "production_candidate",
+          "counts": { "physical": 9, "blank": 1, "comment_only": 2 },
+          "evidence": "Bedrock and Ecotone fee helper wrappers."
+        },
+        {
+          "start": 445,
+          "end": 531,
+          "kind": "tests_candidate",
+          "counts": { "physical": 87, "blank": 13, "comment_only": 18 },
+          "evidence": "Dedicated Ecotone fee unit and compatibility tests; Fjord tests at 533-625 remain current."
+        }
+      ]
+    },
+    {
+      "path": "crates/execution/evm/src/build.rs",
+      "sha256": "ae09b5f1a2d7c8293a35aa1a85de10fbe1c08ffc03603bb88065a90efb4f13b7",
+      "ranges": [
+        {
+          "start": 77,
+          "end": 81,
+          "kind": "production_candidate",
+          "counts": { "physical": 5, "blank": 0, "comment_only": 0 },
+          "evidence": "Pre-Isthmus withdrawals-root alternatives."
+        },
+        {
+          "start": 125,
+          "end": 126,
+          "kind": "production_candidate",
+          "counts": { "physical": 2, "blank": 0, "comment_only": 0 },
+          "evidence": "Canyon-gated body withdrawals expression."
+        }
+      ]
+    },
+    {
+      "path": "crates/common/evm/src/canyon.rs",
+      "sha256": "878f42d154ce9ca8b12bf1c67a9fbd7ac456cee98a86cfd533441fc383e0d260",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 52,
+          "kind": "conditional_production",
+          "counts": { "physical": 52, "blank": 8, "comment_only": 13 },
+          "evidence": "Only conditional on expanding the boundary across custom/simultaneous activation, genesis, replay and proof consumers."
+        }
+      ]
+    },
+    {
+      "path": "crates/execution/consensus/src/proof.rs",
+      "sha256": "be540359622a0c07649d2e31c2fdfc604f3a5c923748c3332dfd4b6b6bda8adf",
+      "ranges": [
+        {
+          "start": 18,
+          "end": 38,
+          "kind": "conditional_production",
+          "counts": { "physical": 21, "blank": 1, "comment_only": 5 },
+          "evidence": "Blocked by host consensus/block assembly/proof consumers."
+        },
+        {
+          "start": 51,
+          "end": 73,
+          "kind": "conditional_production",
+          "counts": { "physical": 23, "blank": 1, "comment_only": 5 },
+          "evidence": "Blocked duplicate path for non-memoized receipts."
+        },
+        {
+          "start": 90,
+          "end": 481,
+          "kind": "conditional_tests",
+          "counts": { "physical": 392, "blank": 3, "comment_only": 17 },
+          "evidence": "Moves only with the conditionally expanded receipt-consumer boundary."
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "production_candidate": { "physical": 60, "blank": 4, "comment_only": 14 },
+    "tests_candidate": { "physical": 105, "blank": 14, "comment_only": 18 },
+    "conditional_production": {
+      "physical": 96,
+      "blank": 10,
+      "comment_only": 23
+    },
+    "conditional_tests": { "physical": 392, "blank": 3, "comment_only": 17 }
+  }
+}

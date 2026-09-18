@@ -25,15 +25,14 @@ the original demo includes both architecture changes and optimized compilation.
 ```sh
 git clone https://github.com/refcell/base-era.git
 cd base-era
-./demo setup
-./demo build
-./demo test
-# Exercise immediately after startup so the pre-cutover transaction lands in time.
-./demo start && ./demo exercise
-./demo verify
-./demo evidence
-./demo stop
+just demo
 ```
+
+Install the [just command runner](https://just.systems/man/en/packages.html) first. The root
+`justfile` runs setup → build → test → start → exercise → verify → evidence, stopping on failure.
+It chooses a fresh timestamp/PID run directory, unless `BASE_ERA_RUN_DIR` is set. On success it
+leaves the network running and prints endpoints and the exact stop command. On failure it preserves
+the run directory and prints the command to stop any launched processes. Nothing is deleted.
 
 All paths are checkout-relative. Setup verifies frozen source and builds the local setup image.
 Build uses the worker's independent lockfile and committed historical subset, then the host's
@@ -43,7 +42,8 @@ Executables are copied to `target/history-artifacts/sha256/<digest>/`; `APPROVAL
 worker and `DIGEST` records its identity. Generated approvals, databases and build outputs stay
 ignored. Source snapshots and lockfiles are committed.
 
-The default run is `target/demo-run`. To repeat, use a fresh directory, for example
+Individual stages remain available via `./demo <stage>`. Their default run is `target/demo-run`
+(unlike `just demo`, which chooses a fresh directory). To repeat individual stages, use a fresh directory, for example
 `export BASE_ERA_RUN_DIR="$PWD/target/demo-run-2"`. Startup refuses existing directories; stop
 verifies process ownership and does not delete chain data. `./demo status` prints the local RPC
 endpoints. These are disposable local test accounts, not production keys or funds.
