@@ -4,7 +4,7 @@
 independent source roots. Digests can be reproduced with:
 
 ```sh
-(cd PATH && find . -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum)
+(cd PATH && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum | sha256sum)
 ```
 
 The worker's historical Base copy can be checked through the stable interface

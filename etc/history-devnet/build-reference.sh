@@ -9,6 +9,7 @@ executable="$root/target/history-reference-node"
 artifacts="$root/target/history-reference-artifacts/sha256"
 metadata="$root/target/history-reference-build.json"
 
+python3 "$root/etc/history-devnet/artifacts.py" --source reference_base
 export CARGO_TARGET_DIR="$build_target"
 export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-3}
 cargo build --manifest-path "$source/Cargo.toml" --locked \

@@ -20,12 +20,36 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def verify_results(run):
+    """Refuse to publish incomplete, skipped or failing acceptance output."""
+    load = lambda path: json.loads((run / path).read_text())
+    replay = load("replay-evidence/summary.json")
+    imported = load("import-evidence/summary.json")
+    failures = load("failure-evidence/summary.json")
+    failure_evidence = load("failure-evidence/evidence.json")
+    stateless = load("evidence/stateless-final/results.json")
+    live = load("evidence/verification.json")
+    if len(replay) < 95 or any(test.get("result") != "PASS" for test in replay):
+        raise RuntimeError("replay acceptance is incomplete or not passing")
+    if imported.get("result") != "PASS" or len(imported["tests"]) != 6 or any(
+        test.get("result") != "PASS" for test in imported["tests"]
+    ):
+        raise RuntimeError("import acceptance is incomplete or not passing")
+    if failures.get("result") != "PASS" or failures.get("claims") != 7 or len(failure_evidence) != 7:
+        raise RuntimeError("failure-injection acceptance is incomplete or not passing")
+    if not stateless.get("all_match") or stateless.get("error") or stateless.get("blocks") != [19, 20, 21]:
+        raise RuntimeError("native stateless acceptance is incomplete or not passing")
+    if not live.get("builderVerifierParity") or not live.get("workloadReceiptsMatch"):
+        raise RuntimeError("live sequencer/verifier parity is not passing")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("run", type=Path)
     parser.add_argument("--output", type=Path, default=ROOT / "etc/history-devnet/evidence/final")
     args = parser.parse_args()
     run = args.run.resolve()
+    verify_results(run)
     args.output.mkdir(parents=True, exist_ok=False)
     runtime = json.loads((run / "runtime.json").read_text())
     manifest = json.loads((run / "manifest.json").read_text())
@@ -81,9 +105,16 @@ def main():
                                        cwd=ROOT).split(b"\0")
     source_paths = sorted({path.decode() for path in changed + untracked if path
                            and not path.startswith(b"etc/history-devnet/evidence/")})
+    tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).split(b"\0")
+    source_hashes = {path.decode(): digest(ROOT / path.decode()) for path in tracked if path
+                     and not path.startswith((b"etc/history-devnet/evidence/", b"evidence/", b"site/"))
+                     and (ROOT / path.decode()).is_file()}
     record = {
         "base_source": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
         "base_branch": subprocess.check_output(["git", "branch", "--show-current"], cwd=ROOT, text=True).strip(),
+        "tracked_source_tree_sha256": hashlib.sha256(json.dumps(source_hashes, sort_keys=True).encode()).hexdigest(),
+        "tracked_source_files": len(source_hashes),
+        "source_clean": not any(changed + untracked),
         "reth_source": "5877708bbf9219c44758cd2ce28a365f738661f7",
         "rustc": subprocess.check_output(["rustc", "-Vv"], cwd=ROOT, text=True).strip(),
         "inputs_sha256": {path: digest(ROOT / path) for path in inputs},

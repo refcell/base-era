@@ -12,6 +12,7 @@ import sys
 import time
 import urllib.request
 
+from artifacts import verify_reference
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -158,6 +159,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    args.reference_bin = verify_reference(args.reference_bin)
     args.manifest = args.manifest or args.run_dir / "manifest.json"
     out = args.output or ROOT / f"target/history-import-{time.strftime('%Y%m%d-%H%M%S')}"
     out.mkdir(parents=True, exist_ok=False)

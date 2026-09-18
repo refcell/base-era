@@ -17,6 +17,7 @@ import subprocess
 import time
 import urllib.request
 
+from artifacts import verify_reference
 
 ROOT = Path(__file__).resolve().parents[2]
 ORACLE = {"to": "0x420000000000000000000000000000000000000F", "data": "0xb54501bc"}
@@ -136,6 +137,7 @@ def main():
     parser.add_argument("--output", type=Path, default=ROOT / "etc/history-devnet/evidence/benchmark.json")
     parser.add_argument("--repetitions", type=int, default=5)
     args = parser.parse_args()
+    args.reference_bin = verify_reference(args.reference_bin)
     if args.run_dir.exists():
         raise SystemExit(f"owned run directory already exists: {args.run_dir}")
     args.run_dir.mkdir(parents=True)

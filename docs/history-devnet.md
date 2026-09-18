@@ -36,11 +36,11 @@ Build `target/debug/examples/fixture` first if it is absent (the runner also acc
 witness archives, command metadata, logs, and `results.json`. The runner checks every subprocess
 exit and compares each fixture's expected full-header hash with RPC for blocks 19–21.
 
-The checked-in `etc/history-devnet/evidence/final/stateless.json` records the successful 2026-09-18
-acceptance run on the final chain. This check neither authorizes zk proofs nor changes a verifying
-program.
+The original source spike passed these checks on 2026-09-18. Fresh migrated evidence must be
+captured before claiming this checkout passed. This check neither authorizes zk proofs nor changes
+a verifying program.
 
-The accompanying `evidence/final/corpus/block-{19,20,21}.tar.gz` files can be replayed without a
+Captured `corpus/block-{19,20,21}.tar.gz` files can be replayed without a
 running network using `target/debug/examples/fixture run <archive>`. Run
 `etc/history-devnet/acceptance.sh "$RUN"` for the complete live/replay/import/failure/native/measurement
 suite, and `python3 etc/history-devnet/collect.py "$RUN" --output "$RUN/portable-evidence"` to

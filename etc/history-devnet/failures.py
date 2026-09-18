@@ -270,7 +270,9 @@ def main():
             except subprocess.TimeoutExpired: process.terminate(); process.wait(5)
         log.close()
         (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
-    print(json.dumps({"result": "PASS", "output": str(output), "claims": len(evidence)}, indent=2))
+    summary = {"result": "PASS", "output": str(output), "claims": len(evidence)}
+    (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    print(json.dumps(summary, indent=2))
 
 
 if __name__ == "__main__":

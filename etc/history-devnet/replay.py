@@ -16,6 +16,7 @@ import sys
 import time
 import urllib.request
 
+from artifacts import verify_reference
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -311,6 +312,7 @@ def main():
     if not endpoint_mode:
         if not all((args.worker_bin, args.reference_bin, args.genesis, args.manifest)):
             parser.error("provide both endpoint options, or both binaries plus --genesis and --manifest")
+        args.reference_bin = verify_reference(args.reference_bin)
         for name in ("worker", "reference"):
             datadir = out / (name + "-datadir")
             if datadir.exists() and any(datadir.iterdir()): parser.error(f"owned datadir is not empty: {datadir}")

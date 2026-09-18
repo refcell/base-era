@@ -9,6 +9,7 @@ export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-3}
 mkdir -p "$artifacts"
 python3 "$root/tools/reth-config.py" > "$config"
 "$root/etc/history-worker/scripts/verify-base.sh"
+python3 "$root/etc/history-devnet/artifacts.py" --source host_reth
 CARGO_TARGET_DIR="$root/etc/history-worker/target" cargo build \
     --manifest-path "$root/etc/history-worker/Cargo.toml" --locked --release --bin base-history-worker
 CARGO_TARGET_DIR="$root/target" cargo --config "$config" build --locked \
