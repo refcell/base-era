@@ -425,6 +425,8 @@ code {
   margin: 0;
   padding: 2rem;
   font: 16px/2 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   overflow: auto;
 }
 .run-notes {

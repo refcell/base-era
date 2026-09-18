@@ -18,7 +18,8 @@ etc/history-devnet/stop.sh "$RUN"
 ```
 
 `runtime.json` contains ephemeral Engine authentication and must not be published. Portable results
-in `etc/history-devnet/evidence/` deliberately contain no JWT or runtime endpoint.
+in `etc/history-devnet/evidence/` deliberately exclude Engine credentials and mutable databases.
+Some diagnostic fields retain local paths or loopback RPC addresses; they are not hosted services.
 
 ## Native stateless witness recording
 

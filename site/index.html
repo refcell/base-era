@@ -196,7 +196,7 @@
       <section class="section quickstart" id="run">
         <div class="section-head">
           <p class="eyebrow">04 / Reproduce</p>
-          <h2>Six commands,<br />one local devnet.</h2>
+          <h2>From checkout<br />to cutover.</h2>
         </div>
         <div class="code-wrap">
           <div class="code-head">
@@ -204,11 +204,14 @@
               >Planned demo interface · repository root</span
             ><button id="copy" type="button">Copy commands</button>
           </div>
-          <pre><code id="commands">./demo setup
+          <pre><code id="commands">git clone https://github.com/refcell/base-era.git
+cd base-era
+./demo setup
 ./demo build
-./demo start
-./demo exercise
+./demo test
+./demo start &amp;&amp; ./demo exercise
 ./demo verify
+./demo evidence
 ./demo stop</code></pre>
         </div>
         <div class="run-notes">
@@ -339,10 +342,15 @@
       <p>
         Experimental research built on
         <a href="https://github.com/base/base">base/base</a>. Read the
-        <a href="https://github.com/base/base/tree/master/docs"
-          >source documentation</a
+        <a href="https://github.com/refcell/base-era/blob/main/docs/history-spike.md"
+          >spike report</a
         >
-        and verify the evidence.<br />Unofficial; not affiliated with or
+        and
+        <a href="https://github.com/refcell/base-era/tree/main/etc/history-devnet/evidence/final"
+          >captured evidence</a>.
+        Review the
+        <a href="https://github.com/refcell/base-era/compare/00cca4b99fad0c68901521cedd32b5a13d283c21...main"
+          >diff from the selected Base baseline</a>.<br />Unofficial; not affiliated with or
         endorsed by Base.
       </p>
       <p class="footer-end">

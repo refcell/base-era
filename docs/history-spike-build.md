@@ -91,7 +91,11 @@ the fixture and host integration limitations in `docs/history-worker.md` remain.
 ## Build image prerequisites
 
 Historical devnet startup requires Docker with BuildKit support and builds
-`base-era-setup:local-v1` from `etc/docker/Dockerfile.devnet` when that tag is absent:
+`base-era-setup:local-v1` from the committed `etc/docker/Dockerfile.devnet` and context on every
+start. Docker can reuse matching layers, but an existing image tag alone is not trusted. The
+resulting image ID and live executable digests are recorded before launch. Each acceptance stage
+records its inputs before execution, launches frozen binary copies, and checks them again on
+completion; evidence collection rejects missing or mismatched stage identities.
 
 ```sh
 etc/history-devnet/build-setup-image.sh
