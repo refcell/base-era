@@ -42,6 +42,9 @@ base-common-evm.workspace = true
 base-execution-evm.workspace = true
 base-execution-trie.workspace = true
 base-execution-txpool.workspace = true
+base-common-genesis = { workspace = true, optional = true }
+base-execution-history = { workspace = true, optional = true }
+base-execution-chainspec = { workspace = true, optional = true }
 base-observability-events.workspace = true
 base-execution-payload-builder.workspace = true
 
@@ -51,6 +54,7 @@ alloy-evm.workspace = true
 alloy-eips.workspace = true
 alloy-serde.workspace = true
 alloy-json-rpc.workspace = true
+alloy-rlp = { workspace = true, optional = true }
 base-common-flz.workspace = true
 alloy-transport.workspace = true
 alloy-consensus.workspace = true
@@ -72,6 +76,7 @@ tokio.workspace = true
 futures.workspace = true
 async-trait.workspace = true
 opentelemetry.workspace = true
+serde_json = { workspace = true, optional = true }
 
 # rpc
 http.workspace = true
@@ -120,4 +125,11 @@ metrics = [
 	"base-observability-events/metrics",
 	"dep:metrics",
 	"reth-evm/metrics",
+]
+history = [
+	"dep:alloy-rlp",
+	"dep:base-common-genesis",
+	"dep:base-execution-chainspec",
+	"dep:base-execution-history",
+	"dep:serde_json",
 ]

@@ -8,6 +8,8 @@ use alloy_rpc_types_eth::{BlockError, error::EthRpcErrorCode};
 use alloy_transport::{RpcError, TransportErrorKind};
 use base_common_evm::{BaseHaltReason, BaseTransactionError};
 use base_execution_evm::BaseBlockExecutionError;
+#[cfg(feature = "history")]
+use base_execution_history::HistoryWorkerError;
 use jsonrpsee_types::error::INTERNAL_ERROR_CODE;
 use reth_evm::execute::ProviderError;
 use reth_rpc_eth_api::{AsEthApiError, EthTxEnvError, TransactionConversionError};
@@ -39,6 +41,10 @@ pub enum BaseEthApiError {
     /// Sequencer client error.
     #[error(transparent)]
     Sequencer(#[from] SequencerClientError),
+    /// Historical RPC worker error.
+    #[cfg(feature = "history")]
+    #[error(transparent)]
+    History(#[from] HistoryWorkerError),
 }
 
 impl AsEthApiError for BaseEthApiError {
@@ -59,6 +65,12 @@ impl From<BaseEthApiError> for jsonrpsee_types::error::ErrorObject<'static> {
             | BaseEthApiError::L1BlockFeeError
             | BaseEthApiError::L1BlockGasError => internal_rpc_err(err.to_string()),
             BaseEthApiError::Sequencer(err) => err.into(),
+            #[cfg(feature = "history")]
+            BaseEthApiError::History(HistoryWorkerError::Rpc { code, message, data }) => {
+                jsonrpsee_types::error::ErrorObject::owned(code, message, data)
+            }
+            #[cfg(feature = "history")]
+            BaseEthApiError::History(err) => internal_rpc_err(err.to_string()),
         }
     }
 }

@@ -166,6 +166,7 @@ impl L2ClientConsensus {
 /// 5. Client consensus node connects to client's engine API
 /// 6. Validator-mode client consensus connects to builder consensus via P2P
 pub struct L2Stack {
+    jwt_secret: JwtSecret,
     builder: InProcessBuilder,
     builder_consensus: InProcessConsensus,
     batcher: InProcessBatcher,
@@ -209,6 +210,27 @@ impl L2Stack {
         let builder_chain_spec =
             InProcessBuilderConfig::chain_spec_from_genesis_json(&config.l2_genesis)
                 .wrap_err("Failed to parse builder L2 chain spec")?;
+
+        if let Some(approval) = std::env::var_os("BASE_HISTORY_APPROVAL") {
+            let mut manifest: serde_json::Value =
+                serde_json::from_slice(&std::fs::read(approval)?)?;
+            let genesis: serde_json::Value = serde_json::from_slice(&config.l2_genesis)?;
+            manifest["genesis_identity"] =
+                format!("{:#x}", alloy_primitives::keccak256(serde_json::to_vec(&genesis)?)).into();
+            manifest["config_identity"] = format!(
+                "{:#x}",
+                alloy_primitives::keccak256(serde_json::to_vec(&genesis.get("config"))?)
+            )
+            .into();
+            manifest["genesis_header_hash"] =
+                format!("{:#x}", builder_chain_spec.genesis_hash()).into();
+            manifest["chain_id"] = builder_chain_spec.chain.id().to_string().into();
+            manifest["genesis"] = genesis;
+            let destination = std::env::var_os("BASE_HISTORY_MANIFEST").ok_or_else(|| {
+                eyre::eyre!("BASE_HISTORY_APPROVAL requires BASE_HISTORY_MANIFEST")
+            })?;
+            std::fs::write(destination, serde_json::to_vec_pretty(&manifest)?)?;
+        }
 
         // 1. Start the builder (in-process EL).
         let builder_config = InProcessBuilderConfig {
@@ -536,6 +558,7 @@ impl L2Stack {
         }
 
         Ok(Self {
+            jwt_secret: config.jwt_secret,
             builder,
             builder_consensus,
             batcher: batcher.expect("batcher starts in both shadow startup paths"),
@@ -543,6 +566,11 @@ impl L2Stack {
             client_consensus,
             shadow_sequencers,
         })
+    }
+
+    /// Returns the local Engine API JWT secret.
+    pub const fn jwt_secret(&self) -> &JwtSecret {
+        &self.jwt_secret
     }
 
     /// Returns a reference to the in-process builder.
@@ -613,6 +641,7 @@ impl L2Stack {
     /// Stops the in-process L2 services and gracefully shuts down execution runtimes.
     pub async fn shutdown(self) -> Result<()> {
         let Self {
+            jwt_secret: _,
             builder,
             builder_consensus,
             batcher,

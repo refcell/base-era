@@ -5,7 +5,7 @@ use std::{fmt, sync::Arc};
 use base_execution_chainspec::BaseChainSpec;
 use clap::Subcommand;
 use reth_cli_commands::{
-    config_cmd, db, dump_genesis, init_cmd,
+    config_cmd, db, dump_genesis, import, init_cmd,
     node::{self, NoArgs},
     prune, re_execute, stage,
 };
@@ -36,6 +36,9 @@ pub enum Commands<Ext: clap::Args + fmt::Debug = NoArgs> {
     /// Initialize the database from a state dump file.
     #[command(name = "init-state")]
     InitState(init_state::BaseInitStateCommand<BaseChainSpecParser>),
+    /// This syncs RLP encoded blocks from a file or files.
+    #[command(name = "import")]
+    Import(import::ImportCommand<BaseChainSpecParser>),
     /// Dumps genesis block JSON configuration to stdout.
     DumpGenesis(dump_genesis::DumpGenesisCommand<BaseChainSpecParser>),
     /// Database debugging utilities
@@ -78,6 +81,7 @@ impl<Ext: clap::Args + fmt::Debug> Commands<Ext> {
             Self::Node(cmd) => cmd.chain_spec(),
             Self::Init(cmd) => cmd.chain_spec(),
             Self::InitState(cmd) => cmd.chain_spec(),
+            Self::Import(cmd) => cmd.chain_spec(),
             Self::DumpGenesis(cmd) => cmd.chain_spec(),
             Self::Db(cmd) => cmd.chain_spec(),
             Self::Stage(cmd) => cmd.chain_spec(),

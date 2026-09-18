@@ -20,25 +20,28 @@
     "upstream": "https://github.com/base/base",
     "revision": "1eda0f7f4cebb823522e62f34fc3e513b1c450b1",
     "path": "historical/reference",
-    "content_sha256": "9a42cb12f04f02117d290bc9d7c683b428126828a58e71ffb904c359c0f63698",
-    "lockfile_sha256": "da5f3aa69b21251722ba5e24e5573e54c7df969ec4fc69840684d941270c9e71",
+    "content_sha256": "7d6671e476c6e2b0b9e4c87c530a1de5cc48def7e0dbe5de14e4a2763ce6b35f",
+    "lockfile_sha256": "ac2b63fa6eb1b432facb526626c11c8d7d2d5e4586d3617a12c0a219d94c2608",
+    "original_lockfile_sha256": "da5f3aa69b21251722ba5e24e5573e54c7df969ec4fc69840684d941270c9e71",
+    "lockfile_normalization": "Cargo removed unused workspace packages; no new package name/version/source/checksum identities were introduced.",
     "license": "MIT",
     "package_directories": 51,
     "adaptation": "Standard reth import command exposure is integrated in crates/execution/cli/src/app.rs and src/commands/mod.rs."
   },
   "host_reth": {
     "upstream": "https://github.com/base/reth",
-    "revision": "d201e8932a613e6ec3c1c89d610c47cbc1684f7b",
+    "revision": "5877708bbf9219c44758cd2ce28a365f738661f7",
+    "source_checkout_local_commit": "d201e8932a613e6ec3c1c89d610c47cbc1684f7b",
     "path": "vendor/reth",
     "content_sha256": "2a30c227f9b0ba0610cf2491417c04d17fc0e21cde6900637c1bf3a8c45eb62d",
     "lockfile_sha256": "db1097803236f4dca7735cedb9e2a01b0b6cef9fb4be1bbca24f3b993e7a8710",
     "licenses": ["Apache-2.0", "MIT"],
     "original_delta": {
       "path": "sources/reth-history.patch",
-      "sha256": "85ca603ec153c88e7e417c95b28c7a6a8d3eacbeb0677abe04168e028d65302a",
+      "sha256": "c2607711fdcc2cd41573c46a3d76c7f28bb180f7ef64c08eb4c222eb1d0c82ad",
       "files": 13,
-      "insertions": 285,
-      "deletions": 45
+      "insertions": 300,
+      "deletions": 42
     }
   }
 }

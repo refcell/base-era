@@ -112,6 +112,8 @@ impl MultiplexRouter {
     /// Returns whether Denim selects the basic builder at `timestamp`.
     pub fn basic_selected_at(&self, timestamp: u64) -> bool {
         self.chain_spec.is_denim_active_at_timestamp(timestamp)
+            || (std::env::var_os("BASE_HISTORY_MANIFEST").is_some()
+                && !self.chain_spec.is_isthmus_active_at_timestamp(timestamp))
     }
 
     /// Returns the recorded route for a payload, defaulting unknown payloads to flashblocks.
@@ -197,6 +199,23 @@ impl MultiplexRouter {
         let payload_id = input.payload_id();
         let selected_basic = self.basic_selected_at(input.attributes.timestamp());
         self.record_payload_route(payload_id, selected_basic);
+
+        // The shadow builder executes too and can populate the already-executed
+        // payload cache. Historical requests must never reach that local EVM.
+        if std::env::var_os("BASE_HISTORY_MANIFEST").is_some()
+            && !self.chain_spec.is_isthmus_active_at_timestamp(input.attributes.timestamp())
+        {
+            let response = self.basic_handle.send_new_payload(input);
+            let health = self.basic_health.clone();
+            return async move {
+                let result = response.await.unwrap_or_else(|_| {
+                    health.mark_unavailable();
+                    Err(Self::unavailable_error(BASIC_BUILDER))
+                });
+                let _ = tx.send(result);
+            }
+            .boxed();
+        }
 
         let mut shadow_attributes = input.attributes.clone();
         shadow_attributes.no_tx_pool = true;

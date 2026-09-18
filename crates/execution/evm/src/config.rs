@@ -18,9 +18,15 @@ use base_common_rpc_types_engine as _;
 use base_common_rpc_types_engine::ExecutionData;
 use base_execution_chainspec::BaseChainSpec;
 use reth_chainspec::EthChainSpec;
+#[cfg(feature = "history")]
+use reth_evm::execute::BlockAssemblerInput;
 #[cfg(feature = "std")]
 use reth_evm::{ConfigureEngineEvm, EvmEnvFor, ExecutableTxIterator, ExecutionCtxFor};
 use reth_evm::{ConfigureEvm, EvmEnv, TransactionEnvMut, precompiles::PrecompilesMap};
+#[cfg(feature = "history")]
+use reth_execution_types::BlockExecutionResult;
+#[cfg(feature = "history")]
+use reth_primitives_traits::Recovered;
 use reth_primitives_traits::{NodePrimitives, SealedBlock, SealedHeader, SignedTransaction};
 #[cfg(feature = "std")]
 use reth_primitives_traits::{TxTy, WithEncoded};
@@ -33,6 +39,8 @@ use revm::{
     primitives::{Address, B256, Bytes as RevmBytes},
 };
 
+#[cfg(feature = "history")]
+use crate::HistoricalExecution;
 use crate::{BaseBlockAssembler, BaseEvmEnvBuilder, BaseRethReceiptBuilder};
 
 /// Context relevant for execution of a next Base block.
@@ -171,6 +179,105 @@ where
 
     fn block_assembler(&self) -> &Self::BlockAssembler {
         &self.block_assembler
+    }
+
+    #[cfg(feature = "history")]
+    fn uses_external_execution(&self, header: &Header) -> bool {
+        HistoricalExecution::selected(self.chain_spec().as_ref(), header)
+    }
+
+    #[cfg(feature = "history")]
+    fn execute_block_external<DB: revm::Database>(
+        &self,
+        state: &mut revm::database::State<DB>,
+        block: &reth_primitives_traits::RecoveredBlock<N::Block>,
+        parent: Option<&Header>,
+    ) -> Result<
+        Option<reth_execution_types::BlockExecutionOutput<N::Receipt>>,
+        reth_execution_errors::BlockExecutionError,
+    > {
+        HistoricalExecution::execute(self.chain_spec().as_ref(), state, block, parent)
+    }
+
+    #[cfg(feature = "history")]
+    fn build_block_external<DB: revm::Database>(
+        &self,
+        state: &mut revm::database::State<DB>,
+        parent: &SealedHeader<Header>,
+        attributes: Self::NextBlockEnvCtx,
+        transactions: Vec<Recovered<N::SignedTx>>,
+        state_provider: &dyn reth_storage_api::StateProvider,
+    ) -> Result<
+        Option<reth_evm::execute::BlockBuilderOutcome<N>>,
+        reth_execution_errors::BlockExecutionError,
+    > {
+        let evm_env = self
+            .next_evm_env(parent, &attributes)
+            .map_err(reth_execution_errors::BlockExecutionError::other)?;
+        let execution_ctx = self
+            .context_for_next_block(parent, attributes)
+            .map_err(reth_execution_errors::BlockExecutionError::other)?;
+        let (plain_transactions, senders): (Vec<_>, Vec<_>) =
+            transactions.iter().cloned().map(Recovered::into_parts).unzip();
+        let empty_result: BlockExecutionResult<N::Receipt> = BlockExecutionResult {
+            receipts: Vec::new(),
+            gas_used: 0,
+            blob_gas_used: 0,
+            requests: Default::default(),
+        };
+        let provisional = self.block_assembler().assemble_block(BlockAssemblerInput::<
+            BaseBlockExecutorFactory<R, Arc<ChainSpec>, EvmF>,
+            Header,
+        >::new(
+            evm_env.clone(),
+            execution_ctx.clone(),
+            parent,
+            plain_transactions.clone(),
+            &empty_result,
+            &state.bundle_state,
+            state_provider,
+            Default::default(),
+            None,
+        ))?;
+        let provisional =
+            reth_primitives_traits::RecoveredBlock::new_unhashed(provisional, senders.clone());
+        let Some(output) = HistoricalExecution::execute(
+            self.chain_spec().as_ref(),
+            state,
+            &provisional,
+            Some(parent),
+        )?
+        else {
+            return Ok(None);
+        };
+        let hashed_state = state_provider
+            .hashed_post_state(&output.state)
+            .map_err(reth_execution_errors::BlockExecutionError::other)?;
+        let (state_root, trie_updates) = state_provider
+            .state_root_with_updates(hashed_state.clone())
+            .map_err(reth_execution_errors::BlockExecutionError::other)?;
+        let block = self.block_assembler().assemble_block(BlockAssemblerInput::<
+            BaseBlockExecutorFactory<R, Arc<ChainSpec>, EvmF>,
+            Header,
+        >::new(
+            evm_env,
+            execution_ctx,
+            parent,
+            plain_transactions,
+            &output.result,
+            &output.state,
+            state_provider,
+            state_root,
+            None,
+        ))?;
+        state.bundle_state = output.state;
+        Ok(Some(reth_evm::execute::BlockBuilderOutcome {
+            execution_result: output.result,
+            hashed_state,
+            trie_updates,
+            block: reth_primitives_traits::RecoveredBlock::new_unhashed(block, senders),
+            block_access_list: None,
+        }))
     }
 
     fn evm_env(&self, header: &Header) -> Result<EvmEnv<BaseSpecId>, Self::Error> {

@@ -1,0 +1,31 @@
+[package]
+name = "base-execution-history"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+libc = "0.2"
+hex.workspace = true
+revm.workspace = true
+serde.workspace = true
+tracing.workspace = true
+alloy-rlp.workspace = true
+thiserror.workspace = true
+alloy-eips.workspace = true
+serde_json.workspace = true
+alloy-primitives.workspace = true
+reth-execution-types.workspace = true
+reth-primitives-traits.workspace = true
+sha2 = { workspace = true, features = ["std"] }
+history-worker-protocol = { package = "base-history-protocol", path = "../../../etc/history-worker/crates/protocol" }
+
+[dev-dependencies]
+alloy-consensus.workspace = true
+base-common-consensus = { workspace = true, features = ["reth"] }

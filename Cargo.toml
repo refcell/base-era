@@ -9,39 +9,37 @@ exclude = [".github/"]
 
 [workspace]
 resolver = "2"
-exclude = ["actions/fixtures", "crates/proof/zk/programs"]
+exclude = ["etc/history-worker", "historical/reference", "vendor/reth"]
 members = [
-  "actions/*",
-  "bin/[a-o]*",
-  "bin/[q-z]*",
-  "bin/proposer",
-  "bin/prover-*",
-  "bin/prover/*",
+  "bin/node",
   "crates/batcher/*",
   "crates/builder/*",
   "crates/common/*",
   "crates/consensus/*",
   "crates/execution/*",
   "crates/infra/*",
-  "crates/proof/[a-r]*",
-  "crates/proof/sub*",
-  "crates/proof/[u-y]*",
-  "crates/proof/prover-service/[a-r]*",
-  "crates/proof/tee/*",
+  "crates/proof/client",
+  "crates/proof/driver",
+  "crates/proof/executor",
+  "crates/proof/host",
+  "crates/proof/mpt",
+  "crates/proof/preimage",
+  "crates/proof/primitives",
+  "crates/proof/proof",
+  "crates/proof/prover-service",
+  "crates/proof/prover-service/client",
+  "crates/proof/prover-service/db",
+  "crates/proof/prover-service/protocol",
+  "crates/proof/worker",
+  "crates/proof/zk/backend",
   "crates/proof/zk/backend/elfs",
-  "crates/proof/zk/backend/scripts",
-  "crates/proof/zk/*",
+  "crates/proof/zk/host",
+  "crates/proof/zk/utils",
+  "crates/proof/zk/witness",
   "crates/utilities/*",
-  "etc/tools/*",
   "etc/systems",
 ]
-default-members = [
-  "bin/[a-o]*",
-  "bin/[q-z]*",
-  "bin/proposer",
-  "bin/prover-*",
-  "bin/prover/*",
-]
+default-members = ["bin/node"]
 
 [workspace.metadata.cargo-udeps.ignore]
 normal = ["rustls-platform-verifier"]
@@ -203,6 +201,7 @@ base-execution-cli = { path = "crates/execution/cli" }
 base-execution-evm = { path = "crates/execution/evm" }
 base-execution-rpc = { path = "crates/execution/rpc" }
 base-metering = { path = "crates/execution/metering" }
+base-execution-history = { path = "crates/execution/history" }
 base-node-runner = { path = "crates/execution/runner" }
 base-shadow-indexer = { path = "crates/execution/shadow-indexer" }
 base-shadow-indexer-db = { path = "crates/execution/shadow-indexer-db" }

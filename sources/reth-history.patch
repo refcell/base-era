@@ -1,6 +1,6 @@
-diff --git i/crates/e2e-test-utils/src/rpc.rs w/crates/e2e-test-utils/src/rpc.rs
+diff --git c/crates/e2e-test-utils/src/rpc.rs w/crates/e2e-test-utils/src/rpc.rs
 index ff030c390..ca9e92dcb 100644
---- i/crates/e2e-test-utils/src/rpc.rs
+--- c/crates/e2e-test-utils/src/rpc.rs
 +++ w/crates/e2e-test-utils/src/rpc.rs
 @@ -34,7 +34,10 @@ where
      pub async fn envelope_by_hash(
@@ -14,9 +14,9 @@ index ff030c390..ca9e92dcb 100644
          let tx = self.inner.debug_api().raw_transaction(hash).await?.unwrap();
          let tx = tx.to_vec();
          Ok(EthereumTxEnvelope::decode_2718(&mut tx.as_ref()).unwrap())
-diff --git i/crates/engine/invalid-block-hooks/src/witness.rs w/crates/engine/invalid-block-hooks/src/witness.rs
+diff --git c/crates/engine/invalid-block-hooks/src/witness.rs w/crates/engine/invalid-block-hooks/src/witness.rs
 index 574b8545c..15cf57ef1 100644
---- i/crates/engine/invalid-block-hooks/src/witness.rs
+--- c/crates/engine/invalid-block-hooks/src/witness.rs
 +++ w/crates/engine/invalid-block-hooks/src/witness.rs
 @@ -220,7 +220,7 @@ where
              self.provider.state_by_block_hash(parent_header.hash())?,
@@ -27,9 +27,9 @@ index 574b8545c..15cf57ef1 100644
          let db = executor.into_state();
          let (codes, preimages, hashed_state, bundle_state) = collect_execution_data(db)?;
  
-diff --git i/crates/engine/tree/src/tree/payload_processor/mod.rs w/crates/engine/tree/src/tree/payload_processor/mod.rs
+diff --git c/crates/engine/tree/src/tree/payload_processor/mod.rs w/crates/engine/tree/src/tree/payload_processor/mod.rs
 index 628155f3c..dcc46eaa1 100644
---- i/crates/engine/tree/src/tree/payload_processor/mod.rs
+--- c/crates/engine/tree/src/tree/payload_processor/mod.rs
 +++ w/crates/engine/tree/src/tree/payload_processor/mod.rs
 @@ -173,6 +173,7 @@ where
          hint_stream: Option<StateRootHintStream>,
@@ -65,9 +65,9 @@ index 628155f3c..dcc46eaa1 100644
              env.transaction_count < SMALL_BLOCK_TX_THRESHOLD
          {
              PrewarmMode::Skipped
-diff --git i/crates/engine/tree/src/tree/payload_validator.rs w/crates/engine/tree/src/tree/payload_validator.rs
+diff --git c/crates/engine/tree/src/tree/payload_validator.rs w/crates/engine/tree/src/tree/payload_validator.rs
 index 9c4dde82d..0e82bc032 100644
---- i/crates/engine/tree/src/tree/payload_validator.rs
+--- c/crates/engine/tree/src/tree/payload_validator.rs
 +++ w/crates/engine/tree/src/tree/payload_validator.rs
 @@ -598,6 +598,21 @@ where
  
@@ -181,9 +181,9 @@ index 9c4dde82d..0e82bc032 100644
          let evm_env = match self.evm_config.evm_env(parent.header()) {
              Ok(evm_env) => evm_env,
              Err(err) => {
-diff --git i/crates/evm/evm/src/execute.rs w/crates/evm/evm/src/execute.rs
-index f51de21cb..4281bdd8d 100644
---- i/crates/evm/evm/src/execute.rs
+diff --git c/crates/evm/evm/src/execute.rs w/crates/evm/evm/src/execute.rs
+index 8035ac809..4281bdd8d 100644
+--- c/crates/evm/evm/src/execute.rs
 +++ w/crates/evm/evm/src/execute.rs
 @@ -41,6 +41,16 @@ pub trait Executor<DB: Database>: Sized {
          block: &RecoveredBlock<<Self::Primitives as NodePrimitives>::Block>,
@@ -202,7 +202,7 @@ index f51de21cb..4281bdd8d 100644
      /// Executes the EVM with the given input and accepts a state hook closure that is invoked with
      /// the EVM state after execution.
      fn execute_one_with_state_hook<F>(
-@@ -578,23 +588,21 @@ impl<F, DB: Database> BasicBlockExecutor<F, DB> {
+@@ -578,21 +588,24 @@ impl<F, DB: Database> BasicBlockExecutor<F, DB> {
          let db = State::builder().with_database(db).with_bundle_update().build();
          Self { strategy_factory, db }
      }
@@ -227,17 +227,19 @@ index f51de21cb..4281bdd8d 100644
 +    where
 +        F: ConfigureEvm,
      {
--        if let Some(output) = self.strategy_factory.execute_block_external(&mut self.db, block)? {
 +        if let Some(output) =
 +            self.strategy_factory.execute_block_external(&mut self.db, block, parent)?
 +        {
-             self.db.bundle_state.extend(output.state);
++            self.db.bundle_state.extend(output.state);
 +            self.db.cache = Default::default();
 +            self.db.use_preloaded_bundle = true;
-             return Ok(output.result)
-         }
- 
-@@ -630,6 +638,32 @@ where
++            return Ok(output.result)
++        }
++
+         let mut executor = self
+             .strategy_factory
+             .executor_for_block(&mut self.db, block)
+@@ -625,6 +638,32 @@ where
  
          Ok(result)
      }
@@ -270,11 +272,11 @@ index f51de21cb..4281bdd8d 100644
  
      fn execute_one_with_state_hook<H>(
          &mut self,
-diff --git i/crates/evm/evm/src/lib.rs w/crates/evm/evm/src/lib.rs
-index a33c1ca36..c81710692 100644
---- i/crates/evm/evm/src/lib.rs
+diff --git c/crates/evm/evm/src/lib.rs w/crates/evm/evm/src/lib.rs
+index 4dfb0b6a8..c81710692 100644
+--- c/crates/evm/evm/src/lib.rs
 +++ w/crates/evm/evm/src/lib.rs
-@@ -26,12 +26,12 @@ use alloy_evm::{
+@@ -26,10 +26,11 @@ use alloy_evm::{
  };
  use alloy_primitives::{Address, Bytes, B256};
  use core::{error::Error, fmt::Debug};
@@ -282,19 +284,24 @@ index a33c1ca36..c81710692 100644
 +use execute::{BasicBlockExecutor, BlockAssembler, BlockBuilder, BlockBuilderOutcome};
  use reth_execution_errors::BlockExecutionError;
  use reth_primitives_traits::{
--    BlockTy, HeaderTy, NodePrimitives, ReceiptTy, RecoveredBlock, SealedBlock, SealedHeader, TxTy,
+-    BlockTy, HeaderTy, NodePrimitives, ReceiptTy, SealedBlock, SealedHeader, TxTy,
 +    BlockTy, HeaderTy, NodePrimitives, ReceiptTy, Recovered, RecoveredBlock, SealedBlock,
 +    SealedHeader, TxTy,
  };
--use alloy_evm::Database;
  use revm::{database::State, primitives::hardfork::SpecId};
  
- pub mod either;
-@@ -221,7 +221,28 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
-         &self,
-         _state: &mut State<DB>,
-         _block: &RecoveredBlock<BlockTy<Self::Primitives>>,
--    ) -> Result<Option<reth_execution_types::BlockExecutionOutput<ReceiptTy<Self::Primitives>>>, BlockExecutionError> {
+@@ -212,6 +213,39 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
+         Block = BlockTy<Self::Primitives>,
+     >;
+ 
++    /// Optionally executes a complete recovered block outside the local EVM.
++    ///
++    /// Implementations must return `None` when routing is disabled. Errors are deliberately
++    /// execution errors so callers retain the invalid-input versus infrastructure distinction.
++    fn execute_block_external<DB: Database>(
++        &self,
++        _state: &mut State<DB>,
++        _block: &RecoveredBlock<BlockTy<Self::Primitives>>,
 +        _parent: Option<&HeaderTy<Self::Primitives>>,
 +    ) -> Result<
 +        Option<reth_execution_types::BlockExecutionOutput<ReceiptTy<Self::Primitives>>>,
@@ -317,12 +324,15 @@ index a33c1ca36..c81710692 100644
 +        _transactions: Vec<Recovered<TxTy<Self::Primitives>>>,
 +        _state_provider: &dyn reth_storage_api::StateProvider,
 +    ) -> Result<Option<BlockBuilderOutcome<Self::Primitives>>, BlockExecutionError> {
-         Ok(None)
-     }
++        Ok(None)
++    }
++
+     /// Returns reference to the configured [`BlockExecutorFactory`].
+     fn block_executor_factory(&self) -> &Self::BlockExecutorFactory;
  
-diff --git i/crates/exex/exex/src/backfill/job.rs w/crates/exex/exex/src/backfill/job.rs
+diff --git c/crates/exex/exex/src/backfill/job.rs w/crates/exex/exex/src/backfill/job.rs
 index 5473b48da..1206a6417 100644
---- i/crates/exex/exex/src/backfill/job.rs
+--- c/crates/exex/exex/src/backfill/job.rs
 +++ w/crates/exex/exex/src/backfill/job.rs
 @@ -11,7 +11,7 @@ use alloy_primitives::BlockNumber;
  use reth_ethereum_primitives::Receipt;
@@ -423,9 +433,9 @@ index 5473b48da..1206a6417 100644
  
          Ok((block_with_senders, block_execution_output))
      }
-diff --git i/crates/exex/exex/src/backfill/stream.rs w/crates/exex/exex/src/backfill/stream.rs
+diff --git c/crates/exex/exex/src/backfill/stream.rs w/crates/exex/exex/src/backfill/stream.rs
 index 7be3d26cb..0dd6a7155 100644
---- i/crates/exex/exex/src/backfill/stream.rs
+--- c/crates/exex/exex/src/backfill/stream.rs
 +++ w/crates/exex/exex/src/backfill/stream.rs
 @@ -11,8 +11,8 @@ use reth_evm::{
      ConfigureEvm,
@@ -475,9 +485,9 @@ index 7be3d26cb..0dd6a7155 100644
  {
      type Item = BackfillJobResult<BatchBlockStreamItem<E::Primitives>>;
  
-diff --git i/crates/exex/exex/src/notifications.rs w/crates/exex/exex/src/notifications.rs
+diff --git c/crates/exex/exex/src/notifications.rs w/crates/exex/exex/src/notifications.rs
 index c8efb6773..89ec23f7c 100644
---- i/crates/exex/exex/src/notifications.rs
+--- c/crates/exex/exex/src/notifications.rs
 +++ w/crates/exex/exex/src/notifications.rs
 @@ -6,6 +6,7 @@ use reth_ethereum_primitives::EthPrimitives;
  use reth_evm::ConfigureEvm;
@@ -543,9 +553,9 @@ index c8efb6773..89ec23f7c 100644
      E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + Clone + Unpin + 'static,
  {
      type Item = eyre::Result<ExExNotification<E::Primitives>>;
-diff --git i/crates/rpc/rpc-builder/src/lib.rs w/crates/rpc/rpc-builder/src/lib.rs
+diff --git c/crates/rpc/rpc-builder/src/lib.rs w/crates/rpc/rpc-builder/src/lib.rs
 index 3e818dabc..d7dc7ae34 100644
---- i/crates/rpc/rpc-builder/src/lib.rs
+--- c/crates/rpc/rpc-builder/src/lib.rs
 +++ w/crates/rpc/rpc-builder/src/lib.rs
 @@ -708,7 +708,7 @@ where
      /// If called outside of the tokio runtime. See also [`Self::eth_api`]
@@ -556,9 +566,9 @@ index 3e818dabc..d7dc7ae34 100644
      {
          let debug_api = self.debug_api();
          self.modules.insert(RethRpcModule::Debug, debug_api.into_rpc().into());
-diff --git i/crates/rpc/rpc-eth-api/src/helpers/call.rs w/crates/rpc/rpc-eth-api/src/helpers/call.rs
+diff --git c/crates/rpc/rpc-eth-api/src/helpers/call.rs w/crates/rpc/rpc-eth-api/src/helpers/call.rs
 index 060d23652..3efeb53df 100644
---- i/crates/rpc/rpc-eth-api/src/helpers/call.rs
+--- c/crates/rpc/rpc-eth-api/src/helpers/call.rs
 +++ w/crates/rpc/rpc-eth-api/src/helpers/call.rs
 @@ -54,6 +54,17 @@ pub type SimulatedBlocksResult<N, E> = Result<Vec<SimulatedBlock<RpcBlock<N>>>,
  /// Execution related functions for the [`EthApiServer`](crate::EthApiServer) trait in
@@ -578,9 +588,9 @@ index 060d23652..3efeb53df 100644
      /// Estimate gas needed for execution of the `request` at the [`BlockId`].
      fn estimate_gas_at(
          &self,
-diff --git i/crates/rpc/rpc/src/debug.rs w/crates/rpc/rpc/src/debug.rs
+diff --git c/crates/rpc/rpc/src/debug.rs w/crates/rpc/rpc/src/debug.rs
 index 9860eae2f..3752346ab 100644
---- i/crates/rpc/rpc/src/debug.rs
+--- c/crates/rpc/rpc/src/debug.rs
 +++ w/crates/rpc/rpc/src/debug.rs
 @@ -27,7 +27,7 @@ use reth_revm::{db::State, witness::ExecutionWitnessRecord};
  use reth_rpc_api::DebugApiServer;
@@ -702,9 +712,9 @@ index 9860eae2f..3752346ab 100644
  {
      /// Handler for `debug_getRawHeader`
      async fn raw_header(&self, block_id: BlockId) -> RpcResult<Bytes> {
-diff --git i/crates/stages/stages/src/stages/execution/mod.rs w/crates/stages/stages/src/stages/execution/mod.rs
+diff --git c/crates/stages/stages/src/stages/execution/mod.rs w/crates/stages/stages/src/stages/execution/mod.rs
 index 61253135c..8c0970fa1 100644
---- i/crates/stages/stages/src/stages/execution/mod.rs
+--- c/crates/stages/stages/src/stages/execution/mod.rs
 +++ w/crates/stages/stages/src/stages/execution/mod.rs
 @@ -352,10 +352,16 @@ where
              // Execute the block

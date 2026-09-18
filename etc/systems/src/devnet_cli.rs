@@ -24,10 +24,47 @@ pub struct DevnetCli {
 /// Supported development network modes.
 #[derive(Debug, Subcommand)]
 pub enum DevnetCommand {
+    /// Start a disposable real L1 and an L2 sequencer plus independent derivation verifier.
+    History(HistoryArgs),
     /// Continue Base snapshot datadirs without an L1.
     Snapshot(SnapshotArgs),
     /// Start a CI-scoped shared L1 and write its runtime manifest.
     SharedL1(SharedL1Args),
+}
+
+/// Arguments for the historical-fork verification network.
+#[derive(Debug, Args)]
+pub struct HistoryArgs {
+    /// L2 block at which Isthmus activates.
+    #[arg(long, default_value_t = 20)]
+    pub isthmus_block: u64,
+    /// Directory in which generated genesis and rollup files are retained.
+    #[arg(long)]
+    pub output_dir: PathBuf,
+    /// Machine-readable endpoint manifest.
+    #[arg(long)]
+    pub runtime_file: PathBuf,
+}
+
+/// Machine-readable state emitted by the real history devnet launcher.
+#[derive(Debug, Serialize)]
+pub struct HistoryRuntime {
+    /// Current launcher state.
+    pub status: &'static str,
+    /// Scheduled Isthmus activation block.
+    pub isthmus_block: u64,
+    /// L1 execution JSON-RPC URL.
+    pub l1_rpc_url: String,
+    /// Sequencer execution JSON-RPC URL.
+    pub builder_rpc_url: String,
+    /// Independent verifier execution JSON-RPC URL.
+    pub verifier_rpc_url: String,
+    /// Sequencer Engine API URL (loopback only).
+    pub builder_engine_url: String,
+    /// Verifier Engine API URL (loopback only).
+    pub verifier_engine_url: String,
+    /// Hex-encoded JWT shared by the two local Engine APIs.
+    pub engine_jwt: String,
 }
 
 /// Arguments for a CI-scoped shared L1 fixture.
@@ -113,9 +150,40 @@ impl DevnetCli {
     /// Runs the selected development network until interrupted.
     pub async fn run(self) -> Result<()> {
         match self.command {
+            DevnetCommand::History(args) => args.run().await,
             DevnetCommand::Snapshot(args) => args.run().await,
             DevnetCommand::SharedL1(args) => args.run().await,
         }
+    }
+}
+
+impl HistoryArgs {
+    /// Starts a dedicated real stack and keeps it alive until interrupted.
+    pub async fn run(self) -> Result<()> {
+        std::fs::create_dir_all(&self.output_dir)?;
+        let stack = SystemTestStackBuilder::new()
+            .with_l1_chain_id(1_337)
+            .with_l2_chain_id(84_539_001)
+            .with_isthmus_activation_block(self.isthmus_block)
+            .with_force_batch_submission()
+            .with_output_dir(self.output_dir)
+            .build()
+            .await?;
+        let l2 = stack.l2_stack();
+        let runtime = HistoryRuntime {
+            status: "ready",
+            isthmus_block: self.isthmus_block,
+            l1_rpc_url: stack.l1_rpc_url().await?.to_string(),
+            builder_rpc_url: l2.rpc_url()?.to_string(),
+            verifier_rpc_url: l2.client_rpc_url()?.to_string(),
+            builder_engine_url: l2.builder().engine_url()?.to_string(),
+            verifier_engine_url: l2.client().engine_url()?.to_string(),
+            engine_jwt: hex::encode(l2.jwt_secret().as_bytes()),
+        };
+        std::fs::write(&self.runtime_file, serde_json::to_vec_pretty(&runtime)?)?;
+        println!("history devnet ready: {}", self.runtime_file.display());
+        tokio::signal::ctrl_c().await.wrap_err("failed to listen for Ctrl-C")?;
+        stack.shutdown().await
     }
 }
 

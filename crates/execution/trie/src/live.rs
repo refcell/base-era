@@ -5,10 +5,10 @@ use std::{sync::Arc, time::Instant};
 use alloy_eips::{BlockNumHash, NumHash, eip1898::BlockWithParent};
 use derive_more::Constructor;
 use reth_evm::{ConfigureEvm, execute::Executor};
-use reth_primitives_traits::{AlloyBlockHeader, BlockTy, NodePrimitives, RecoveredBlock};
+use reth_primitives_traits::{AlloyBlockHeader, BlockTy, HeaderTy, NodePrimitives, RecoveredBlock};
 use reth_provider::{
-    DatabaseProviderFactory, HashedPostStateProvider, StateProviderFactory, StateReader,
-    StateRootProvider,
+    DatabaseProviderFactory, HashedPostStateProvider, HeaderProvider, ProviderError,
+    StateProviderFactory, StateReader, StateRootProvider,
 };
 use reth_revm::database::StateProviderDatabase;
 use reth_trie_common::{HashedPostStateSorted, updates::TrieUpdatesSorted};
@@ -27,7 +27,10 @@ use crate::{
 pub struct LiveTrieCollector<'tx, Evm, Provider, PreimageStore>
 where
     Evm: ConfigureEvm,
-    Provider: StateReader + DatabaseProviderFactory + StateProviderFactory,
+    Provider: StateReader
+        + DatabaseProviderFactory
+        + StateProviderFactory
+        + HeaderProvider<Header = HeaderTy<Evm::Primitives>>,
 {
     evm_config: Evm,
     provider: Provider,
@@ -37,7 +40,10 @@ where
 impl<'tx, Evm, Provider, Store> LiveTrieCollector<'tx, Evm, Provider, Store>
 where
     Evm: ConfigureEvm,
-    Provider: StateReader + DatabaseProviderFactory + StateProviderFactory,
+    Provider: StateReader
+        + DatabaseProviderFactory
+        + StateProviderFactory
+        + HeaderProvider<Header = HeaderTy<Evm::Primitives>>,
     Store: 'tx + BaseProofsStore + Clone + 'static,
 {
     fn record_storage_metrics(
@@ -90,9 +96,16 @@ where
         );
 
         let db = StateProviderDatabase::new(&state_provider);
-        let block_executor = self.evm_config.batch_executor(db);
+        let mut block_executor = self.evm_config.batch_executor(db);
+        let parent = self
+            .provider
+            .header(block.parent_hash())?
+            .ok_or_else(|| ProviderError::HeaderNotFound(block.parent_hash().into()))?;
 
-        let execution_result = block_executor.execute(&(*block).clone())?;
+        let result = block_executor.execute_one_with_parent(block, &parent)?;
+        let mut state = block_executor.into_state();
+        let execution_result =
+            reth_provider::BlockExecutionOutput { state: state.take_bundle(), result };
 
         operation_durations.execution_duration_seconds = start.elapsed();
 
@@ -270,7 +283,10 @@ pub enum BatchBlock<P: NodePrimitives> {
 impl<'tx, Evm, Provider, Store> LiveTrieCollector<'tx, Evm, Provider, Store>
 where
     Evm: ConfigureEvm,
-    Provider: StateReader + DatabaseProviderFactory + StateProviderFactory,
+    Provider: StateReader
+        + DatabaseProviderFactory
+        + StateProviderFactory
+        + HeaderProvider<Header = HeaderTy<Evm::Primitives>>,
     Store: 'tx + BaseProofsBatchStore + Clone + 'static,
 {
     /// Execute and write a batch of blocks inside a single underlying transaction.
@@ -380,9 +396,16 @@ where
         );
 
         let db = StateProviderDatabase::new(&state_provider);
-        let block_executor = self.evm_config.batch_executor(db);
+        let mut block_executor = self.evm_config.batch_executor(db);
+        let parent = self
+            .provider
+            .header(block.parent_hash())?
+            .ok_or_else(|| ProviderError::HeaderNotFound(block.parent_hash().into()))?;
 
-        let execution_result = block_executor.execute(&(*block).clone())?;
+        let result = block_executor.execute_one_with_parent(block, &parent)?;
+        let mut state = block_executor.into_state();
+        let execution_result =
+            reth_provider::BlockExecutionOutput { state: state.take_bundle(), result };
 
         let hashed_state = state_provider.hashed_post_state(&execution_result.state)?;
         let (state_root, trie_updates) =

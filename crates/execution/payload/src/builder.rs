@@ -5,7 +5,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use alloy_consensus::{BlockHeader, Transaction, Typed2718, transaction::TxHashRef};
+use alloy_consensus::{BlockHeader, Transaction, TxReceipt, Typed2718, transaction::TxHashRef};
 use alloy_evm::{
     Evm as AlloyEvm,
     block::{CommitChanges, TxResult},
@@ -407,6 +407,120 @@ impl<Txs> Builder<'_, Txs> {
         // pre-loaded the database will panic when trying to fetch the DA footprint gas
         // scalar.
         db.load_cache_account(Predeploys::L1_BLOCK_INFO).map_err(BlockExecutionError::other)?;
+
+        if std::env::var_os("BASE_HISTORY_MANIFEST").is_some()
+            && !ctx.chain_spec.is_isthmus_active_at_timestamp(ctx.attributes().timestamp())
+        {
+            drop(state_root_handle.take());
+            let mut transactions = ctx
+                .attributes()
+                .sequencer_transactions()
+                .iter()
+                .map(|tx| {
+                    if tx.value().is_eip4844() {
+                        return Err(PayloadBuilderError::other(
+                            BasePayloadBuilderError::BlobTransactionRejected,
+                        ));
+                    }
+                    tx.value().try_clone_into_recovered().map_err(|_| {
+                        PayloadBuilderError::other(
+                            BasePayloadBuilderError::TransactionEcRecoverFailed,
+                        )
+                    })
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let next_env = Evm::NextBlockEnvCtx::build_next_env(
+                ctx.attributes(),
+                ctx.parent(),
+                ctx.chain_spec.as_ref(),
+            )
+            .map_err(PayloadBuilderError::other)?;
+            let env = ctx
+                .evm_config
+                .next_evm_env(ctx.parent(), &next_env)
+                .map_err(PayloadBuilderError::other)?;
+            let base_fee = env.block_env().basefee();
+            let mut outcome = ctx
+                .evm_config
+                .build_block_external(
+                    &mut db,
+                    ctx.parent(),
+                    next_env,
+                    transactions.clone(),
+                    state_provider,
+                )
+                .map_err(|error| PayloadBuilderError::EvmExecutionError(Box::new(error)))?
+                .ok_or_else(|| {
+                    PayloadBuilderError::other(std::io::Error::other(
+                        "historical builder route unavailable",
+                    ))
+                })?;
+            if !ctx.attributes().no_tx_pool() {
+                let mut candidates = best(ctx.best_transaction_attributes(env.block_env()));
+                while let Some(tx) = candidates.next(()) {
+                    if ctx.cancel.is_cancelled() {
+                        return Ok(BuildOutcomeKind::Cancelled);
+                    }
+                    let sender = tx.sender();
+                    let nonce = tx.nonce();
+                    transactions.push(tx.into_consensus());
+                    let saved_bundle = std::mem::take(&mut db.bundle_state);
+                    let attrs = Evm::NextBlockEnvCtx::build_next_env(
+                        ctx.attributes(),
+                        ctx.parent(),
+                        ctx.chain_spec.as_ref(),
+                    )
+                    .map_err(PayloadBuilderError::other)?;
+                    match ctx.evm_config.build_block_external(
+                        &mut db,
+                        ctx.parent(),
+                        attrs,
+                        transactions.clone(),
+                        state_provider,
+                    ) {
+                        Ok(Some(next)) => {
+                            outcome = next;
+                            candidates.mark_current_committed();
+                        }
+                        Err(BlockExecutionError::Validation(_)) => {
+                            transactions.pop();
+                            db.bundle_state = saved_bundle;
+                            candidates.mark_invalid(sender, nonce);
+                        }
+                        Err(error) => {
+                            return Err(PayloadBuilderError::EvmExecutionError(Box::new(error)));
+                        }
+                        Ok(None) => {
+                            return Err(PayloadBuilderError::other(std::io::Error::other(
+                                "historical builder route disappeared",
+                            )));
+                        }
+                    }
+                }
+            }
+            let mut previous_gas = 0;
+            let mut fees = U256::ZERO;
+            for (tx, receipt) in transactions.iter().zip(&outcome.execution_result.receipts) {
+                let gas = receipt.cumulative_gas_used() - previous_gas;
+                previous_gas = receipt.cumulative_gas_used();
+                fees += U256::from(gas)
+                    * U256::from(tx.effective_tip_per_gas(base_fee).unwrap_or_default());
+            }
+            {
+                let BlockBuilderOutcome { block, block_access_list, .. } = outcome;
+                let sealed_block = Arc::new(block.sealed_block().clone());
+                // Force Engine validation of the worker-built candidate instead of the
+                // already-executed payload shortcut.
+                let payload = BaseBuiltPayload::new(
+                    ctx.payload_id(),
+                    sealed_block,
+                    fees,
+                    None,
+                    block_access_list.map(|bal| alloy_rlp::encode(bal).into()),
+                );
+                return Ok(BuildOutcomeKind::Freeze(payload));
+            }
+        }
 
         let mut builder = ctx.block_builder(&mut db)?;
 

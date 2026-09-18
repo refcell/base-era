@@ -7,10 +7,10 @@ repository's migration is not complete until a fresh run here passes too.
 |---|---|---|
 | Source inventory | Orchestrator + inventory agents | Complete: `docs/source-inventory.md` and JSON allowlists |
 | Host and harness migration | Orchestrator | In progress: preserve upstream paths, remove moving patch setup |
-| Frozen worker/reference and reth packaging | Packaging agent | Pending assignment; separate immutable source workspaces |
-| Showcase website | Site agent | Pending assignment; accessible static site and honest evidence-driven claims |
-| Ethereum comparison | Research agent | Pending assignment; distinguish history expiry, state expiry and Era files |
-| Fresh builds and live acceptance | Orchestrator | Pending migrated source |
+| Frozen worker/reference and reth packaging | Packaging agent | Integrated; worker release build and 15 subprocess tests passed; reference lock normalization in progress |
+| Showcase website | Site agent | Static draft integrated; source-spike results explicitly labeled, full-page visual/interaction verification pending |
+| Ethereum comparison | Research agent | Sourced comparison integrated; site wording reconciliation pending |
+| Fresh builds and live acceptance | Orchestrator | Fresh host, reference and worker builds running from this checkout |
 | Independent correctness/reproducibility review | Review agent | Pending integrated implementation and fresh evidence |
 | GitHub Pages and release publication | Orchestrator | Pending verified demo, site inspection and artifact provenance |
 

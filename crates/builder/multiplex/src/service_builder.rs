@@ -101,7 +101,10 @@ where
         let mut builder_config = self.builder_config.clone();
         builder_config.state_provider_metrics = ctx.config().engine.state_provider_metrics;
 
-        if !self.routing_config.cutover_enabled && !self.basic_only {
+        if !self.routing_config.cutover_enabled
+            && !self.basic_only
+            && std::env::var_os("BASE_HISTORY_MANIFEST").is_none()
+        {
             return FlashblocksServiceBuilder::new(builder_config)
                 .spawn_payload_builder_service(ctx, pool, evm_config)
                 .await;

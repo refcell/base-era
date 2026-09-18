@@ -18,6 +18,7 @@ reth-storage-errors.workspace = true
 reth-execution-types.workspace = true
 reth-execution-errors.workspace = true
 reth-primitives-traits.workspace = true
+reth-storage-api = { workspace = true, optional = true }
 
 reth-rpc-eth-api = { workspace = true, optional = true }
 
@@ -34,6 +35,11 @@ base-common-rpc-types-engine = { workspace = true, features = ["reth"] }
 
 base-execution-chainspec.workspace = true
 base-execution-consensus.workspace = true
+base-execution-history = { workspace = true, optional = true }
+base-common-genesis = { workspace = true, optional = true }
+alloy-rlp = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+hex = { workspace = true, optional = true }
 
 # revm
 revm.workspace = true
@@ -51,6 +57,7 @@ base-common-consensus = { workspace = true, features = ["arbitrary"] }
 
 [features]
 default = [ "metrics", "std" ]
+history = [ "std", "dep:base-execution-history", "dep:base-common-genesis", "dep:alloy-rlp", "dep:serde_json", "dep:hex", "dep:reth-storage-api" ]
 metrics = [ "base-common-evm/metrics", "reth-evm/metrics" ]
 std = [
 	"alloy-consensus/std",

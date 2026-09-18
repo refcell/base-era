@@ -3,7 +3,7 @@
 use std::{path::PathBuf, sync::Arc};
 
 use alloy_consensus::Header;
-use alloy_primitives::{B256, Bytes, Sealable};
+use alloy_primitives::{Address, B256, Bytes, Sealable, address, keccak256};
 use alloy_provider::{Provider, RootProvider, network::primitives::BlockTransactions};
 use alloy_rlp::Decodable;
 use alloy_rpc_client::RpcClient;
@@ -87,6 +87,36 @@ pub struct ExecutorTestFixtureCreator {
     pub data_dir: PathBuf,
 }
 
+/// The preimages returned by Reth's `debug_executionWitness` RPC method.
+#[derive(Debug, Deserialize)]
+pub struct ExecutionWitness {
+    /// Hashed trie node preimages.
+    pub state: Vec<Bytes>,
+    /// Contract bytecode preimages.
+    pub codes: Vec<Bytes>,
+    /// Unhashed addresses and storage slots touched during execution.
+    pub keys: Vec<Bytes>,
+    /// RLP-encoded block headers used by execution.
+    pub headers: Vec<Bytes>,
+}
+
+/// The portion of an `eth_getProof` response needed to supplement witness boundary nodes.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountProof {
+    /// Account trie proof nodes.
+    pub account_proof: Vec<Bytes>,
+    /// Storage trie proofs.
+    pub storage_proof: Vec<StorageProof>,
+}
+
+/// A storage proof from `eth_getProof`.
+#[derive(Debug, Deserialize)]
+pub struct StorageProof {
+    /// Storage trie proof nodes.
+    pub proof: Vec<Bytes>,
+}
+
 impl ExecutorTestFixtureCreator {
     /// Creates a new [`ExecutorTestFixtureCreator`] with the given parameters.
     pub fn new(provider_url: &str, block_number: u64, base_fixture_directory: PathBuf) -> Self {
@@ -113,6 +143,11 @@ impl ExecutorTestFixtureCreator {
         let rollup_config =
             base_common_chains::rollup_config!(chain_id).expect("Rollup config not found");
 
+        self.create_static_fixture_with_rollup_config(rollup_config).await;
+    }
+
+    /// Create a static test fixture using an explicitly supplied rollup configuration.
+    pub async fn create_static_fixture_with_rollup_config(self, rollup_config: RollupConfig) {
         let executing_block = self
             .provider
             .get_block_by_number(self.block_number.into())
@@ -213,6 +248,71 @@ impl ExecutorTestFixtureCreator {
         // Remove the leftover directory.
         fs::remove_dir_all(data_dir).await.expect("Failed to remove temporary directory");
     }
+
+    /// Create a fixture after seeding the local store from Reth's execution witness RPC.
+    pub async fn create_static_fixture_from_execution_witness(self, rollup_config: RollupConfig) {
+        const L2_TO_L1_MESSAGE_PASSER: Address =
+            address!("4200000000000000000000000000000000000016");
+
+        let store = self.kv_store.lock().await;
+        for block_number in [self.block_number - 1, self.block_number] {
+            let witness: ExecutionWitness = self
+                .provider
+                .client()
+                .request("debug_executionWitness", &[format!("0x{block_number:x}")])
+                .await
+                .expect("Failed to fetch execution witness");
+            for preimage in witness.state.iter().chain(&witness.codes).chain(&witness.headers) {
+                store
+                    .put(keccak256(preimage), preimage)
+                    .expect("Failed to store execution witness preimage");
+            }
+            let mut addresses = witness
+                .keys
+                .iter()
+                .filter(|key| key.len() == 20)
+                .map(|key| Address::from_slice(key))
+                .collect::<Vec<_>>();
+            // The payload builder reads the message passer outside EVM execution to derive the
+            // Isthmus withdrawals root, so Reth does not report it in the witness key trace. Its
+            // account path can contain untouched state-trie siblings needed while sealing.
+            addresses.push(L2_TO_L1_MESSAGE_PASSER);
+            addresses.sort_unstable();
+            addresses.dedup();
+
+            let mut slots = witness
+                .keys
+                .iter()
+                .filter(|key| key.len() == 32)
+                .map(|key| B256::from_slice(key))
+                .collect::<Vec<_>>();
+            slots.extend([B256::ZERO, B256::with_last_byte(1)]);
+            slots.sort_unstable();
+            slots.dedup();
+
+            for address in addresses {
+                let proof: AccountProof = self
+                    .provider
+                    .client()
+                    .request("eth_getProof", (address, &slots, format!("0x{block_number:x}")))
+                    .await
+                    .expect("Failed to fetch account proof");
+                for preimage in proof.account_proof {
+                    store
+                        .put(keccak256(&preimage), preimage)
+                        .expect("Failed to store account proof preimage");
+                }
+                for preimage in proof.storage_proof.into_iter().flat_map(|proof| proof.proof) {
+                    store
+                        .put(keccak256(&preimage), preimage)
+                        .expect("Failed to store storage proof preimage");
+                }
+            }
+        }
+        drop(store);
+
+        self.create_static_fixture_with_rollup_config(rollup_config).await;
+    }
 }
 
 impl TrieProvider for ExecutorTestFixtureCreator {
@@ -222,12 +322,22 @@ impl TrieProvider for ExecutorTestFixtureCreator {
         // Fetch the preimage from the L2 chain provider.
         let preimage: Bytes = tokio::task::block_in_place(move || {
             Handle::current().block_on(async {
-                let preimage: Bytes = self
-                    .provider
-                    .client()
-                    .request("debug_dbGet", &[key])
+                if let Some(preimage) = self
+                    .kv_store
+                    .lock()
                     .await
-                    .map_err(|_| TestTrieNodeProviderError::PreimageNotFound)?;
+                    .get(key)
+                    .map_err(|_| TestTrieNodeProviderError::KVStore)?
+                {
+                    return Ok(Bytes::from(preimage));
+                }
+                tracing::debug!(%key, "execution witness missing trie node preimage");
+                let preimage: Bytes =
+                    self.provider
+                        .client()
+                        .request("debug_dbGet", &[key])
+                        .await
+                        .map_err(|_| TestTrieNodeProviderError::TrieNodeNotFound(key))?;
 
                 self.kv_store
                     .lock()
@@ -252,6 +362,15 @@ impl TrieDBProvider for ExecutorTestFixtureCreator {
         // Fetch the preimage from the L2 chain provider.
         let preimage: Bytes = tokio::task::block_in_place(move || {
             Handle::current().block_on(async {
+                if let Some(code) = self
+                    .kv_store
+                    .lock()
+                    .await
+                    .get(hash)
+                    .map_err(|_| TestTrieNodeProviderError::KVStore)?
+                {
+                    return Ok(Bytes::from(code));
+                }
                 // Attempt to fetch the code from the L2 chain provider.
                 let code_hash = [&[CODE_PREFIX], hash.as_slice()].concat();
                 let code = self
@@ -364,6 +483,9 @@ impl TrieDBProvider for DiskTrieNodeProvider {
 /// An error type for the [`DiskTrieNodeProvider`] and [`ExecutorTestFixtureCreator`].
 #[derive(Debug, thiserror::Error)]
 pub enum TestTrieNodeProviderError {
+    /// A trie node was absent from both the witness and fallback RPC.
+    #[error("Trie node preimage not found: {0}")]
+    TrieNodeNotFound(B256),
     /// The preimage was not found in the key-value store.
     #[error("Preimage not found")]
     PreimageNotFound,

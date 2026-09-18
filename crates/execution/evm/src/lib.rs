@@ -27,3 +27,8 @@ pub use l1::*;
 
 mod receipts;
 pub use receipts::*;
+
+#[cfg(feature = "history")]
+mod history;
+#[cfg(feature = "history")]
+pub use history::HistoricalExecution;

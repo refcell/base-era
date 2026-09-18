@@ -16,12 +16,12 @@ use testcontainers::{
 
 use crate::config::{BATCHER, BUILDER, CHALLENGER, DEPLOYER, PROPOSER, SEQUENCER};
 
-const SETUP_IMAGE_NAME: &str = "devnet-setup";
+const SETUP_IMAGE_NAME: &str = "base-era-setup";
 // Bump this interface version when cached setup images can no longer serve callers.
-// v2 invokes the integrated offline generator as `op-deployer` without a subcommand.
-const SETUP_IMAGE_TAG: &str = "local-v2";
-const SETUP_IMAGE_REFERENCE: &str = "devnet-setup:local-v2";
-const SETUP_IMAGE_BUILD_LOCK_DIR: &str = "base-system-test-setup-image-build.lock";
+// v1 applies custom fork schedules before generating the L2 allocation and genesis header.
+const SETUP_IMAGE_TAG: &str = "local-v1";
+const SETUP_IMAGE_REFERENCE: &str = "base-era-setup:local-v1";
+const SETUP_IMAGE_BUILD_LOCK_DIR: &str = "base-era-setup-image-build.lock";
 const SETUP_IMAGE_BUILD_LOCK_TIMEOUT: Duration = Duration::from_secs(600);
 const SETUP_IMAGE_BUILD_LOCK_POLL_INTERVAL: Duration = Duration::from_millis(500);
 const SETUP_DOCKERFILE_PATH: &str = "etc/docker/Dockerfile.devnet";

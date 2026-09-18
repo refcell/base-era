@@ -261,6 +261,38 @@ where
                 .await
                 .map_err(EthApiError::from)?;
             let db = StateProviderDatabase::new(&state_provider);
+
+            if this.eth_api.evm_config().uses_external_execution(block.header()) {
+                let parent = this
+                    .eth_api
+                    .provider()
+                    .header(block.parent_hash())
+                    .map_err(EthApiError::from)?
+                    .ok_or(EthApiError::HeaderNotFound(block.parent_hash().into()))?;
+                let mut db = State::builder().with_database(db).with_bundle_update().build();
+                let output = this
+                    .eth_api
+                    .evm_config()
+                    .execute_block_external(&mut db, &block, Some(&parent))
+                    .map_err(EthApiError::from)?
+                    .ok_or_else(|| {
+                        EthApiError::Internal(reth_errors::RethError::msg(
+                            "external execution route returned no result",
+                        ))
+                    })?;
+                db.bundle_state = output.state;
+
+                return ExecutionWitnessRecord::new(&db)
+                    .into_execution_witness(
+                        &db.database.0,
+                        self.inner.eth_api.provider(),
+                        block_number,
+                        ExecutionWitnessMode::default(),
+                    )
+                    .map_err(EthApiError::from)
+                    .map_err(Into::into);
+            }
+
             let block_executor = this.eth_api.evm_config().executor(db);
 
             let mut witness = None;

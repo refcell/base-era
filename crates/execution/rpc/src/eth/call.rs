@@ -9,14 +9,18 @@ use alloy_primitives::{B256, U256};
 use alloy_rpc_types_eth::{
     BlockId, BlockOverrides,
     simulate::{SimBlock, SimulatePayload, SimulatedBlock},
+    state::EvmOverrides,
 };
-use base_common_chains::BaseUpgrade;
+use base_common_chains::{BaseUpgrade, Upgrades};
 use reth_chainspec::{ChainSpecProvider, EthChainSpec, EthereumHardforks, Hardforks};
 use reth_errors::RethError;
 use reth_evm::{ConfigureEvm, Evm, execute::BlockBuilder};
+use reth_node_api::NodePrimitives;
 use reth_primitives_traits::SealedHeader;
 use reth_revm::{database::StateProviderDatabase, db::State};
 use reth_rpc_convert::RpcTxReq;
+#[cfg(feature = "history")]
+use reth_rpc_eth_api::helpers::LoadTransaction;
 use reth_rpc_eth_api::{
     EthApiTypes, FromEvmError, RpcBlock, RpcConvert,
     helpers::{
@@ -29,8 +33,19 @@ use reth_rpc_eth_types::{
     error::{AsEthApiError, FromEthApiError},
     simulate::{self, EthSimulateError},
 };
+#[cfg(feature = "history")]
+use reth_storage_api::HeaderProvider;
 use revm::{context::Block, context_interface::Cfg};
 use revm_inspectors::transfer::TransferInspector;
+#[cfg(feature = "history")]
+use {
+    base_common_evm::BaseSpecId,
+    base_common_genesis::BaseUpgrade as GenesisUpgrade,
+    base_execution_chainspec::BaseChainSpec,
+    base_execution_history::HistoryWorker,
+    serde_json::json,
+    std::sync::atomic::{AtomicU64, Ordering},
+};
 
 use crate::{BaseEthApi, BaseEthApiError, eth::RpcNodeCore};
 
@@ -39,7 +54,162 @@ where
     N: RpcNodeCore,
     BaseEthApiError: FromEvmError<N::Evm>,
     Rpc: RpcConvert<Primitives = N::Primitives, Error = BaseEthApiError, Evm = N::Evm>,
+    N::Primitives: NodePrimitives<BlockHeader = alloy_consensus::Header>,
+    <N::Provider as ChainSpecProvider>::ChainSpec: Upgrades,
 {
+    #[cfg(feature = "history")]
+    async fn historical_debug_rpc(
+        &self,
+        method: &str,
+        mut params: Vec<serde_json::Value>,
+        block: Option<BlockId>,
+        transaction: Option<B256>,
+    ) -> Result<Option<serde_json::Value>, Self::Error> {
+        #[cfg(feature = "history")]
+        {
+            let (block, state_hash) = if let Some(hash) = transaction {
+                let Some((transaction, block)) = self.transaction_and_block(hash).await? else {
+                    return Ok(None);
+                };
+                if !historical_selected(self.provider().chain_spec().as_ref(), block.header()) {
+                    return Ok(None);
+                }
+                let (_, info) = transaction.split();
+                let index = info.index.ok_or(EthApiError::TracingTransactionNotFound)?;
+                params.insert(0, serde_json::Value::from(index));
+                let parent_hash = block.parent_hash();
+                (block, parent_hash)
+            } else {
+                let at = block.unwrap_or_default();
+                if at.is_pending() {
+                    return Ok(None);
+                }
+                let Some(block) = self.recovered_block(at).await? else { return Ok(None) };
+                if !historical_selected(self.provider().chain_spec().as_ref(), block.header()) {
+                    return Ok(None);
+                }
+                let state_hash = if method == "debug_traceCall" {
+                    block.hash()
+                } else {
+                    if block.number() == 0 {
+                        return Err(EthApiError::GenesisNotTraceable.into());
+                    }
+                    block.parent_hash()
+                };
+                (block, state_hash)
+            };
+
+            if block.number() == 0 && method != "debug_traceCall" {
+                return Err(EthApiError::GenesisNotTraceable.into());
+            }
+            let state_header = if state_hash == block.hash() {
+                block.header().clone()
+            } else {
+                self.provider()
+                    .header(state_hash)?
+                    .ok_or(EthApiError::HeaderNotFound(state_hash.into()))?
+            };
+            let block_rlp = (method != "debug_traceCall").then(|| {
+                format!(
+                    "0x{}",
+                    alloy_primitives::hex::encode(alloy_rlp::encode(
+                        block.as_ref().clone().into_block()
+                    ))
+                )
+            });
+            let method = method.to_owned();
+            let era =
+                BaseSpecId::from_header(self.provider().chain_spec().as_ref(), block.header())
+                    .to_string()
+                    .to_ascii_lowercase();
+            return self
+                .spawn_with_state_at_block(state_hash, move |this, mut db| {
+                    historical_rpc_raw(
+                        this.provider().chain_spec().as_ref(),
+                        &state_header,
+                        era,
+                        &method,
+                        params,
+                        block_rlp.unwrap_or_default(),
+                        this.call_gas_limit(),
+                        &mut db,
+                    )
+                    .map(Some)
+                })
+                .await;
+        }
+        #[cfg(not(feature = "history"))]
+        {
+            let _ = (method, params, block, transaction);
+            Ok(None)
+        }
+    }
+
+    async fn estimate_gas_at(
+        &self,
+        request: RpcTxReq<<Self::RpcConvert as RpcConvert>::Network>,
+        at: BlockId,
+        overrides: EvmOverrides,
+    ) -> Result<U256, Self::Error> {
+        #[cfg(feature = "history")]
+        if !at.is_pending()
+            && let Some(block) = self.recovered_block(at).await?
+            && historical_selected(self.provider().chain_spec().as_ref(), block.header())
+        {
+            let block_hash = block.hash();
+            let header = block.header().clone();
+            return self
+                .spawn_with_state_at_block(block_hash, move |this, mut db| {
+                    historical_rpc(
+                        this.provider().chain_spec().as_ref(),
+                        &header,
+                        "eth_estimateGas",
+                        request,
+                        overrides,
+                        this.call_gas_limit(),
+                        &mut db,
+                    )
+                })
+                .await;
+        }
+
+        EstimateCall::estimate_gas_at(self, request, at, overrides).await
+    }
+
+    async fn call(
+        &self,
+        request: RpcTxReq<<Self::RpcConvert as RpcConvert>::Network>,
+        block: Option<BlockId>,
+        overrides: EvmOverrides,
+    ) -> Result<alloy_primitives::Bytes, Self::Error> {
+        let at = block.unwrap_or_default();
+        #[cfg(feature = "history")]
+        if !at.is_pending()
+            && let Some(block) = self.recovered_block(at).await?
+            && historical_selected(self.provider().chain_spec().as_ref(), block.header())
+        {
+            let block_hash = block.hash();
+            let header = block.header().clone();
+            return self
+                .spawn_with_state_at_block(block_hash, move |this, mut db| {
+                    historical_rpc(
+                        this.provider().chain_spec().as_ref(),
+                        &header,
+                        "eth_call",
+                        request,
+                        overrides,
+                        this.call_gas_limit(),
+                        &mut db,
+                    )
+                })
+                .await;
+        }
+
+        let _permit = self.acquire_owned_blocking_io().await;
+        let result = self.transact_call_at(request, at, overrides).await?;
+        Self::Error::ensure_success(result.result)
+    }
+
     async fn simulate_v1(
         &self,
         payload: SimulatePayload<RpcTxReq<<Self::RpcConvert as RpcConvert>::Network>>,
@@ -244,6 +414,102 @@ where
         })
         .await
     }
+}
+
+#[cfg(feature = "history")]
+fn historical_selected(spec: &impl Upgrades, header: &alloy_consensus::Header) -> bool {
+    std::env::var_os("BASE_HISTORY_MANIFEST").is_some()
+        && !spec.is_isthmus_active_at_timestamp(header.timestamp)
+}
+
+#[cfg(feature = "history")]
+fn historical_rpc<T, DB, S, R>(
+    spec: &S,
+    header: &alloy_consensus::Header,
+    method: &'static str,
+    request: T,
+    overrides: EvmOverrides,
+    call_gas_limit: u64,
+    db: &mut DB,
+) -> Result<R, BaseEthApiError>
+where
+    T: serde::Serialize,
+    DB: revm::Database,
+    DB::Error: std::fmt::Display,
+    S: reth_chainspec::EthChainSpec<Header = alloy_consensus::Header> + Upgrades,
+    R: serde::de::DeserializeOwned,
+{
+    let value = historical_rpc_raw(
+        spec,
+        header,
+        BaseSpecId::from_header(spec, header).to_string().to_ascii_lowercase(),
+        method,
+        vec![
+            serde_json::to_value(request).map_err(|_| EthApiError::InternalEthError)?,
+            serde_json::to_value(overrides.state).map_err(|_| EthApiError::InternalEthError)?,
+            serde_json::to_value(overrides.block).map_err(|_| EthApiError::InternalEthError)?,
+        ],
+        String::new(),
+        call_gas_limit,
+        db,
+    )?;
+    serde_json::from_value(value).map_err(|_| EthApiError::InternalEthError.into())
+}
+
+#[cfg(feature = "history")]
+fn historical_rpc_raw<DB, S>(
+    spec: &S,
+    header: &alloy_consensus::Header,
+    era: String,
+    method: &str,
+    params: Vec<serde_json::Value>,
+    block_rlp: String,
+    call_gas_limit: u64,
+    db: &mut DB,
+) -> Result<serde_json::Value, BaseEthApiError>
+where
+    DB: revm::Database,
+    DB::Error: std::fmt::Display,
+    S: reth_chainspec::EthChainSpec<Header = alloy_consensus::Header> + Upgrades,
+{
+    let manifest = std::env::var_os("BASE_HISTORY_MANIFEST")
+        .ok_or_else(|| BaseEthApiError::Eth(EthApiError::InternalEthError))?;
+    let worker = HistoryWorker::from_manifest(manifest)?;
+    let frozen = BaseChainSpec::try_from_genesis(
+        serde_json::from_value(worker.manifest.genesis.clone())
+            .map_err(|_| EthApiError::InternalEthError)?,
+    )
+    .map_err(|_| EthApiError::InternalEthError)?;
+    if frozen.genesis_hash() != spec.genesis_hash()
+        || frozen.chain().id() != spec.chain().id()
+        || GenesisUpgrade::EXECUTION_VARIANTS
+            .iter()
+            .any(|fork| frozen.fork_condition(*fork) != spec.fork_condition(*fork))
+    {
+        return Err(EthApiError::InternalEthError.into());
+    }
+
+    static NEXT_REQUEST: AtomicU64 = AtomicU64::new(1);
+    let request_id = format!(
+        "{}-{}-{}",
+        std::process::id(),
+        NEXT_REQUEST.fetch_add(1, Ordering::Relaxed),
+        header.hash_slow()
+    );
+    let operation = json!({
+        "method": method,
+        "params": params,
+        "call_gas_limit": call_gas_limit,
+    });
+    let value = worker.rpc(
+        request_id,
+        era,
+        format!("0x{}", alloy_primitives::hex::encode(alloy_rlp::encode(header))),
+        block_rlp,
+        operation,
+        db,
+    )?;
+    Ok(value)
 }
 
 impl<N, Rpc> EstimateCall for BaseEthApi<N, Rpc>
