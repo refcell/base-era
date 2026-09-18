@@ -18,8 +18,12 @@ repository contains the selected host source, independently frozen historical/re
 vendored reth, and the devnet harness—no enclosing Base checkout or moving patch overlay required.
 
 [Explore the showcase](https://refcell.github.io/base-era/) · [Read the report](docs/history-spike.md)
-· [Inspect the evidence](etc/history-devnet/evidence/final/) ·
+· [Inspect the evidence](etc/history-devnet/evidence/optimized/) ·
 [Review the integration diff](https://github.com/refcell/base-era/compare/00cca4b99fad0c68901521cedd32b5a13d283c21...main)
+
+Historical calls now take **10.53 ms instead of 2.34 s (223× faster)**; estimation improves **254×**.
+These gains combine persistent isolated workers, configuration caching and optimized compilation.
+The optimized in-process reference is still faster. See [measurements and limitations](docs/history-performance.md).
 
 ## Run it
 
@@ -79,8 +83,8 @@ implementations.
 - Native stateless execution matched the full headers for blocks 19–21.
 - Host and worker built with separate lockfiles and different resolved dependency versions.
 
-The final local run recorded 95 replay/validation/RPC checks, six import checks, seven
-failure/recovery scenarios, 11 host tests, 15 worker subprocess tests and nine artifact-integrity
+The optimized local run recorded 95 replay/validation/RPC checks, six import checks, nine
+failure/recovery scenarios, 13 host tests, 18 worker subprocess tests and nine artifact-integrity
 tests passing. These are local results, not GitHub CI results. Portable evidence binds each stage
 to its tested executable hashes and approved configuration; an independent reviewer checked the
 results, routing, failure causality and publication safety.
@@ -93,8 +97,8 @@ results, routing, failure causality and publication safety.
 - Native stateless parity is not a zkVM proof. Guest execution and verifier authorization need
   separate work.
 - The worker supports specific historical RPC operations and tracers, not every simulation API.
-- Historical calls in the unoptimized migrated run took roughly 2.34 seconds versus 1.93 milliseconds in
-  the reference. Repeated genesis/configuration processing and per-request processes need work.
+- Warm historical calls take 10.53 ms versus 0.207 ms in the optimized reference. Cold initialization
+  takes 164 ms; per-operation artifact verification and serialized state reads remain costs.
 - The tested isolation mechanism requires Linux with Landlock ABI 3+ and seccomp.
 
 ## Upstream inputs

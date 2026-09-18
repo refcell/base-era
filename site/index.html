@@ -43,7 +43,7 @@
             >Technical report ↗</a
           >
           <a
-            href="https://github.com/refcell/base-era/tree/main/etc/history-devnet/evidence/final"
+            href="https://github.com/refcell/base-era/tree/main/etc/history-devnet/evidence/optimized"
             >Raw evidence ↗</a
           >
           <a
@@ -84,11 +84,15 @@
         </table>
         <p class="note" id="measurement-note"></p>
         <p class="bottleneck">
-          <strong>Historical execution is unoptimized.</strong> Each operation
-          spawns a worker and repeatedly processes a ~9 MB
-          genesis/configuration. Twelve parent-state reads per measured request;
-          2,550–2,562 bytes of read requests (not total traffic). Bare worker
-          startup + protocol parse: 0.708 ms.
+          <strong>223× faster historical calls; 254× faster estimation.</strong>
+          Versus the original debug-build demo, including optimized compilation.
+          Persistent isolated workers cache configuration, never execution
+          state; warm request frames shrink from 9.37 MB to 2 KB. Calls remain
+          51× slower than the optimized in-process reference.
+          <a
+            href="https://github.com/refcell/base-era/blob/main/docs/history-performance.md"
+            >Measurements + limits ↗</a
+          >
         </p>
       </section>
 
@@ -135,8 +139,9 @@
           </div>
           <ul class="technical-list">
             <li>
-              <strong>Protocol:</strong> serialized requests bind chain/config,
-              parent, candidate, operation and artifact digest.
+              <strong>Protocol v2:</strong> reusable sessions; every request
+              binds chain/config, parent, candidate, operation and artifact
+              digest.
             </li>
             <li>
               <strong>State:</strong> immutable parent reads in;
@@ -156,7 +161,7 @@
         <p class="note">
           Coverage: sequencer/verifier parity, restart, cross-cutover reorgs,
           malformed Engine/import blocks, historical calls/estimates/traces and
-          worker failure recovery. Additional tests: 11 host, 15 worker, 9
+          worker failure recovery. Additional tests: 13 host, 18 worker, 9
           artifact-integrity.
         </p>
       </section>

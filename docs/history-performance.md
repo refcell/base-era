@@ -18,6 +18,38 @@ The historical worker still has its independent release build, lockfile, and div
 **Any speedup against the original demo includes both optimized compilation and session reuse.**
 It must not be presented as the isolated effect of process reuse.
 
+## Results (September 18, 2026)
+
+Fresh acceptance ran from clean committed source
+[`b346294`](https://github.com/refcell/base-era/commit/b346294b662fc29a872d8d65af664d580761fa18).
+The [optimized evidence](../etc/history-devnet/evidence/optimized/) preserves artifact hashes,
+configuration identity, sample distributions, routing and failure verdicts. The independent review
+checked these against the raw run, including exact reference outputs and reused worker PIDs.
+
+| Measurement | Original demo | Optimized session | Improvement |
+|---|---:|---:|---:|
+| Historical call, warm median | 2343.979 ms | 10.527 ms | 223× |
+| Historical gas estimate, warm median | 2599.164 ms | 10.222 ms | 254× |
+| Import 22 blocks | 49.409 s | 0.652 s | 75.8× |
+
+The optimized in-process reference measured **0.207 ms** for historical calls and **0.248 ms** for
+estimation. Isolation still costs roughly **51× / 41×** on these tiny workloads. This is not parity
+with in-process latency and is not an EVM computation speedup.
+
+The first historical call in a fresh host/worker took **164.419 ms**; warm call p95 was **12.668 ms**.
+The first estimate ran after the call workload and is therefore **not** a cold session. One worker
+PID served all **42** historical benchmark operations. Initialization sent **9,372,216 bytes**;
+the next call sent **2,000 bytes**, with 12 state reads and 2,598 bytes of read-request frames.
+These are directional frame counts, not total bidirectional traffic. Warm worker exchange took
+about **0.6 ms**; most remaining wall time is host-side artifact/configuration handling.
+
+Host CPU was **0.625 s**, with **226,592 KiB** peak RSS for the full benchmark. The persistent
+worker separately reported **0.090 s** CPU, **44,024 KiB** current RSS and **51,136 KiB** peak RSS.
+Reference host CPU was **0.442 s**, peak RSS **160,088 KiB**. The standalone startup/unsupported
+request probe took **6.614 ms**, now including the worker's executable self-hash. Node readiness
+was **107.605 ms** for the history host and **509.259 ms** for the reference; these single startup
+observations are not stable throughput estimates.
+
 ## Verification board
 
 | Responsibility | Status |
@@ -27,7 +59,7 @@ It must not be presented as the isolated effect of process reuse.
 | Worker/protocol | Immutable initialized configuration; fresh state and read sequence per operation |
 | Independent review | Fixed artifact check before queueing; strengthened state-isolation test; bound malformed block verdict |
 | Unit/subprocess tests | 13 host, 18 worker and 9 integrity tests pass |
-| Optimized devnet acceptance and measurements | Pending fresh integrated run |
+| Optimized devnet acceptance and measurements | 95 replay/validation/RPC, 6 import, 9 failures pass; native blocks 19–21 match |
 
 The unchanged reth integration remains 13 files (+300/−42); this performance change does not alter
 reth or the frozen historical implementation sources. The new tests cover session initialization,
@@ -52,4 +84,11 @@ concurrency; this is not yet a production-sized worker pool.
 CPU and peak RSS from `wait4` cover the host and only descendants it reaped. A separate `/proc`
 snapshot records persistent worker CPU, current RSS and peak RSS before shutdown. Do not sum RSS
 peaks or claim host-only `wait4` figures include all persistent-worker cost. Small 22-block import
-timings include node initialization and are not steady-state large-chain replay throughput.
+timings include import-process startup (database initialization is separately timed) and are not
+steady-state large-chain replay throughput.
+
+The accepted network is left running in `target/demo-performance` (launcher PID 514236): builder
+`http://127.0.0.1:46593/`, verifier `http://127.0.0.1:34901/`, L1 `http://localhost:35240/`.
+These are local-only, ephemeral endpoints. Inspect/stop with
+`BASE_ERA_RUN_DIR="$PWD/target/demo-performance" ./demo status` or `./demo stop` using the same
+environment variable. Restart using a fresh directory and the build/start/exercise commands above.

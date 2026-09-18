@@ -1,7 +1,7 @@
 {
   "provenance": {
     "status": "migrated-pass",
-    "label": "Migrated demo acceptance",
+    "label": "Optimized session acceptance",
     "date": "2026-09-18",
     "checkoutStatus": "Passed from a clean Base Era source checkout",
     "environment": "AMD Ryzen AI MAX+ 395 · x86-64 Linux · kernel 7.1.8 · Rust 1.96.0"
@@ -13,7 +13,7 @@
       "detail": "PASS · 0 fail · 0 skip"
     },
     { "value": "6", "label": "import checks", "detail": "PASS" },
-    { "value": "7", "label": "failure + recovery scenarios", "detail": "PASS" },
+    { "value": "9", "label": "failure + recovery scenarios", "detail": "PASS" },
     {
       "value": "19–21",
       "label": "native stateless parity",
@@ -21,48 +21,48 @@
     }
   ],
   "latency": {
-    "workerMs": 2343.979,
-    "referenceMs": 1.927,
+    "workerMs": 10.527,
+    "referenceMs": 0.207,
     "label": "Repeated historical eth_call median",
-    "note": "Migrated run · debug host/reference; release worker. Five samples after the first request; OS page cache retained."
+    "note": "Optimized host/reference; release worker. 20 warm samples; OS page cache retained. CPU/RSS: host wait4; persistent worker separately used 0.090 s CPU / 51,136 KiB peak RSS (not summed)."
   },
   "performance": [
     {
       "metric": "Historical eth_call · median",
-      "host": "2343.979 ms",
-      "reference": "1.927 ms",
+      "host": "10.527 ms",
+      "reference": "0.207 ms",
       "historical": true
     },
     {
       "metric": "Historical estimateGas · median",
-      "host": "2599.164 ms",
-      "reference": "2.102 ms",
+      "host": "10.222 ms",
+      "reference": "0.248 ms",
       "historical": true
     },
     {
       "metric": "Current eth_call · median",
-      "host": "2.137 ms",
-      "reference": "2.159 ms"
+      "host": "0.291 ms",
+      "reference": "0.180 ms"
     },
     {
       "metric": "Import · blocks 1–22",
-      "host": "0.445 blk/s",
-      "reference": "16.224 blk/s"
+      "host": "33.742 blk/s",
+      "reference": "86.614 blk/s"
     },
     {
-      "metric": "Node readiness",
-      "host": "1453.390 ms",
-      "reference": "2306.753 ms"
+      "metric": "Historical eth_call · cold process",
+      "host": "164.419 ms",
+      "reference": "3.055 ms"
     },
     {
-      "metric": "Benchmark CPU · user + system",
-      "host": "31.083 s",
-      "reference": "2.280 s"
+      "metric": "Host CPU · user + system",
+      "host": "0.625 s",
+      "reference": "0.442 s"
     },
     {
-      "metric": "Benchmark peak RSS",
-      "host": "333572 KiB",
-      "reference": "247688 KiB"
+      "metric": "Host peak RSS",
+      "host": "226592 KiB",
+      "reference": "160088 KiB"
     }
   ]
 }

@@ -50,16 +50,16 @@ running network using `target/debug/examples/fixture run <archive>`. Run
 suite, and `python3 etc/history-devnet/collect.py "$RUN" --output "$RUN/portable-evidence"` to
 collect shareable results without Engine credentials.
 
-The accepted devnet remains running at `target/demo-publication`. Operate that exact run with:
+The optimized accepted devnet remains running at `target/demo-performance`. Operate that exact run with:
 
 ```sh
-export BASE_ERA_RUN_DIR="$PWD/target/demo-publication"
+export BASE_ERA_RUN_DIR="$PWD/target/demo-performance"
 ./demo status
 ./demo stop
 ```
 
 The pipeline freezes each stage's artifacts before testing, and the collector joins and verifies
-their hashes in [`provenance.json`](../etc/history-devnet/evidence/final/provenance.json). Never
+their hashes in [`provenance.json`](../etc/history-devnet/evidence/optimized/provenance.json). Never
 publish the Engine JWT. Runtime image tags and package fetches make the process neither bit
 reproducible nor hermetic: cold builds require tools, images, and downloads. No release binaries are
 published.

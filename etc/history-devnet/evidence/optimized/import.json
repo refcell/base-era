@@ -1,0 +1,115 @@
+{
+  "output": "/home/refcell/dev/base-era/target/demo-performance/import-evidence",
+  "tests": [
+    {
+      "test": "host-history-host-node canonical full-state import",
+      "result": "PASS",
+      "init_exit": 0,
+      "import_exit": 0,
+      "init_seconds": 0.243,
+      "import_seconds": 0.652,
+      "blocks_per_second": 33.742,
+      "verified": {
+        "head": 22,
+        "hash": "0x5e0e204a909aeab55108ee4f027f45e858c8e1dd76d470b5dd78f2f8efb3cbe5",
+        "stateRoot": "0x003c0373705ac195e28b44198f28d6682910c04f22e3ba58383db52dc7e73e55",
+        "receiptsRoot": "0x28e48039c50dc4fa33b8ff887f6a931b2222814ffcd69f40c3cba3b189509bba",
+        "state_probe_balance": "0x0"
+      }
+    },
+    {
+      "test": "host-history-host-node rejects malformed pre19-state-root",
+      "result": "PASS",
+      "import_exit": 101,
+      "seconds": 1.114,
+      "verified": {
+        "head": 0,
+        "hash": "0x71d78146ac713642998b6185be6d177e697fb7b9a5fa4a3f84f5c3736b33a020",
+        "stateRoot": "0x083be6767da87f85b96e0ec6d3ee6fa34581c39d3cf38c16c2663edcbb123418",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "state_probe_balance": "0x0"
+      },
+      "invalid_block": 19,
+      "invalid_block_committed": false
+    },
+    {
+      "test": "host-history-host-node rejects malformed post20-receipts-root",
+      "result": "PASS",
+      "import_exit": 101,
+      "seconds": 0.808,
+      "verified": {
+        "head": 0,
+        "hash": "0x71d78146ac713642998b6185be6d177e697fb7b9a5fa4a3f84f5c3736b33a020",
+        "stateRoot": "0x083be6767da87f85b96e0ec6d3ee6fa34581c39d3cf38c16c2663edcbb123418",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "state_probe_balance": "0x0"
+      },
+      "invalid_block": 20,
+      "invalid_block_committed": false
+    },
+    {
+      "test": "reference-base-reth-node canonical full-state import",
+      "result": "PASS",
+      "init_exit": 0,
+      "import_exit": 0,
+      "init_seconds": 0.216,
+      "import_seconds": 0.254,
+      "blocks_per_second": 86.614,
+      "verified": {
+        "head": 22,
+        "hash": "0x5e0e204a909aeab55108ee4f027f45e858c8e1dd76d470b5dd78f2f8efb3cbe5",
+        "stateRoot": "0x003c0373705ac195e28b44198f28d6682910c04f22e3ba58383db52dc7e73e55",
+        "receiptsRoot": "0x28e48039c50dc4fa33b8ff887f6a931b2222814ffcd69f40c3cba3b189509bba",
+        "state_probe_balance": "0x0"
+      }
+    },
+    {
+      "test": "reference-base-reth-node rejects malformed pre19-state-root",
+      "result": "PASS",
+      "import_exit": 101,
+      "seconds": 0.569,
+      "verified": {
+        "head": 0,
+        "hash": "0x71d78146ac713642998b6185be6d177e697fb7b9a5fa4a3f84f5c3736b33a020",
+        "stateRoot": "0x083be6767da87f85b96e0ec6d3ee6fa34581c39d3cf38c16c2663edcbb123418",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "state_probe_balance": "0x0"
+      },
+      "invalid_block": 19,
+      "invalid_block_committed": false
+    },
+    {
+      "test": "reference-base-reth-node rejects malformed post20-receipts-root",
+      "result": "PASS",
+      "import_exit": 101,
+      "seconds": 0.426,
+      "verified": {
+        "head": 0,
+        "hash": "0x71d78146ac713642998b6185be6d177e697fb7b9a5fa4a3f84f5c3736b33a020",
+        "stateRoot": "0x083be6767da87f85b96e0ec6d3ee6fa34581c39d3cf38c16c2663edcbb123418",
+        "receiptsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+        "state_probe_balance": "0x0"
+      },
+      "invalid_block": 20,
+      "invalid_block_committed": false
+    }
+  ],
+  "source": "http://127.0.0.1:46593/",
+  "genesis": "/home/refcell/dev/base-era/target/demo-performance/generated/l2/genesis.json",
+  "manifest": "/home/refcell/dev/base-era/target/demo-performance/import-evidence/worker-manifest.json",
+  "rlp": {
+    "blocks-1-22.rlp": {
+      "bytes": 31166,
+      "sha256": "4109cc2800136faf4c1a76acb523f33ae83949c7d70952f432eadb792a4c170b"
+    },
+    "malformed-pre19-state-root.rlp": {
+      "bytes": 16226,
+      "sha256": "54e245d7c9b027a7479e6fb1047ab428ea24fb2ba175065d383ee31d8fc197e9"
+    },
+    "malformed-post20-receipts-root.rlp": {
+      "bytes": 29147,
+      "sha256": "7f9193b513dfa14f18ea28d28e2fdd5817ab9073188798d16b96c0eb482e3429"
+    }
+  },
+  "result": "PASS"
+}

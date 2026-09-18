@@ -34,7 +34,7 @@ fetch("./data/evidence.json")
     document.querySelector("#provenance").textContent =
       `${data.provenance.date} · ${data.provenance.checkoutStatus}. Recorded local run, not CI or a live benchmark.`;
     document.querySelector("#measurement-note").textContent =
-      `${data.provenance.environment}. ${data.latency.note} CPU/RSS: wait4, including waited-for descendants; RSS is not summed.`;
+      `${data.provenance.environment}. ${data.latency.note}`;
     document.querySelector("#header-status").textContent =
       data.provenance.status === "migrated-pass"
         ? "Acceptance passed"

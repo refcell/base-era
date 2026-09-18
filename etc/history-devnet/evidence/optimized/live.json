@@ -1,0 +1,22 @@
+{
+  "fork": "Isthmus",
+  "forkBlock": 20,
+  "builderVerifierParity": true,
+  "builderStorage": "0x0000000000000000000000000000000000000000000000000000000000001234",
+  "verifierStorage": "0x0000000000000000000000000000000000000000000000000000000000001234",
+  "preBlockHash": "0x9105102203af15a1d284926dc1b7a064c0729696257a0171cf607450a55c554e",
+  "cutoverBlockHash": "0x87e6326c5064c00970f08cf586d6568cd52b4d80c4f0a69ad21db9392fbfa5e9",
+  "preStateRoot": "0x6a481d26b939b08403f7cf3e828e93098184565ec46883e0196dbc6371d2f808",
+  "cutoverStateRoot": "0xfdb7f479eabb2c01c287c5af69f2606fda02fc464d5b899485763b69b7bf08d7",
+  "cutoverRequestsHash": "0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "gasPriceOracleIsthmus": {
+    "pre": false,
+    "cutover": true
+  },
+  "recipientBalancesWei": {
+    "genesis": 0,
+    "pre": 11,
+    "post": 44
+  },
+  "workloadReceiptsMatch": true
+}

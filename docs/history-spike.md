@@ -5,6 +5,13 @@ the worker and reference build independently from committed frozen sources. Fres
 from clean source [`d4ae34c`](https://github.com/refcell/base-era/commit/d4ae34c6345174757a27a60688a1caae569d96ec); portable results are published in
 [`etc/history-devnet/evidence/final/`](../etc/history-devnet/evidence/final/).
 
+**Update:** the protocol-2 session implementation passed a new full acceptance run from clean
+[`b346294`](https://github.com/refcell/base-era/commit/b346294b662fc29a872d8d65af664d580761fa18).
+Historical calls improved 223× and gas estimation 254× versus the original debug demo, combining
+session reuse with optimized builds. See [the performance report](history-performance.md) and
+[new evidence](../etc/history-devnet/evidence/optimized/). The original measurements below remain
+as a baseline, not the current performance claim.
+
 ## Architecture and scope
 
 The host owns its canonical database, forkchoice, commit, and unwind. With
@@ -102,8 +109,8 @@ have distinct hashes by design; both are recorded. This review is not a security
 of broad production coverage. Only the credential-free portable evidence was published.
 
 The [Pages showcase](https://refcell.github.io/base-era/) was deployed and checked over public
-HTTPS, including its activation interaction and rendered layout. The accepted local network remains
-in `target/demo-publication`; see [operation commands](history-devnet.md). Builds produce local
+HTTPS, including its compact technical layout. The optimized accepted local network remains
+in `target/demo-performance`; see [operation commands](history-devnet.md). Builds produce local
 approved artifacts; no downloadable binary release is published. Runtime image tags and package
 downloads remain non-hermetic inputs, documented in the build guide.
 
@@ -119,5 +126,5 @@ aggregation changes where needed, and verifier authorization. No new zkVM proof 
 authorization is claimed.
 
 Productionization also requires protocol-wide resource budgets (the current frame limit is 64 MiB
-and invocation deadline is 30 seconds), batching or persistent workers, configuration caching, a
+and invocation deadline is 30 seconds), batching and bounded concurrent worker pools, a
 broader historical/custom-chain corpus, fuller historical API coverage, and artifact governance.

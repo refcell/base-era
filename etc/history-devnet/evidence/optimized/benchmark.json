@@ -1,0 +1,771 @@
+{
+  "schema": 1,
+  "measurement_utc": "2026-09-18T22:22:44Z",
+  "cold_definition": "Fresh node processes and owned datadir copies; OS page cache was not dropped.",
+  "inputs": {
+    "genesis": "/home/refcell/dev/base-era/target/demo-performance/generated/l2/genesis.json",
+    "source_datadirs": [
+      "/home/refcell/dev/base-era/target/demo-performance/replay-evidence/worker-datadir",
+      "/home/refcell/dev/base-era/target/demo-performance/replay-evidence/reference-datadir"
+    ],
+    "run_dir": "/home/refcell/dev/base-era/target/demo-performance/benchmark",
+    "repetitions": 20
+  },
+  "binaries": {
+    "host": {
+      "path": "/home/refcell/dev/base-era/target/demo-performance/benchmark/provenance-artifacts/ac56a54c35d87f21ca8e860bd009a45019ac83b2577600d5ab027040cedf6998/host-history-host-node",
+      "sha256": "0xac56a54c35d87f21ca8e860bd009a45019ac83b2577600d5ab027040cedf6998"
+    },
+    "reference": {
+      "path": "/home/refcell/dev/base-era/target/demo-performance/benchmark/provenance-artifacts/542e4a08bab83ac1e5001b25f6933ea8c0b3f3088d742a65b258db48710b0621/reference-base-reth-node",
+      "sha256": "0x542e4a08bab83ac1e5001b25f6933ea8c0b3f3088d742a65b258db48710b0621"
+    },
+    "release_worker": {
+      "path": "/home/refcell/dev/base-era/target/demo-performance/benchmark/provenance-artifacts/dd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff/worker-base-history-worker",
+      "sha256": "0xdd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff"
+    },
+    "manifest_approved_sha256": "0xdd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff"
+  },
+  "environment": {
+    "kernel": "7.1.8-arch1-3",
+    "architecture": "x86_64",
+    "python": "3.14.7",
+    "rust_toolchain": "1.96.0",
+    "rustc_verbose": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0\nLLVM version: 22.1.2",
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S"
+  },
+  "startup_readiness_ms": {
+    "worker": 107.605183,
+    "reference": 509.25892
+  },
+  "workloads": {
+    "historical_eth_call": {
+      "worker": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "observed_first_ms": 164.419438,
+        "repeated": {
+          "count": 20,
+          "min_ms": 8.929267,
+          "median_ms": 10.526818,
+          "p95_ms": 12.668464,
+          "max_ms": 15.03313,
+          "mean_ms": 11.0144232,
+          "samples_ms": [
+            10.815993,
+            10.920049,
+            12.484176,
+            12.668464,
+            12.383717,
+            12.038336,
+            10.014322,
+            9.413099,
+            9.743282,
+            9.942687,
+            8.929267,
+            9.614288,
+            11.270569,
+            12.614793,
+            15.03313,
+            12.330857,
+            10.182178,
+            9.893094,
+            10.237643,
+            9.75852
+          ]
+        }
+      },
+      "reference": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "observed_first_ms": 3.054907,
+        "repeated": {
+          "count": 20,
+          "min_ms": 0.178697,
+          "median_ms": 0.2072505,
+          "p95_ms": 0.306036,
+          "max_ms": 0.437785,
+          "mean_ms": 0.2266706,
+          "samples_ms": [
+            0.437785,
+            0.306036,
+            0.261332,
+            0.229924,
+            0.203964,
+            0.194777,
+            0.232808,
+            0.187343,
+            0.187353,
+            0.233901,
+            0.241395,
+            0.2126,
+            0.202352,
+            0.182173,
+            0.178697,
+            0.179298,
+            0.278725,
+            0.210537,
+            0.187403,
+            0.185009
+          ]
+        }
+      },
+      "parity": true
+    },
+    "historical_estimate_gas": {
+      "worker": {
+        "first_result": "0x7084",
+        "observed_first_ms": 10.306723,
+        "repeated": {
+          "count": 20,
+          "min_ms": 9.227159,
+          "median_ms": 10.2217275,
+          "p95_ms": 11.321966,
+          "max_ms": 11.936946,
+          "mean_ms": 10.3467055,
+          "samples_ms": [
+            11.143249,
+            11.936946,
+            10.66068,
+            9.464807,
+            9.830736,
+            11.065153,
+            10.026796,
+            10.420087,
+            10.529022,
+            9.227159,
+            9.494262,
+            10.215741,
+            10.826633,
+            11.321966,
+            9.929202,
+            10.795214,
+            10.145559,
+            10.227714,
+            9.563643,
+            10.109541
+          ]
+        }
+      },
+      "reference": {
+        "first_result": "0x7084",
+        "observed_first_ms": 1.192477,
+        "repeated": {
+          "count": 20,
+          "min_ms": 0.177044,
+          "median_ms": 0.24834799999999999,
+          "p95_ms": 0.523767,
+          "max_ms": 0.56782,
+          "mean_ms": 0.2933979,
+          "samples_ms": [
+            0.523767,
+            0.26499,
+            0.220055,
+            0.187483,
+            0.186541,
+            0.252526,
+            0.56782,
+            0.394223,
+            0.458604,
+            0.365519,
+            0.231616,
+            0.187253,
+            0.177044,
+            0.24417,
+            0.236756,
+            0.221457,
+            0.338268,
+            0.320063,
+            0.271802,
+            0.218001
+          ]
+        }
+      },
+      "parity": true
+    },
+    "historical_block_19": {
+      "worker": {
+        "first_result": {
+          "hash": "0x9105102203af15a1d284926dc1b7a064c0729696257a0171cf607450a55c554e",
+          "parentHash": "0xb5af9f66f4cbf02db20ce8a01f1bb9361bfe2c7f2b9f013e2427d8eae48923a0",
+          "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+          "miner": "0x4200000000000000000000000000000000000011",
+          "stateRoot": "0x6a481d26b939b08403f7cf3e828e93098184565ec46883e0196dbc6371d2f808",
+          "transactionsRoot": "0xb7dc1d1d11f1276e57736da2f8cf5e4101cadbada1416e9080b7bb025d988ee7",
+          "receiptsRoot": "0x0dd115e2476c18f16726129573b87e07007a77ae0d90d0eab28e81c75155f170",
+          "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "difficulty": "0x0",
+          "number": "0x13",
+          "gasLimit": "0x3938700",
+          "gasUsed": "0xcbe4",
+          "timestamp": "0x6aadb95c",
+          "extraData": "0x00000000fa00000006",
+          "mixHash": "0x108b02cd36f6feecc4dc4e1a96bd7bea6b0edb1e38067e25b14a72586e478580",
+          "nonce": "0x0000000000000000",
+          "baseFeePerGas": "0x37419419",
+          "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+          "blobGasUsed": "0x0",
+          "excessBlobGas": "0x0",
+          "parentBeaconBlockRoot": "0x6523841baebaea0dfb37342949fa75e4a125d77cad6dd071a5c3ce2ecc529a4d",
+          "size": "0x350",
+          "uncles": [],
+          "transactions": [
+            "0x221aea6fd39161a0577c40b7d3b24e9cc29bbaf601c009a5967a9f0eb7e71e35"
+          ],
+          "withdrawals": []
+        },
+        "observed_first_ms": 0.495564,
+        "repeated": {
+          "count": 20,
+          "min_ms": 0.160453,
+          "median_ms": 0.22581050000000003,
+          "p95_ms": 0.305135,
+          "max_ms": 0.376169,
+          "mean_ms": 0.22610665,
+          "samples_ms": [
+            0.376169,
+            0.219373,
+            0.194918,
+            0.20173,
+            0.18038,
+            0.181312,
+            0.183195,
+            0.232248,
+            0.249751,
+            0.263166,
+            0.299865,
+            0.23869,
+            0.305135,
+            0.245824,
+            0.16439,
+            0.179067,
+            0.240753,
+            0.235744,
+            0.160453,
+            0.16997
+          ]
+        }
+      },
+      "reference": {
+        "first_result": {
+          "hash": "0x9105102203af15a1d284926dc1b7a064c0729696257a0171cf607450a55c554e",
+          "parentHash": "0xb5af9f66f4cbf02db20ce8a01f1bb9361bfe2c7f2b9f013e2427d8eae48923a0",
+          "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+          "miner": "0x4200000000000000000000000000000000000011",
+          "stateRoot": "0x6a481d26b939b08403f7cf3e828e93098184565ec46883e0196dbc6371d2f808",
+          "transactionsRoot": "0xb7dc1d1d11f1276e57736da2f8cf5e4101cadbada1416e9080b7bb025d988ee7",
+          "receiptsRoot": "0x0dd115e2476c18f16726129573b87e07007a77ae0d90d0eab28e81c75155f170",
+          "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "difficulty": "0x0",
+          "number": "0x13",
+          "gasLimit": "0x3938700",
+          "gasUsed": "0xcbe4",
+          "timestamp": "0x6aadb95c",
+          "extraData": "0x00000000fa00000006",
+          "mixHash": "0x108b02cd36f6feecc4dc4e1a96bd7bea6b0edb1e38067e25b14a72586e478580",
+          "nonce": "0x0000000000000000",
+          "baseFeePerGas": "0x37419419",
+          "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+          "blobGasUsed": "0x0",
+          "excessBlobGas": "0x0",
+          "parentBeaconBlockRoot": "0x6523841baebaea0dfb37342949fa75e4a125d77cad6dd071a5c3ce2ecc529a4d",
+          "size": "0x350",
+          "uncles": [],
+          "transactions": [
+            "0x221aea6fd39161a0577c40b7d3b24e9cc29bbaf601c009a5967a9f0eb7e71e35"
+          ],
+          "withdrawals": []
+        },
+        "observed_first_ms": 0.632943,
+        "repeated": {
+          "count": 20,
+          "min_ms": 0.117952,
+          "median_ms": 0.13816050000000002,
+          "p95_ms": 0.288002,
+          "max_ms": 0.344198,
+          "mean_ms": 0.16372345,
+          "samples_ms": [
+            0.344198,
+            0.192623,
+            0.155343,
+            0.144212,
+            0.12724,
+            0.122421,
+            0.118573,
+            0.117952,
+            0.118914,
+            0.119094,
+            0.121629,
+            0.122241,
+            0.132109,
+            0.17001,
+            0.149121,
+            0.131388,
+            0.19114,
+            0.18557,
+            0.288002,
+            0.222689
+          ]
+        }
+      },
+      "parity": true
+    },
+    "current_eth_call": {
+      "worker": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "observed_first_ms": 1.826663,
+        "repeated": {
+          "count": 20,
+          "min_ms": 0.217019,
+          "median_ms": 0.29070300000000004,
+          "p95_ms": 0.433447,
+          "max_ms": 0.612925,
+          "mean_ms": 0.311206,
+          "samples_ms": [
+            0.433447,
+            0.33452,
+            0.390236,
+            0.364567,
+            0.612925,
+            0.36655,
+            0.258978,
+            0.302089,
+            0.293804,
+            0.348627,
+            0.317348,
+            0.287602,
+            0.27566,
+            0.237798,
+            0.232398,
+            0.240042,
+            0.238881,
+            0.244401,
+            0.227228,
+            0.217019
+          ]
+        }
+      },
+      "reference": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "observed_first_ms": 1.138605,
+        "repeated": {
+          "count": 20,
+          "min_ms": 0.164099,
+          "median_ms": 0.1799585,
+          "p95_ms": 0.245854,
+          "max_ms": 0.270169,
+          "mean_ms": 0.1889941,
+          "samples_ms": [
+            0.270169,
+            0.245854,
+            0.180309,
+            0.164099,
+            0.165161,
+            0.182354,
+            0.16457,
+            0.177053,
+            0.172125,
+            0.165582,
+            0.176292,
+            0.176382,
+            0.168487,
+            0.197212,
+            0.20701,
+            0.230825,
+            0.192072,
+            0.182805,
+            0.179608,
+            0.181913
+          ]
+        }
+      },
+      "parity": true
+    }
+  },
+  "worker_state_access_from_host_log": [
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 82738,
+      "request_bytes": 9372216,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 611,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 595,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 936,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 762,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 767,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 725,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 419,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 478,
+      "request_bytes": 2000,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2598
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 542,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 542,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 429,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 892,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 583,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 951,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 1497,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 694,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 516,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 548,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 587,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 594,
+      "request_bytes": 2001,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 790,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 1111,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 552,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 469,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 503,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 653,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 473,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 536,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 532,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 603,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 533,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 535,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 754,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 668,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 730,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 587,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 737,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 676,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 559,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 616,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    },
+    {
+      "worker_pid": 548869,
+      "elapsed_us": 520,
+      "request_bytes": 2008,
+      "state_read_request_count": 12,
+      "state_read_frame_bytes": 2610
+    }
+  ],
+  "persistent_worker_reuse": {
+    "logged_worker_pids": [
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869,
+      548869
+    ],
+    "consecutive_same_pid_count": 41,
+    "available": true
+  },
+  "persistent_worker_resources_before_shutdown": {
+    "worker": [
+      {
+        "pid": 548869,
+        "executable": "/memfd:base-history-worker (deleted)",
+        "user_seconds": 0.07,
+        "system_seconds": 0.02,
+        "rss_kib": 44024,
+        "peak_rss_kib": 51136
+      }
+    ],
+    "reference": []
+  },
+  "node_resource_usage_including_waited_descendants": {
+    "method": "Linux wait4 rusage after graceful shutdown; includes only descendants each node waited for",
+    "limitation": "Persistent worker CPU and peak RSS may be excluded when the host does not wait for that child; these values are not claimed as complete worker cost.",
+    "worker": {
+      "user_seconds": 0.293269,
+      "system_seconds": 0.331613,
+      "elapsed_ms": 1355.140455,
+      "peak_rss_kib": 226592
+    },
+    "reference": {
+      "user_seconds": 0.095093,
+      "system_seconds": 0.347306,
+      "elapsed_ms": 1247.420436,
+      "peak_rss_kib": 160088
+    }
+  },
+  "release_worker_probe": {
+    "label": "process startup + framed request parsing (not cold page cache)",
+    "wall_ms": 6.614205,
+    "response": {
+      "outcome": "unsupported",
+      "request_id": "benchmark-unsupported",
+      "error": "protocol version 999"
+    },
+    "resource_usage": {
+      "user_seconds": 0.004306,
+      "system_seconds": 0.00215,
+      "elapsed_ms": 6.614205,
+      "peak_rss_kib": 56004
+    }
+  }
+}
