@@ -1,12 +1,9 @@
 # Version-isolated historical execution
 
-This repository is the migrated Base Era demo. PR1 is merged, the host is the selected Base source
-closure, and the worker and reference build independently from committed frozen sources. Fresh
-acceptance is currently running in `target/demo-publication`.
-
-> **Evidence pending:** do not treat the source-spike results below as results from this checkout.
-> Migrated acceptance evidence will be published under
-> [`etc/history-devnet/evidence/final/`](../etc/history-devnet/evidence/final/) when the run finishes.
+This repository is the migrated Base Era demo. The host is the selected Base source closure, and
+the worker and reference build independently from committed frozen sources. Fresh acceptance passed
+from clean source [`d4ae34c`](https://github.com/refcell/base-era/commit/d4ae34c6345174757a27a60688a1caae569d96ec); portable results are published in
+[`etc/history-devnet/evidence/final/`](../etc/history-devnet/evidence/final/).
 
 ## Architecture and scope
 
@@ -49,10 +46,10 @@ kernel exploits, and unsupported sandbox kernels fail closed.
   reth tree. [`sources/reth-history.patch`](../sources/reth-history.patch) is an audit artifact,
   not a setup-time patch.
 
-Exact frozen-source metadata is in
+Exact pinned source-set metadata is in
 [`sources/frozen-sources.json`](../sources/frozen-sources.json). Independent host, reference, and
-worker builds have succeeded from this checkout; that does not substitute for the pending full
-acceptance run.
+worker builds and the full acceptance run succeeded from this checkout. The worker intentionally
+uses Alloy consensus/EIPs 2.4.2 and primitives 1.7.3, independently of the host's 2.4.1/1.6.1.
 
 Historical execution bodies still exist in selected host crates and dependency graphs even where
 the external boundary bypasses them. Host header/env/receipt-root assembly, validation,
@@ -61,33 +58,39 @@ admission remain host-side. Reth/revm also retain historical branches. Pending s
 `eth_simulateV1`, unsupported custom tracers, and trace-call `txIndex` are outside the extracted
 historical RPC boundary. There is no claim of a physically history-free binary.
 
-## Original source-spike evidence (historical only)
+## Migrated acceptance results (2026-09-18)
 
-The pre-migration source spike reported 95 replay passes, six import passes, seven failure-scenario
-passes, and native witness replay parity for blocks 19–21. It also reported exact sequencer/verifier
-agreement around blocks 19–22, reorg restoration, malformed payload parity, and worker causality.
-Those observations motivated this migration but **have not yet been re-established by the fresh
-migrated acceptance run**.
+The fresh suite recorded [95 replay PASS, 0 FAIL, 0 SKIP](../etc/history-devnet/evidence/final/replay.json),
+[six import passes](../etc/history-devnet/evidence/final/import.json), [seven failure/recovery
+claims](../etc/history-devnet/evidence/final/failures.json), and [native witness parity for blocks
+19–21](../etc/history-devnet/evidence/final/stateless.json). Live evidence confirms exact
+builder/verifier parity across the block-20 Isthmus cutover. Host routing used the worker through
+block 19 and local execution from block 20. Host unit tests passed 11, worker subprocess tests passed
+15, and the Python suite passed 9.
 
-On an AMD Ryzen AI MAX+ 395 running x86-64 Linux 7.1.8 and Rust 1.96.0, that original spike measured:
+On an AMD Ryzen AI MAX+ 395 running x86-64 Linux 7.1.8 and Rust 1.96.0, the migrated debug
+host/reference and release worker measured:
 
 | Operation | History host | Original reference |
 |---|---:|---:|
-| Full-state import, blocks 1–22 | 49.592 s; 0.444 blocks/s | 1.302 s; 16.897 blocks/s |
-| Historical call, first / repeated median | 2524.066 / 2537.581 ms | 6.102 / 2.903 ms |
-| Historical estimate, first / repeated median | 2698.938 / 2704.166 ms | 4.381 / 2.159 ms |
-| Current call, repeated median | 4.241 ms | 3.062 ms |
-| Fresh-process readiness | 2323.313 ms | 1655.564 ms |
-| Benchmark peak RSS | 745704 KiB | 249364 KiB |
+| Full-state import, blocks 1–22 | 49.409 s; 0.445 blocks/s | 1.356 s; 16.224 blocks/s |
+| Historical call, first / warm median | 2342.176 / 2343.979 ms | 8.507 / 1.927 ms |
+| Historical estimate, first / warm median | 2631.316 / 2599.164 ms | 5.694 / 2.102 ms |
+| Current call, first / warm median | 6.099 / 2.137 ms | 5.286 / 2.159 ms |
+| Fresh-process readiness | 1453.390 ms | 2306.753 ms |
+| Node CPU user/system; peak RSS | 30.374/0.709 s; 333572 KiB | 1.914/0.366 s; 247688 KiB |
 
-These were debug host/reference builds and a release worker. “Cold” meant fresh processes and
-copied databases, not dropped page caches. One process was spawned per operation, and repeated
-serialization of the roughly 9 MiB genesis/manifest dominated observed cost. The numbers are not
-migrated-release benchmarks.
+CPU and peak RSS use Linux `wait4` and include waited-for descendants; peak RSS is not the sum
+of concurrently resident processes. Medians use five samples after the first request.
+“Cold” means fresh processes and copied databases, not dropped page caches. Each measured historical
+operation performed 12 host-served state reads; request frames were 2550 or 2562 bytes. Those byte
+counts are requests only, not bidirectional traffic. The release-worker startup/framed-parse probe
+was 0.708 ms and 55588 KiB peak RSS. Full samples and measurement definitions are in
+[`benchmark.json`](../etc/history-devnet/evidence/final/benchmark.json).
 
 ## Proof and production boundaries
 
-The source spike's native witness check was not a zkVM proof. Some original proof guest directories
+The native witness check is not a zkVM proof. Some original proof guest directories
 are intentionally absent from this selected checkout; the omitted range guest can be inspected in
 the pinned upstream Base source at
 [`crates/proof/zk/programs/succinct/range/ethereum/src/main.rs`](https://github.com/base/base/blob/1eda0f7f4cebb823522e62f34fc3e513b1c450b1/crates/proof/zk/programs/succinct/range/ethereum/src/main.rs).

@@ -22,5 +22,8 @@ used only to exercise failure handling; successful historical execution always u
 artifact. Protocol version negotiation is covered separately by the real worker spawn tests.
 
 By default the script derives genesis and `replay-evidence/worker-datadir` from `--run-dir`; use
-`--datadir` if replay used another output directory. The original source spike passed these
-scenarios; migrated evidence is pending at `etc/history-devnet/evidence/final/failures.json`.
+`--datadir` if replay used another output directory. The migrated run passed all [seven recorded
+claims](../etc/history-devnet/evidence/final/failures.json): real historical/current execution,
+digest/missing-artifact causality and recovery, in-flight crash recovery, malformed response,
+incompatible terminal schema, stale request, and timeout/reaping. Every failure left `latest`
+unchanged; current execution remained available while the historical worker was broken.

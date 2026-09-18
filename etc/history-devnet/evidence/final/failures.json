@@ -1,0 +1,131 @@
+[
+  {
+    "claim": "real historical/current execution",
+    "historical19": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "current20": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000001"
+    },
+    "latest": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25"
+  },
+  {
+    "claim": "manifest failure causality and recovery",
+    "wrongDigest": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32603,
+        "message": "worker artifact digest mismatch"
+      }
+    },
+    "missingExecutable": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32603,
+        "message": "historical execution infrastructure failure: No such file or directory (os error 2)"
+      }
+    },
+    "currentWhileBroken": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000001"
+    },
+    "recovered": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "latestUnchanged": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25"
+  },
+  {
+    "claim": "in-flight worker crash fails closed",
+    "hostPid": 272276,
+    "workerPid": 272916,
+    "workerExe": "/memfd:base-history-worker (deleted)",
+    "workerStatus": "Name:\t54\nUmask:\t0022\nState:\tS (sleeping)\nTgid:\t272916\nNgid:\t0\nPid:\t272916\nPPid:\t272276\nTracerPid:\t0\nUid:\t1000\t1000\t1000\t1000\nGid:\t1000\t1000\t1000\t1000\nFDSize:\t64\nGroups:\t962 967 992 998 1000 \nNStgid:\t272916\nNSpid:\t272916\nNSpgid:\t164097\nNSsid:\t164097\nKthread:\t0\nVmPeak:\t    9864 kB\nVmSize:\t    9864 kB\nVmLck:\t       0 kB\nVmPin:\t       0 kB\nVmHWM:\t    2764 kB\nVmRSS:\t    2764 kB\nRssAnon:\t     224 kB\nRssFile:\t    1672 kB\nRssShmem:\t     868 kB\nVmData:\t     220 kB\nVmStk:\t     132 kB\nVmExe:\t    4112 kB\nVmLib:\t    1844 kB\nVmPTE:\t      56 kB\nVmSwap:\t       0 kB\nHugetlbPages:\t       0 kB\nCoreDumping:\t0\nTHP_enabled:\t1\nuntag_mask:\t0xffffffffffffffff\nThreads:\t1\nSigQ:\t0/512078\nSigPnd:\t0000000000000000\nShdPnd:\t0000000000000000\nSigBlk:\t0000000000000000\nSigIgn:\t0000000000001000\nSigCgt:\t0000000000000440\nCapInh:\t0000000800000000\nCapPrm:\t0000000000000000\nCapEff:\t0000000000000000\nCapBnd:\t000001ffffffffff\nCapAmb:\t0000000000000000\nNoNewPrivs:\t1\nSeccomp:\t2\nSeccomp_filters:\t1\nSpeculation_Store_Bypass:\tthread vulnerable\nSpeculationIndirectBranch:\tconditional enabled\nCpus_allowed:\tffffffff\nCpus_allowed_list:\t0-31\nMems_allowed:\t00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001\nMems_allowed_list:\t0\nvoluntary_ctxt_switches:\t1\nnonvoluntary_ctxt_switches:\t5\nx86_Thread_features:\t\nx86_Thread_features_locked:\t\n",
+    "error": {
+      "code": -32603,
+      "message": "historical execution infrastructure failure: worker pipe failed"
+    },
+    "latestUnchanged": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25",
+    "retry": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  {
+    "claim": "fixture malformed response fails closed",
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32603,
+        "message": "historical execution infrastructure failure: EOF while parsing an object at line 1 column 1"
+      }
+    },
+    "error": {
+      "code": -32603,
+      "message": "historical execution infrastructure failure: EOF while parsing an object at line 1 column 1"
+    },
+    "latestUnchanged": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25",
+    "artifactOnly": true
+  },
+  {
+    "claim": "fixture incompatible-terminal-schema response fails closed",
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32603,
+        "message": "historical execution infrastructure failure: terminal RPC response is not bound to request"
+      }
+    },
+    "error": {
+      "code": -32603,
+      "message": "historical execution infrastructure failure: terminal RPC response is not bound to request"
+    },
+    "latestUnchanged": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25",
+    "artifactOnly": true
+  },
+  {
+    "claim": "fixture stale-request response fails closed",
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32603,
+        "message": "historical execution infrastructure failure: terminal RPC response is not bound to request"
+      }
+    },
+    "error": {
+      "code": -32603,
+      "message": "historical execution infrastructure failure: terminal RPC response is not bound to request"
+    },
+    "latestUnchanged": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25",
+    "artifactOnly": true
+  },
+  {
+    "claim": "fixture timeout response fails closed",
+    "response": {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "error": {
+        "code": -32603,
+        "message": "historical execution infrastructure failure: worker transport timeout"
+      }
+    },
+    "error": {
+      "code": -32603,
+      "message": "historical execution infrastructure failure: worker transport timeout"
+    },
+    "latestUnchanged": "0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25",
+    "artifactOnly": true
+  }
+]

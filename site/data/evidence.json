@@ -1,9 +1,9 @@
 {
   "provenance": {
-    "status": "source-spike",
-    "label": "Source-spike evidence",
+    "status": "migrated-pass",
+    "label": "Migrated demo acceptance",
     "date": "2026-09-18",
-    "checkoutStatus": "Not yet rerun from this checkout",
+    "checkoutStatus": "Passed from a clean Base Era source checkout",
     "environment": "AMD Ryzen AI MAX+ 395 · x86-64 Linux · kernel 7.1.8 · Rust 1.96.0"
   },
   "checks": [
@@ -21,9 +21,9 @@
     }
   ],
   "latency": {
-    "workerMs": 2537.581,
-    "referenceMs": 2.903,
+    "workerMs": 2343.979,
+    "referenceMs": 1.927,
     "label": "Repeated historical eth_call median",
-    "note": "Debug history host/reference; release worker. Five samples after the first request."
+    "note": "Migrated run · debug host/reference; release worker. Five samples after the first request; OS page cache retained."
   }
 }

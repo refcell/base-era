@@ -11,28 +11,27 @@ runs full-state imports (without `--no-state`), starts each imported database wi
 a historical state query. Separate fresh databases import blocks 1..18 plus a bad block 19 state
 root and blocks 1..19 plus a bad block 20 receipts root using `--fail-on-invalid-block`.
 
-## Original source-spike result (2026-09-18)
+## Migrated result (2026-09-18)
 
-The pre-migration source spike reported that both real artifacts exposed `import` and passed.
-The table and commitments below are historical context, not results from this checkout. Fresh
-migrated evidence is pending at `etc/history-devnet/evidence/final/import.json`.
+Both independently built artifacts exposed `import`; all [six checks
+passed](../etc/history-devnet/evidence/final/import.json).
 
 | Check | History host | Reference Base/reth |
 |---|---:|---:|
-| Canonical import 1..22 | PASS, exit 0, 49.592 s (0.444 blocks/s) | PASS, exit 0, 1.302 s (16.897 blocks/s) |
-| Bad pre-Isthmus block 19 state root | PASS, exit 101, 53.751 s | PASS, exit 101, 1.386 s |
-| Bad post-Isthmus block 20 receipts root | PASS, exit 101, 53.836 s | PASS, exit 101, 1.194 s |
+| Canonical import 1..22 | PASS, exit 0, 49.409 s (0.445 blocks/s) | PASS, exit 0, 1.356 s (16.224 blocks/s) |
+| Bad pre-Isthmus block 19 state root | PASS, exit 101, 54.186 s | PASS, exit 101, 1.408 s |
+| Bad post-Isthmus block 20 receipts root | PASS, exit 101, 53.969 s | PASS, exit 101, 1.132 s |
 
 Canonical parity was exact at head 22: hash
-`0xa9e86115158531889e66f5cdba4ed142a8b3e24bce420afbc281b87a67965f2a`, state root
-`0x4d9ded9b8cf17a4bbde69bcf373f94371afa86bb378886121423a72f738118a4`, and receipts root
+`0xc53bcde7fb41a7a15f16efcb1f0323fa2ed2405b3b20352ff2ba4b3fde20ad25`, state root
+`0xa090e2e96c5fe68e146379a9ec4670cc423dd2d587c15f19e141a5270bab3086`, and receipts root
 `0x1d422bc42a4b79a63117e0de09df25fadb47778bfffa4b68067c88d2e96ed3f5`. Both malformed
 imports remained transactionally at genesis (head 0), proving neither malformed block nor its
 valid input prefix was committed.
 
-RLP SHA-256 commitments are `9484736956156c1c051f366b00d370633b359d170d8df7983b7e2fa7b33a0de4`
-(canonical), `28a0e685c0abeaff3942e50acc9aa77eb8936689dcf775ffc3729455d3a64ca6`
-(bad block 19), and `6514dfff58ed39d4ec7168d7cf0019e7df4b56767bc5fd5c1fd5cbc8a4079e3f`
-(bad block 20). In the source spike, the reference artifact differed from original Base/reth only by
-the two CLI exposure edits recorded in `etc/history-devnet/reference-cli.patch`; the migrated
-reference contains that adaptation in committed `historical/reference` source.
+RLP SHA-256 commitments are `89b750cd96cd5569a5b4d45461e17df3d61a5875d0378827bd2a4ecef7fe6ec6`
+(canonical), `ffd5aa527a6acd6cb5a839e710bff237d0af066d8c441fe24f7a5c5d93a95626`
+(bad block 19), and `db63f4310614cab2f56aacf5459f32c6e120c02dc9153e4d7e8c7b1762a048c6`
+(bad block 20). The reference retains original execution code, with two CLI exposure edits
+recorded in `etc/history-devnet/reference-cli.patch`. Its workspace and lockfile are pruned without
+introducing new package versions. This adaptation is committed in `historical/reference`.

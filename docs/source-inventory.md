@@ -2,12 +2,13 @@
 
 ## Historical status
 
-This document records the **pre-migration source-spike inventory** used to select Base Era's source
-closure. Its counts and commands describe the old checkout and were not rerun here. The migration
+This document records the **pre-migration source inventory** used to select Base Era's source
+closure. Its counts describe the old checkout and were not rerun here. The migration
 uses those results: host crates are at their normal paths, frozen worker source is committed under
 `etc/history-worker/historical/base`, the independent reference under `historical/reference`, and
-integrated reth under `vendor/reth`. Independent builds from this checkout succeeded; fresh full
-acceptance evidence remains pending.
+integrated reth under `vendor/reth`. Independent builds and fresh full acceptance succeeded from
+clean source `d4ae34c6345174757a27a60688a1caae569d96ec`; see
+[`evidence/final/provenance.json`](../etc/history-devnet/evidence/final/provenance.json).
 
 ## Recommendation (as measured before migration)
 
@@ -167,6 +168,9 @@ Its workspace/build dependencies are a separate inventory from the Base list.
 The migration implemented this with committed `vendor/reth`. `tools/reth-config.py` emits Cargo
 path overrides to that tree. `sources/reth-history.patch` is audit-only and is not applied during
 setup. Keep the worker/reference on original reth. Do not edit Cargo caches.
+
+The launcher binary `base-devnet` and reference node binary `base-reth-node` have different roles
+and are built from different source graphs by design; their hashes are not expected to match.
 
 There is a **second non-Base source modification**:
 `etc/history-devnet/optimism-isthmus.patch` changes Base Optimism's offline genesis

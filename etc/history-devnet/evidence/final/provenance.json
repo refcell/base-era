@@ -1,0 +1,102 @@
+{
+  "base_source": "d4ae34c6345174757a27a60688a1caae569d96ec",
+  "base_branch": "main",
+  "tracked_source_tree_sha256": "f6abd7dbb077601a83c9816a42c4f549c9e7df2d129e809ca5b238772a9c7c75",
+  "tracked_source_files": 5218,
+  "source_clean": true,
+  "reth_source": "5877708bbf9219c44758cd2ce28a365f738661f7",
+  "rustc": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0\nLLVM version: 22.1.2",
+  "inputs_sha256": {
+    "Cargo.lock": "d269926b2dc54ebbe06665b33ee4254415c63d46fc2f3ad898bf7973609903af",
+    "rust-toolchain.toml": "6c7f7b59e2d60c8c326dc7ccda7bf17c045a261843cd780f4483ebf4beefb5b5",
+    "etc/history-worker/Cargo.lock": "a7058df0dd535616407558ebbf96e233dc1ec7e412fb2242fe1bf5a71d70c150",
+    "etc/history-worker/rust-toolchain.toml": "6c7f7b59e2d60c8c326dc7ccda7bf17c045a261843cd780f4483ebf4beefb5b5",
+    "sources/frozen-sources.json": "da03fbdc32abb8d57fe6011dc17a8c23ea85b3dc083c9e894f0af6fab49ffe0c",
+    "sources/reth-history.patch": "c2607711fdcc2cd41573c46a3d76c7f28bb180f7ef64c08eb4c222eb1d0c82ad",
+    "historical/reference/Cargo.lock": "ac2b63fa6eb1b432facb526626c11c8d7d2d5e4586d3617a12c0a219d94c2608",
+    "etc/history-devnet/reference-cli.patch": "0636f63e72c8178dd524f6c834bc9e33ce722edd1be75e190a2bcfb2008da84d",
+    "etc/history-devnet/optimism-isthmus.patch": "074e056395b2b85b21b60ddfdcad745b9b54d490d9c6ca2fe3cf85afa2e24baf"
+  },
+  "working_source_sha256": {},
+  "host_sha256": "7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08",
+  "reference_sha256": "a64ebacdec921127075e2a78a3bfbd796ebc78ef9746b46be2e10c60fa477de8",
+  "devnet_sha256": "9385073e883bc2ee6872ee8e45b96d5fafd804611397858840bc611b0fafa0aa",
+  "worker_sha256": "d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156",
+  "setup_image_id": "sha256:a5589e20f3a86ed2018bdf8bdce11bbb1f5325001bcc69cce9ed98f60136937c",
+  "genesis_identity": "0xfec8cb868a69ebdae91550284157865721cfc104633c2169fdfe6c935fc698e7",
+  "configuration_identity": "0xd51d08a869017c2061fc6822d7e44871173e830355544334083baf65c06e073c",
+  "chain_id": "84539001",
+  "genesis_header_hash": "0x0f3e259aaf46ee7debe14d6558747caaaa1470558fa45122c930d959f59cab49",
+  "fixture_sha256": {
+    "block-19.tar.gz": "c975fbc962ccd3fc56ab43eb059f43a110dfec49771578cf5f916867d3ae225b",
+    "block-20.tar.gz": "d684433adad24f529b3aa54fa09dc937a17ecaf84e31a50edbaec4462abfc229",
+    "block-21.tar.gz": "0f760985407a8b399a10687b424eb3f26be51ddbe13073055ebe1ed6d541d26d"
+  },
+  "stage_provenance": {
+    "replay": {
+      "source_manifest_sha256": "da03fbdc32abb8d57fe6011dc17a8c23ea85b3dc083c9e894f0af6fab49ffe0c",
+      "binaries_sha256": {
+        "host": "7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08",
+        "reference": "a64ebacdec921127075e2a78a3bfbd796ebc78ef9746b46be2e10c60fa477de8",
+        "worker": "d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156"
+      },
+      "inputs_sha256": {
+        "manifest": "e5a03bf3d4318e453b22b2b747fedb750ab22434f54bd4b9efdef973de9f8b20",
+        "genesis": "252d74211a38d1f5594f43cda48ef487a86003276c63249af315f3af9a509f74"
+      }
+    },
+    "import": {
+      "source_manifest_sha256": "da03fbdc32abb8d57fe6011dc17a8c23ea85b3dc083c9e894f0af6fab49ffe0c",
+      "binaries_sha256": {
+        "host": "7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08",
+        "reference": "a64ebacdec921127075e2a78a3bfbd796ebc78ef9746b46be2e10c60fa477de8",
+        "worker": "d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156"
+      },
+      "inputs_sha256": {
+        "manifest": "e5a03bf3d4318e453b22b2b747fedb750ab22434f54bd4b9efdef973de9f8b20",
+        "genesis": "252d74211a38d1f5594f43cda48ef487a86003276c63249af315f3af9a509f74"
+      }
+    },
+    "failures": {
+      "source_manifest_sha256": "da03fbdc32abb8d57fe6011dc17a8c23ea85b3dc083c9e894f0af6fab49ffe0c",
+      "binaries_sha256": {
+        "host": "7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08",
+        "worker": "d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156",
+        "fixture-malformed": "689bf0373e9f30b86968cbeb8cf9a225ec8ec97788ed7b00f572cb631c0b7873",
+        "fixture-incompatible-terminal-schema": "1d1aefac819fd7d706bec0975703fe1b2e1ba9b9a69691eaabaacc2a2404f566",
+        "fixture-stale-request": "3906447982bb89eba9bf022a0eef83b4ce5dd3ee711698a9063ffcfa829b7fa3",
+        "fixture-timeout": "5c69098dc6e188ef2bf4ff1e2c5888b459d6173881b1be6ab4abcd45a833286f"
+      },
+      "inputs_sha256": {
+        "manifest": "e5a03bf3d4318e453b22b2b747fedb750ab22434f54bd4b9efdef973de9f8b20",
+        "genesis": "252d74211a38d1f5594f43cda48ef487a86003276c63249af315f3af9a509f74"
+      }
+    },
+    "stateless": {
+      "source_manifest_sha256": "da03fbdc32abb8d57fe6011dc17a8c23ea85b3dc083c9e894f0af6fab49ffe0c",
+      "binaries_sha256": {
+        "host": "7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08",
+        "worker": "d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156",
+        "fixture": "9ca7ee86892e0dc2a88443b865f6980583499fc31efd098cb749697e028402d4"
+      },
+      "inputs_sha256": {
+        "manifest": "e5a03bf3d4318e453b22b2b747fedb750ab22434f54bd4b9efdef973de9f8b20",
+        "genesis": "252d74211a38d1f5594f43cda48ef487a86003276c63249af315f3af9a509f74",
+        "rollup": "4e4ad459c7ba1fdf9ce9f5e3a3707dde6fca9fdc6a9608365c8faf9cba296f48"
+      }
+    },
+    "benchmark": {
+      "source_manifest_sha256": "da03fbdc32abb8d57fe6011dc17a8c23ea85b3dc083c9e894f0af6fab49ffe0c",
+      "binaries_sha256": {
+        "host": "7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08",
+        "reference": "a64ebacdec921127075e2a78a3bfbd796ebc78ef9746b46be2e10c60fa477de8",
+        "worker": "d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156"
+      },
+      "inputs_sha256": {
+        "approval": "75510b0713a360667fc106dbd0c12af514811464bb5148562ea774c47e1a1f66",
+        "manifest": "e5a03bf3d4318e453b22b2b747fedb750ab22434f54bd4b9efdef973de9f8b20",
+        "genesis": "252d74211a38d1f5594f43cda48ef487a86003276c63249af315f3af9a509f74"
+      }
+    }
+  }
+}

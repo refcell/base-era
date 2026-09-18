@@ -1,0 +1,76 @@
+{
+  "blocks": [
+    19,
+    20,
+    21
+  ],
+  "record_witness": [
+    {
+      "block": 19,
+      "exit": 0
+    },
+    {
+      "block": 20,
+      "exit": 0
+    },
+    {
+      "block": 21,
+      "exit": 0
+    }
+  ],
+  "offline_fixture": [
+    {
+      "block": 19,
+      "exit": 0
+    },
+    {
+      "block": 20,
+      "exit": 0
+    },
+    {
+      "block": 21,
+      "exit": 0
+    }
+  ],
+  "full_header_parity": [
+    {
+      "block": 19,
+      "rpc_hash": "0x400b4f334102f0b20cec915bdfec71ab824314b783dfdc5f81cc080f4a8d48c3",
+      "fixture_expected_hash": "0x400b4f334102f0b20cec915bdfec71ab824314b783dfdc5f81cc080f4a8d48c3",
+      "full_header_parity": true
+    },
+    {
+      "block": 20,
+      "rpc_hash": "0xab9fd2d559ff746f5fbb0d73a329293c03b86f2287d22dbc4cc803480663ea19",
+      "fixture_expected_hash": "0xab9fd2d559ff746f5fbb0d73a329293c03b86f2287d22dbc4cc803480663ea19",
+      "full_header_parity": true
+    },
+    {
+      "block": 21,
+      "rpc_hash": "0xd206b7d56d05121034bad89d26abbc3552e291e66a0a8d1a08ecadf6fa7d9a3c",
+      "fixture_expected_hash": "0xd206b7d56d05121034bad89d26abbc3552e291e66a0a8d1a08ecadf6fa7d9a3c",
+      "full_header_parity": true
+    }
+  ],
+  "node": "stopped",
+  "error": null,
+  "all_match": true,
+  "fixtures": [
+    {
+      "block": 19,
+      "path": "fixtures/block-19.tar.gz",
+      "sha256": "c975fbc962ccd3fc56ab43eb059f43a110dfec49771578cf5f916867d3ae225b"
+    },
+    {
+      "block": 20,
+      "path": "fixtures/block-20.tar.gz",
+      "sha256": "d684433adad24f529b3aa54fa09dc937a17ecaf84e31a50edbaec4462abfc229"
+    },
+    {
+      "block": 21,
+      "path": "fixtures/block-21.tar.gz",
+      "sha256": "0f760985407a8b399a10687b424eb3f26be51ddbe13073055ebe1ed6d541d26d"
+    }
+  ],
+  "node_exit": 0
+}

@@ -1,0 +1,355 @@
+{
+  "schema": 1,
+  "measurement_utc": "2026-09-18T21:24:37Z",
+  "cold_definition": "Fresh node processes and owned datadir copies; OS page cache was not dropped.",
+  "inputs": {
+    "genesis": "/home/refcell/dev/base-era/target/demo-publication/generated/l2/genesis.json",
+    "source_datadirs": [
+      "/home/refcell/dev/base-era/target/demo-publication/replay-evidence/worker-datadir",
+      "/home/refcell/dev/base-era/target/demo-publication/replay-evidence/reference-datadir"
+    ],
+    "run_dir": "/home/refcell/dev/base-era/target/demo-publication/benchmark",
+    "repetitions": 5
+  },
+  "binaries": {
+    "host": {
+      "path": "/home/refcell/dev/base-era/target/demo-publication/benchmark/provenance-artifacts/7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08/host-history-host-node",
+      "sha256": "0x7178a4530b1eb387bcc96b49b7133c3f0c3812097bce554c9b8000757845ab08"
+    },
+    "reference": {
+      "path": "/home/refcell/dev/base-era/target/demo-publication/benchmark/provenance-artifacts/a64ebacdec921127075e2a78a3bfbd796ebc78ef9746b46be2e10c60fa477de8/reference-base-reth-node",
+      "sha256": "0xa64ebacdec921127075e2a78a3bfbd796ebc78ef9746b46be2e10c60fa477de8"
+    },
+    "release_worker": {
+      "path": "/home/refcell/dev/base-era/target/demo-publication/benchmark/provenance-artifacts/d91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156/worker-base-history-worker",
+      "sha256": "0xd91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156"
+    },
+    "manifest_approved_sha256": "0xd91510f9b15f84c1af4770d5caba9f2206b474780a5126453cf81a638f150156"
+  },
+  "environment": {
+    "kernel": "7.1.8-arch1-3",
+    "architecture": "x86_64",
+    "python": "3.14.7",
+    "rust_toolchain": "1.96.0",
+    "rustc_verbose": "rustc 1.96.0 (ac68faa20 2026-05-25)\nbinary: rustc\ncommit-hash: ac68faa20c58cbccd01ee7208bf3b6e93a7d7f96\ncommit-date: 2026-05-25\nhost: x86_64-unknown-linux-gnu\nrelease: 1.96.0\nLLVM version: 22.1.2",
+    "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S"
+  },
+  "startup_readiness_ms": {
+    "worker": 1453.389791,
+    "reference": 2306.752601
+  },
+  "workloads": {
+    "historical_eth_call": {
+      "worker": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "observed_first_ms": 2342.175841,
+        "repeated": {
+          "count": 5,
+          "min_ms": 2335.125017,
+          "median_ms": 2343.978775,
+          "p95_ms": 2356.429541,
+          "max_ms": 2360.448168,
+          "mean_ms": 2347.520498,
+          "samples_ms": [
+            2335.125017,
+            2343.978775,
+            2356.429541,
+            2341.620989,
+            2360.448168
+          ]
+        }
+      },
+      "reference": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "observed_first_ms": 8.507378,
+        "repeated": {
+          "count": 5,
+          "min_ms": 1.525367,
+          "median_ms": 1.926771,
+          "p95_ms": 1.984019,
+          "max_ms": 2.664928,
+          "mean_ms": 1.942158,
+          "samples_ms": [
+            2.664928,
+            1.926771,
+            1.609705,
+            1.525367,
+            1.984019
+          ]
+        }
+      },
+      "parity": true
+    },
+    "historical_estimate_gas": {
+      "worker": {
+        "first_result": "0x7084",
+        "observed_first_ms": 2631.316196,
+        "repeated": {
+          "count": 5,
+          "min_ms": 2560.206915,
+          "median_ms": 2599.164405,
+          "p95_ms": 2609.998803,
+          "max_ms": 2624.138684,
+          "mean_ms": 2598.5153132,
+          "samples_ms": [
+            2599.067759,
+            2560.206915,
+            2599.164405,
+            2609.998803,
+            2624.138684
+          ]
+        }
+      },
+      "reference": {
+        "first_result": "0x7084",
+        "observed_first_ms": 5.69368,
+        "repeated": {
+          "count": 5,
+          "min_ms": 1.848974,
+          "median_ms": 2.102321,
+          "p95_ms": 2.557686,
+          "max_ms": 2.636445,
+          "mean_ms": 2.2068592,
+          "samples_ms": [
+            2.557686,
+            1.848974,
+            2.102321,
+            1.88887,
+            2.636445
+          ]
+        }
+      },
+      "parity": true
+    },
+    "historical_block_19": {
+      "worker": {
+        "first_result": {
+          "hash": "0x400b4f334102f0b20cec915bdfec71ab824314b783dfdc5f81cc080f4a8d48c3",
+          "parentHash": "0xdfebd45efc25bb8bf996714bd3ad8bf4c307570575116f9b064e44b3e07dd0ec",
+          "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+          "miner": "0x4200000000000000000000000000000000000011",
+          "stateRoot": "0xd2aff0c9772afac4c22ea02ed63c9884427a4339aef6ef765c6e3898c1c3dc49",
+          "transactionsRoot": "0x67c465da3832a040bb2163d22a8e14dfef9e4e3559bf5671ad84633488f0e502",
+          "receiptsRoot": "0xe5af4a06baa046e330f35ececb63f974e84e1faad92e3e85f2cb4bfa8401d9f0",
+          "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "difficulty": "0x0",
+          "number": "0x13",
+          "gasLimit": "0x3938700",
+          "gasUsed": "0xaaf0",
+          "timestamp": "0x6aada974",
+          "extraData": "0x00000000fa00000006",
+          "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "nonce": "0x0000000000000000",
+          "baseFeePerGas": "0x37413178",
+          "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+          "blobGasUsed": "0x0",
+          "excessBlobGas": "0x0",
+          "parentBeaconBlockRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "size": "0x350",
+          "uncles": [],
+          "transactions": [
+            "0xb611c0fcc1c88aed5144935a2d526604b70554e49abc32fcab32ebfb335dc578"
+          ],
+          "withdrawals": []
+        },
+        "observed_first_ms": 2.113622,
+        "repeated": {
+          "count": 5,
+          "min_ms": 0.705175,
+          "median_ms": 0.7397,
+          "p95_ms": 0.782541,
+          "max_ms": 1.062256,
+          "mean_ms": 0.8011576,
+          "samples_ms": [
+            1.062256,
+            0.782541,
+            0.7397,
+            0.716116,
+            0.705175
+          ]
+        }
+      },
+      "reference": {
+        "first_result": {
+          "hash": "0x400b4f334102f0b20cec915bdfec71ab824314b783dfdc5f81cc080f4a8d48c3",
+          "parentHash": "0xdfebd45efc25bb8bf996714bd3ad8bf4c307570575116f9b064e44b3e07dd0ec",
+          "sha3Uncles": "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+          "miner": "0x4200000000000000000000000000000000000011",
+          "stateRoot": "0xd2aff0c9772afac4c22ea02ed63c9884427a4339aef6ef765c6e3898c1c3dc49",
+          "transactionsRoot": "0x67c465da3832a040bb2163d22a8e14dfef9e4e3559bf5671ad84633488f0e502",
+          "receiptsRoot": "0xe5af4a06baa046e330f35ececb63f974e84e1faad92e3e85f2cb4bfa8401d9f0",
+          "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+          "difficulty": "0x0",
+          "number": "0x13",
+          "gasLimit": "0x3938700",
+          "gasUsed": "0xaaf0",
+          "timestamp": "0x6aada974",
+          "extraData": "0x00000000fa00000006",
+          "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "nonce": "0x0000000000000000",
+          "baseFeePerGas": "0x37413178",
+          "withdrawalsRoot": "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+          "blobGasUsed": "0x0",
+          "excessBlobGas": "0x0",
+          "parentBeaconBlockRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "size": "0x350",
+          "uncles": [],
+          "transactions": [
+            "0xb611c0fcc1c88aed5144935a2d526604b70554e49abc32fcab32ebfb335dc578"
+          ],
+          "withdrawals": []
+        },
+        "observed_first_ms": 2.185677,
+        "repeated": {
+          "count": 5,
+          "min_ms": 0.550004,
+          "median_ms": 0.607411,
+          "p95_ms": 0.646676,
+          "max_ms": 0.951848,
+          "mean_ms": 0.6671978000000001,
+          "samples_ms": [
+            0.951848,
+            0.646676,
+            0.607411,
+            0.58005,
+            0.550004
+          ]
+        }
+      },
+      "parity": true
+    },
+    "current_eth_call": {
+      "worker": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "observed_first_ms": 6.099011,
+        "repeated": {
+          "count": 5,
+          "min_ms": 1.958441,
+          "median_ms": 2.136525,
+          "p95_ms": 2.23438,
+          "max_ms": 3.264655,
+          "mean_ms": 2.3139488,
+          "samples_ms": [
+            1.958441,
+            1.975743,
+            2.136525,
+            2.23438,
+            3.264655
+          ]
+        }
+      },
+      "reference": {
+        "first_result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "observed_first_ms": 5.285864,
+        "repeated": {
+          "count": 5,
+          "min_ms": 1.922573,
+          "median_ms": 2.159349,
+          "p95_ms": 2.325299,
+          "max_ms": 2.860987,
+          "mean_ms": 2.2820848,
+          "samples_ms": [
+            2.860987,
+            2.325299,
+            2.159349,
+            2.142216,
+            1.922573
+          ]
+        }
+      },
+      "parity": true
+    }
+  },
+  "worker_state_access_from_host_log": [
+    {
+      "elapsed_us": 208729,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 203876,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 212311,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 210303,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 202830,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 203147,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 205446,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 205256,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 201704,
+      "request_count": 12,
+      "request_bytes": 2550
+    },
+    {
+      "elapsed_us": 203769,
+      "request_count": 12,
+      "request_bytes": 2562
+    },
+    {
+      "elapsed_us": 204581,
+      "request_count": 12,
+      "request_bytes": 2562
+    },
+    {
+      "elapsed_us": 205309,
+      "request_count": 12,
+      "request_bytes": 2562
+    }
+  ],
+  "node_resource_usage_including_waited_descendants": {
+    "method": "Linux wait4 rusage after graceful shutdown; includes descendants each node waited for",
+    "worker": {
+      "user_seconds": 30.373787,
+      "system_seconds": 0.7087279999999999,
+      "elapsed_ms": 33564.295778,
+      "peak_rss_kib": 333572
+    },
+    "reference": {
+      "user_seconds": 1.9142039999999998,
+      "system_seconds": 0.36561099999999996,
+      "elapsed_ms": 32110.78,
+      "peak_rss_kib": 247688
+    }
+  },
+  "release_worker_probe": {
+    "label": "process startup + framed request parsing (not cold page cache)",
+    "wall_ms": 0.70789,
+    "response": {
+      "outcome": "unsupported",
+      "request_id": "benchmark-unsupported",
+      "error": "protocol version 999"
+    },
+    "resource_usage": {
+      "user_seconds": 0.000554,
+      "system_seconds": 0.0,
+      "elapsed_ms": 0.70789,
+      "peak_rss_kib": 55588
+    }
+  }
+}

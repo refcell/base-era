@@ -13,14 +13,35 @@ It is **not** an Era/Era1 archive-format implementation or an official Base proj
 
 ## Status
 
-The source spike has run successfully on a disposable local devnet. **Migration is in progress:**
-this repository now contains the selected host source, independently frozen historical/reference
-sources, vendored reth, the devnet harness and a static showcase site. Fresh builds and acceptance
-are being run from this checkout; the earlier spike's results below are not yet migration results.
+**The migrated demo passed its complete local acceptance run on September 18, 2026.** This
+repository contains the selected host source, independently frozen historical/reference sources,
+vendored reth, and the devnet harness—no enclosing Base checkout or moving patch overlay required.
 
-The local entry point is `./demo help`. Follow [the task board](TASK_BOARD.md) for current evidence.
-There is no published binary release yet. The source baseline is a separate commit so integration
-changes can be reviewed without mistaking omitted tooling for removed historical logic.
+[Explore the showcase](https://refcell.github.io/base-era/) · [Read the report](docs/history-spike.md)
+· [Inspect the evidence](etc/history-devnet/evidence/final/) ·
+[Review the integration diff](https://github.com/refcell/base-era/compare/00cca4b99fad0c68901521cedd32b5a13d283c21...main)
+
+## Run it
+
+Requires x86-64 Linux with Landlock ABI 3+, Docker, Rust 1.96, Foundry `cast`, and a native build
+toolchain. Allow at least 70 GiB for build outputs. See [the build guide](docs/history-spike-build.md)
+for prerequisites, pins, profiles and fresh-run handling.
+
+```sh
+git clone https://github.com/refcell/base-era.git
+cd base-era
+./demo setup
+./demo build
+./demo test
+./demo start && ./demo exercise
+./demo verify
+./demo evidence
+./demo stop
+```
+
+The harness creates content-addressed local executables; no downloadable binary release is
+published yet. Runtime images and package downloads are not fully hermetic. The selected upstream
+baseline is a separate commit; omitted tooling is not removed historical execution logic.
 
 ## How it works
 
@@ -44,7 +65,7 @@ canonical database. Requests and results are bound to the parent, chain configur
 and approved executable identity. Missing artifacts, crashes and malformed responses fail closed;
 they do not silently fall back to the current execution rules.
 
-## What the local spike demonstrated
+## What this checkout demonstrated
 
 The tested boundary was **pre-Isthmus versus Isthmus and later**, with Isthmus scheduled at block
 20 on the devnet. This is a real protocol activation, not an artificial switch between identical
@@ -59,19 +80,20 @@ implementations.
 - Host and worker built with separate lockfiles and different resolved dependency versions.
 
 The final local run recorded 95 replay/validation/RPC checks, six import checks, seven
-failure/recovery scenarios, 11 host tests and 15 worker subprocess tests passing.
-These are results from the source spike, **not CI results for this repository**. Reproducible
-commands and supporting evidence will accompany the migration.
+failure/recovery scenarios, 11 host tests, 15 worker subprocess tests and nine artifact-integrity
+tests passing. These are local results, not GitHub CI results. Portable evidence binds each stage
+to its tested executable hashes and approved configuration; an independent reviewer checked the
+results, routing, failure causality and publication safety.
 
 ## Boundaries and limitations
 
 - This is experimental, not production-ready or a security audit.
-- Historical implementation bodies remain in the source spike's host tree; the selected execution
+- Historical implementation bodies remain in this host tree; the selected execution
   paths bypass them. Complete latest-only source extraction is not demonstrated.
 - Native stateless parity is not a zkVM proof. Guest execution and verifier authorization need
   separate work.
 - The worker supports specific historical RPC operations and tracers, not every simulation API.
-- Historical calls in the unoptimized spike took roughly 2.54 seconds versus 2.9 milliseconds in
+- Historical calls in the unoptimized migrated run took roughly 2.34 seconds versus 1.93 milliseconds in
   the reference. Repeated genesis/configuration processing and per-request processes need work.
 - The tested isolation mechanism requires Linux with Landlock ABI 3+ and seccomp.
 
@@ -84,5 +106,5 @@ commands and supporting evidence will accompany the migration.
 The spike's reth patch changes 13 files: 300 added and 42 removed lines. Worker execution uses
 the original pinned reth revision, not the host's patched interfaces.
 
-Any migrated upstream source and distributed artifacts must retain their applicable licenses and
-notices. Release packaging and attribution will be established before binaries are published.
+Upstream source retains its applicable licenses and notices. Source/dependency details are in
+[the inventory](docs/source-inventory.md) and [frozen-source manifest](sources/frozen-sources.json).

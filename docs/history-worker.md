@@ -78,10 +78,11 @@ UTF-8 JSON in declaration order containing every request field (including genesi
 chain ID, era, and protocol version); only `binding_hash` itself is omitted. Hosts should call the
 protocol method rather than duplicate this serialization.
 
-The original source-spike worker subprocess tests exercised Canyon receipt/CREATE2 transitions, Regolith account creation,
-code/storage deletion, separate parent views, calls, estimation and tracing. Live Isthmus cutover,
-Engine replay/reorg, import rejection and failure recovery observations are described with their
-historical status in `history-spike.md`; migrated acceptance evidence is pending.
+The migrated worker subprocess suite passed 15 tests covering Canyon receipt/CREATE2 transitions,
+Regolith account creation, code/storage deletion, separate parent views, calls, estimation, tracing,
+protocol/configuration failures, and provider failures. Host unit tests passed 11 and the Python
+suite passed 9. Live cutover, replay/reorg, import, and failure evidence is indexed in
+[`history-spike.md`](history-spike.md).
 `block_reversions` is reserved and empty in this one-block protocol: the host reconstructs inverse
 entries from validated before-values and retains the parent snapshot to restore slots omitted by
 a wipe. Canonical receipt RLP is authoritative; duplicated deposit fields are informational. The

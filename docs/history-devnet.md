@@ -2,14 +2,17 @@
 
 The disposable harness starts dedicated L1 services and a full L2 stack (sequencer, batcher,
 derivation, and independent verifier) with Isthmus at block 20. From a clean checkout, first build
-the artifacts as documented in `docs/history-spike-build.md`, then use a fresh run directory:
+the artifacts as documented in `docs/history-spike-build.md`. Setup always runs `docker build` from
+committed context. The default documented path is a fresh run directory:
 
 ```sh
 RUN="$PWD/target/history-devnet-run"
-etc/history-devnet/start.sh "$RUN"
-etc/history-devnet/exercise.sh "$RUN"
+etc/history-devnet/start.sh "$RUN" && etc/history-devnet/exercise.sh "$RUN"
 etc/history-devnet/verify.sh "$RUN"
 ```
+
+`./demo start` defaults to `target/demo-run` and refuses an existing directory. For another run,
+select a new path with `BASE_ERA_RUN_DIR`. Exercise immediately after startup to catch the cutover.
 
 Keep the devnet running for replay/import. Stop it when those consumers finish:
 
@@ -37,12 +40,26 @@ Build `target/debug/examples/fixture` first if it is absent (the runner also acc
 witness archives, command metadata, logs, and `results.json`. The runner checks every subprocess
 exit and compares each fixture's expected full-header hash with RPC for blocks 19–21.
 
-The original source spike passed these checks on 2026-09-18. Fresh migrated evidence must be
-captured before claiming this checkout passed. This check neither authorizes zk proofs nor changes
-a verifying program.
+The migrated run passed witness recording, offline replay, and full-header parity for blocks 19–21;
+see [`stateless.json`](../etc/history-devnet/evidence/final/stateless.json). This check neither
+authorizes zk proofs nor changes a verifying program.
 
 Captured `corpus/block-{19,20,21}.tar.gz` files can be replayed without a
 running network using `target/debug/examples/fixture run <archive>`. Run
 `etc/history-devnet/acceptance.sh "$RUN"` for the complete live/replay/import/failure/native/measurement
 suite, and `python3 etc/history-devnet/collect.py "$RUN" --output "$RUN/portable-evidence"` to
 collect shareable results without Engine credentials.
+
+The accepted devnet remains running at `target/demo-publication`. Operate that exact run with:
+
+```sh
+export BASE_ERA_RUN_DIR="$PWD/target/demo-publication"
+./demo status
+./demo stop
+```
+
+The pipeline freezes each stage's artifacts before testing, and the collector joins and verifies
+their hashes in [`provenance.json`](../etc/history-devnet/evidence/final/provenance.json). Never
+publish the Engine JWT. Runtime image tags and package fetches make the process neither bit
+reproducible nor hermetic: cold builds require tools, images, and downloads. No release binaries are
+published.

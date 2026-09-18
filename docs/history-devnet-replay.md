@@ -38,9 +38,9 @@ python3 etc/history-devnet/replay.py --run-dir "$RUN" \
 The launch defaults are the artifacts under `target/`, and genesis is derived from `--run-dir`.
 The JWT is read from `runtime.json`. `replay-evidence/transcript.json` records every JSON-RPC
 request and response; `summary.json` records exact PASS, FAIL, and SKIP outcomes. `cast` must be on
-`PATH` to compute Keccak-256 for malformed headers. The passed count excludes SKIP. The original
-source spike on 2026-09-18 recorded 95 PASS and no FAIL/SKIP outcomes, including alternate-branch
-builder parity and canonical restoration. This is historical context, not a migrated result. Fresh
-results are pending at `etc/history-devnet/evidence/final/replay.json`. The six
+`PATH` to compute Keccak-256 for malformed headers. The passed count excludes SKIP. The migrated
+run recorded [95 PASS, 0 FAIL, and 0 SKIP](../etc/history-devnet/evidence/final/replay.json),
+including alternate-branch builder parity, canonical restoration, restart, and manifest-digest
+causality. The six
 malformed cases span both sides of Isthmus, testing state/receipt roots and gas accounting;
 Engine artifact failure is required to be internal, not INVALID.
