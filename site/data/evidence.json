@@ -25,5 +25,44 @@
     "referenceMs": 1.927,
     "label": "Repeated historical eth_call median",
     "note": "Migrated run · debug host/reference; release worker. Five samples after the first request; OS page cache retained."
-  }
+  },
+  "performance": [
+    {
+      "metric": "Historical eth_call · median",
+      "host": "2343.979 ms",
+      "reference": "1.927 ms",
+      "historical": true
+    },
+    {
+      "metric": "Historical estimateGas · median",
+      "host": "2599.164 ms",
+      "reference": "2.102 ms",
+      "historical": true
+    },
+    {
+      "metric": "Current eth_call · median",
+      "host": "2.137 ms",
+      "reference": "2.159 ms"
+    },
+    {
+      "metric": "Import · blocks 1–22",
+      "host": "0.445 blk/s",
+      "reference": "16.224 blk/s"
+    },
+    {
+      "metric": "Node readiness",
+      "host": "1453.390 ms",
+      "reference": "2306.753 ms"
+    },
+    {
+      "metric": "Benchmark CPU · user + system",
+      "host": "31.083 s",
+      "reference": "2.280 s"
+    },
+    {
+      "metric": "Benchmark peak RSS",
+      "host": "333572 KiB",
+      "reference": "247688 KiB"
+    }
+  ]
 }

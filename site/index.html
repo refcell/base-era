@@ -5,204 +5,167 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="Base Era explores version-isolated historical execution with pinned worker binaries."
+      content="Base Era: pinned historical execution workers. Architecture, acceptance results, benchmarks and reproduction commands."
     />
+    <title>Base Era — historical execution benchmarks</title>
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><rect width=%2216%22 height=%2216%22 fill=%22%23174aff%22/></svg>"
     />
-    <title>Base Era — version-isolated execution</title>
     <link rel="stylesheet" href="./styles.css" />
     <script src="./app.js" defer></script>
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <header class="topbar">
-      <a class="wordmark" href="#top" aria-label="Base Era home">BASE / ERA</a>
+      <a class="wordmark" href="#main">BASE / ERA</a>
       <nav aria-label="Primary">
-        <a href="#walkthrough">Walkthrough</a><a href="#evidence">Evidence</a
-        ><a href="#run">Run it</a><a href="#context">Context</a>
+        <a href="#performance">Benchmarks</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#run">Reproduce</a>
+        <a href="https://github.com/refcell/base-era">GitHub ↗</a>
       </nav>
-      <div class="status">
-        <i aria-hidden="true"></i><span id="header-status">Source spike</span>
-      </div>
     </header>
-
     <main id="main">
-      <section class="hero" id="top">
-        <p class="eyebrow">Research note 01 / historical execution</p>
-        <h1>Old rules,<br /><em>kept executable.</em></h1>
-        <div class="hero-deck">
-          <p>
-            Base Era explores whether a current Base node can delegate old
-            blocks to independently built, immutable workers—without giving
-            those workers ownership of canonical state.
-          </p>
-          <div class="hero-actions">
-            <a class="primary-action" id="demo-action" href="#run"
-              >Review the demo commands <span aria-hidden="true">→</span></a
-            ><a class="arrow-link" href="#walkthrough"
-              >Follow the block boundary <span aria-hidden="true">↓</span></a
-            >
-          </div>
+      <section class="intro" aria-labelledby="title">
+        <div class="heading">
+          <h1 id="title">Version-isolated execution</h1>
+          <span class="status" id="header-status">Loading evidence</span>
         </div>
-        <div class="hero-meta">
-          <span>Pre-Isthmus → Isthmus</span><span>Local devnet · 22 blocks</span
-          ><span id="hero-provenance">Source spike · 2026-09-18</span>
-        </div>
-      </section>
-
-      <section class="section timeline-section" id="walkthrough">
-        <div class="section-head">
-          <p class="eyebrow">01 / The cutover</p>
-          <h2>One chain.<br />Two execution paths.</h2>
-        </div>
-        <p class="lede">
-          The compressed devnet activates the real Isthmus fork at block 20.
-          Choose a block to inspect who executes it and why.
+        <p>
+          Base executes pre-Isthmus blocks in a pinned, sandboxed worker;
+          Isthmus+ stays in-process. The host retains canonical state,
+          validation, forkchoice and unwind.
         </p>
-        <div class="timeline" role="group" aria-label="Fork timeline">
-          <div class="track" aria-hidden="true"><i></i></div>
-          <button class="block active" data-block="19" aria-pressed="true">
-            <b>19</b><span>pre-Isthmus parent</span>
-          </button>
-          <button class="block activation" data-block="20" aria-pressed="false">
-            <b>20</b><span>activation</span>
-          </button>
-          <button class="block" data-block="21" aria-pressed="false">
-            <b>21</b><span>current rules</span>
-          </button>
-        </div>
-        <div class="timeline-detail" aria-live="polite">
-          <div>
-            <p class="eyebrow" id="route-label">BLOCK 19 · WORKER ROUTE</p>
-            <h3 id="route-title">Holocene rules, isolated</h3>
-          </div>
-          <p id="route-copy">
-            The host binds the request to block 19’s exact parent and sends
-            complete-block execution to the approved historical worker.
-          </p>
-          <dl>
-            <div>
-              <dt>Executor</dt>
-              <dd id="route-executor">Pinned worker</dd>
-            </div>
-            <div>
-              <dt>State access</dt>
-              <dd id="route-state">Immutable parent view</dd>
-            </div>
-            <div>
-              <dt>Persistence</dt>
-              <dd>Host only</dd>
-            </div>
-          </dl>
-        </div>
-      </section>
-
-      <section class="section flow-section">
-        <div class="section-head">
-          <p class="eyebrow">02 / Trust boundary</p>
-          <h2>The host lends<br />reads, never writes.</h2>
-        </div>
-        <div class="flow" aria-label="Immutable read execution flow">
-          <article>
-            <span>01</span>
-            <h3>Host selects</h3>
-            <p>
-              Chain configuration and block context select current or historical
-              rules—not a wall clock or arbitrary flag.
-            </p>
-          </article>
-          <div class="connector" aria-hidden="true">request →</div>
-          <article class="worker">
-            <span>02</span>
-            <h3>Worker executes</h3>
-            <p>
-              A digest-verified binary asks for parent-bound account, code and
-              storage reads in a Linux sandbox.
-            </p>
-          </article>
-          <div class="connector" aria-hidden="true">deltas →</div>
-          <article>
-            <span>03</span>
-            <h3>Host validates</h3>
-            <p>
-              The worker returns receipts and explicit deltas. The host checks
-              bindings, validates roots, then commits or unwinds.
-            </p>
-          </article>
-        </div>
-        <p class="flow-note">
-          <strong>No shared Rust objects. No writable database handle.</strong>
-          Versioned serialized messages bind operation, configuration, parent,
-          candidate and executable identity. Infrastructure failures fail
-          closed—never silently back to current rules.
-        </p>
-      </section>
-
-      <section class="section evidence" id="evidence">
-        <div class="section-head">
-          <p class="eyebrow">03 / Evidence</p>
-          <h2>What the spike<br />actually showed.</h2>
-        </div>
-        <div class="evidence-banner">
-          <div>
-            <strong id="evidence-label">Source-spike evidence</strong
-            ><span id="evidence-date">Final local run · 2026-09-18</span>
-          </div>
-          <p id="checkout-status">Not yet rerun from this checkout</p>
-        </div>
-        <div class="stats" id="stats"><p>Loading evidence…</p></div>
-        <div class="latency">
-          <div>
-            <p class="eyebrow">The uncomfortable number</p>
-            <h3>Historical calls were dramatically slower.</h3>
-            <p>
-              The unoptimized path repeatedly processed a ~9 MB genesis/manifest
-              and spawned one process per operation. This is a result to fix,
-              not hide.
-            </p>
-          </div>
-          <div
-            class="bars"
-            aria-label="Repeated historical call median latency comparison"
+        <div class="links">
+          <a
+            href="https://github.com/refcell/base-era/blob/main/docs/history-spike.md"
+            >Technical report ↗</a
           >
-            <div>
-              <span>History host + worker</span><i style="--size: 100%"></i
-              ><b id="worker-latency">2537.581 ms</b>
-            </div>
-            <div>
-              <span>Original reference</span
-              ><i
-                class="reference-bar"
-                id="reference-bar"
-                style="--size: 0.114%"
-              ></i
-              ><b id="reference-latency">2.903 ms</b>
-            </div>
-            <small id="latency-note"
-              >Debug history host/reference; release worker.</small
-            >
-          </div>
+          <a
+            href="https://github.com/refcell/base-era/tree/main/etc/history-devnet/evidence/final"
+            >Raw evidence ↗</a
+          >
+          <a
+            href="https://github.com/refcell/base-era/compare/00cca4b99fad0c68901521cedd32b5a13d283c21...main"
+            >Diff from selected Base baseline ↗</a
+          >
         </div>
-        <p class="source-note" id="source-note">
-          Figures above come from the disposable source spike, not CI or a fresh
-          run of this checkout. The orchestrator can replace
-          <code>site/data/evidence.json</code> with migrated-run results without
-          editing this page.
+      </section>
+
+      <section class="acceptance" aria-label="Acceptance results">
+        <div class="stats" id="stats"><p>Loading recorded results…</p></div>
+        <p class="note" id="provenance">
+          Recorded local devnet results, not a live browser benchmark.
         </p>
       </section>
 
-      <section class="section quickstart" id="run">
-        <div class="section-head">
-          <p class="eyebrow">04 / Reproduce</p>
-          <h2>From checkout<br />to cutover.</h2>
+      <section id="performance">
+        <div class="heading">
+          <h2>Performance</h2>
+          <span class="note">History host + worker vs original reference</span>
         </div>
-        <div class="code-wrap">
-          <div class="code-head">
-            <span id="quickstart-status"
-              >Planned demo interface · repository root</span
-            ><button id="copy" type="button">Copy commands</button>
+        <table class="performance">
+          <caption class="sr-only">
+            Measured performance on the same local devnet workloads
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">History host</th>
+              <th scope="col">Reference</th>
+            </tr>
+          </thead>
+          <tbody id="benchmarks">
+            <tr>
+              <td colspan="3">Loading measurements…</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="note" id="measurement-note"></p>
+        <p class="bottleneck">
+          <strong>Historical execution is unoptimized.</strong> Each operation
+          spawns a worker and repeatedly processes a ~9 MB
+          genesis/configuration. Twelve parent-state reads per measured request;
+          2,550–2,562 bytes of read requests (not total traffic). Bare worker
+          startup + protocol parse: 0.708 ms.
+        </p>
+      </section>
+
+      <section id="architecture">
+        <div class="heading">
+          <h2>Execution boundary</h2>
+          <span class="note">Isthmus activation: block 20</span>
+        </div>
+        <div class="columns">
+          <div>
+            <table>
+              <caption class="sr-only">
+                Execution routing across the activation
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Blocks</th>
+                  <th scope="col">Rules</th>
+                  <th scope="col">Executor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">1–19</th>
+                  <td>Holocene</td>
+                  <td class="accent">Pinned worker</td>
+                </tr>
+                <tr>
+                  <th scope="row">20</th>
+                  <td>Isthmus cutover</td>
+                  <td>Host; old-era parent</td>
+                </tr>
+                <tr>
+                  <th scope="row">21+</th>
+                  <td>Isthmus</td>
+                  <td>Host</td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="note">
+              Real fork differences: upgrade deposits, GasPriceOracle flag, and
+              requests/withdrawals commitments.
+            </p>
+          </div>
+          <ul class="technical-list">
+            <li>
+              <strong>Protocol:</strong> serialized requests bind chain/config,
+              parent, candidate, operation and artifact digest.
+            </li>
+            <li>
+              <strong>State:</strong> immutable parent reads in;
+              account/storage/code deltas and era-correct receipts out. Only the
+              host writes the DB.
+            </li>
+            <li>
+              <strong>Isolation:</strong> SHA-256 approval, sealed executable,
+              Landlock + seccomp. Failures never fall back to latest rules.
+            </li>
+            <li>
+              <strong>Independent builds:</strong> separate lockfiles; worker
+              Alloy 2.4.2 vs host 2.4.1. Reth delta: 13 files, +300/−42 lines.
+            </li>
+          </ul>
+        </div>
+        <p class="note">
+          Coverage: sequencer/verifier parity, restart, cross-cutover reorgs,
+          malformed Engine/import blocks, historical calls/estimates/traces and
+          worker failure recovery. Additional tests: 11 host, 15 worker, 9
+          artifact-integrity.
+        </p>
+      </section>
+
+      <div class="columns lower">
+        <section id="run">
+          <div class="heading">
+            <h2>Reproduce</h2>
+            <button id="copy" type="button">Copy commands</button>
           </div>
           <pre><code id="commands">git clone https://github.com/refcell/base-era.git
 cd base-era
@@ -213,151 +176,64 @@ cd base-era
 ./demo verify
 ./demo evidence
 ./demo stop</code></pre>
-        </div>
-        <div class="run-notes">
-          <p id="quickstart-note">
-            <strong>These commands are the planned interface.</strong> They
-            become runnable when the demo migration lands; today this checkout
-            does not claim a successful run.
+          <p class="note">
+            x86-64 Linux, Landlock ABI 3+, Docker, Rust 1.96, Foundry and ≥70
+            GiB build space.
+            <a
+              href="https://github.com/refcell/base-era/blob/main/docs/history-spike-build.md"
+              >Build guide ↗</a
+            >. Source-build demo; no binary release. Runtime image/package
+            inputs are not fully hermetic.
           </p>
-          <p>
-            <strong>Supported host:</strong> x86-64 Linux with Landlock ABI 3+
-            and seccomp. Setup/build may be substantial. The browser page itself
-            performs no blockchain execution.
-          </p>
-        </div>
-      </section>
-
-      <section class="section context" id="context">
-        <div class="section-head">
-          <p class="eyebrow">05 / Ethereum context</p>
-          <h2>Related direction.<br />Different job.</h2>
-        </div>
-        <div class="comparison">
-          <article>
-            <h3>EIP-4444 / history expiry</h3>
-            <p>
-              The Draft proposes bounded retention for old headers, block bodies
-              and receipts. Major clients shipped partial pre-Merge expiry in
-              2025; full rolling expiry remained ongoing. Its full-sync section
-              already proposes stitching together historical execution
-              engines—Base Era explores that design space, not a novel idea.
-            </p>
-            <div class="source-links">
-              <a href="https://eips.ethereum.org/EIPS/eip-4444">EIP-4444 ↗</a
-              ><a
-                href="https://blog.ethereum.org/2025/07/08/partial-history-exp"
-                >2025 client rollout ↗</a
-              >
-            </div>
-          </article>
-          <article>
-            <h3>State expiry ≠ statelessness</h3>
-            <p>
-              State expiry makes inactive account and storage state
-              resurrectable; stateless execution uses witnesses to reduce
-              state-storage duties. Neither is history pruning. This native
-              worker receives immutable parent-state reads, but implements no
-              state-expiry scheme and produces no zkVM proof.
-            </p>
-            <a href="https://ethereum.org/en/roadmap/statelessness/"
-              >Ethereum roadmap ↗</a
-            >
-          </article>
-          <article>
-            <h3>Era / Era1 archives</h3>
-            <p>
-              Era stores consensus history; Era1 packages pre-Merge execution
-              headers, bodies and receipts. These are archive data formats—not
-              historical state or executable fork rules. Base Era neither reads
-              nor writes them.
-            </p>
-            <div class="source-links">
+        </section>
+        <section id="context">
+          <h2>Ethereum context</h2>
+          <dl class="context">
+            <dt>
               <a
-                href="https://github.com/eth-clients/e2store-format-specs/blob/main/formats/era.md"
-                >Era specification ↗</a
-              ><a
-                href="https://github.com/eth-clients/e2store-format-specs/blob/main/formats/era1.md"
-                >Era1 specification ↗</a
+                href="https://eips.ethereum.org/EIPS/eip-4444#full-syncing-from-genesis"
+                >EIP-4444</a
               >
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <section class="section limits">
-        <div class="section-head">
-          <p class="eyebrow">06 / Limits</p>
-          <h2>A boundary demo,<br />not a finished client.</h2>
-        </div>
-        <ul>
-          <li>
-            <b>Legacy implementations remain.</b
-            ><span
-              >Selected paths bypass them, but historical implementation bodies
-              and dependencies remain in the host source tree. This says nothing
-              about retained block-body data.</span
-            >
-          </li>
-          <li>
-            <b>Parity is not proof.</b
-            ><span
-              >Native stateless execution matched headers 19–21; no zkVM guest,
-              proof or onchain authorization was demonstrated.</span
-            >
-          </li>
-          <li>
-            <b>Coverage is scoped.</b
-            ><span
-              >Supported historical calls, estimates and traces work; every
-              simulation API and custom tracer does not.</span
-            >
-          </li>
-          <li>
-            <b>Isolation has a platform.</b
-            ><span
-              >Landlock 3+, seccomp and other Linux controls fail closed on
-              unsupported kernels; the worker remains trusted client code.</span
-            >
-          </li>
-          <li>
-            <b>No expiry feature.</b
-            ><span
-              >This does not implement Ethereum state expiry or EIP-4444 history
-              expiry.</span
-            >
-          </li>
-          <li>
-            <b>Production work remains.</b
-            ><span
-              >Resource budgets, persistent/batched workers, caching, broader
-              corpora, artifact governance and proof integration.</span
-            >
-          </li>
-        </ul>
-      </section>
+            </dt>
+            <dd>
+              History retention. Its full-sync design already proposes stitching
+              historical execution engines together; Base Era explores that
+              approach.
+            </dd>
+            <dt>
+              <a href="https://ethereum.org/en/roadmap/statelessness/"
+                >State expiry</a
+              >
+            </dt>
+            <dd>
+              Inactive state can expire and be resurrected. Distinct from
+              history pruning or witness-based statelessness; not implemented
+              here.
+            </dd>
+            <dt>
+              <a href="https://github.com/eth-clients/e2store-format-specs"
+                >Era / Era1</a
+              >
+            </dt>
+            <dd>
+              Archive data formats, not executable fork rules. This demo does
+              not read or write them.
+            </dd>
+          </dl>
+        </section>
+      </div>
+      <aside class="limits" aria-label="Limitations">
+        <strong>Scope limits</strong> — Historical bodies remain in host source;
+        selected paths bypass them. No zkVM proof or verifier changes. Only
+        supported RPC methods/tracers are isolated. Production work:
+        configuration caching, worker batching, resource budgets, broader fork
+        coverage and artifact governance.
+      </aside>
     </main>
     <footer>
-      <a class="wordmark" href="#top">BASE / ERA</a>
-      <p>
-        Experimental research built on
-        <a href="https://github.com/base/base">base/base</a>. Read the
-        <a href="https://github.com/refcell/base-era/blob/main/docs/history-spike.md"
-          >spike report</a
-        >
-        and
-        <a href="https://github.com/refcell/base-era/tree/main/etc/history-devnet/evidence/final"
-          >captured evidence</a>.
-        Review the
-        <a href="https://github.com/refcell/base-era/compare/00cca4b99fad0c68901521cedd32b5a13d283c21...main"
-          >diff from the selected Base baseline</a>.<br />Unofficial; not affiliated with or
-        endorsed by Base.
-      </p>
-      <p class="footer-end">
-        Version-isolated historical execution<br /><span id="footer-provenance"
-          >Local source spike · 2026</span
-        >
-      </p>
+      Experimental, unofficial Base research. Not production-ready or a security
+      audit.
+      <a href="https://github.com/refcell/base-era">refcell/base-era ↗</a>
     </footer>
   </body>
 </html>
