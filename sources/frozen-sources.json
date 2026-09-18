@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "digest_algorithm": "sha256(sorted NUL-safe `sha256sum` output for every regular file)",
+  "historical_base": {
+    "upstream": "https://github.com/base/base",
+    "revision": "1eda0f7f4cebb823522e62f34fc3e513b1c450b1",
+    "path": "etc/history-worker/historical/base",
+    "content_sha256": "0c1ad5663502a31767a8d9e439ea5b845a0a1c0e154f22234dab4e27ba96314d",
+    "lockfile_sha256": "da5f3aa69b21251722ba5e24e5573e54c7df969ec4fc69840684d941270c9e71",
+    "license": "MIT",
+    "package_directories": 29
+  },
+  "worker": {
+    "path": "etc/history-worker",
+    "lockfile_sha256": "a7058df0dd535616407558ebbf96e233dc1ec7e412fb2242fe1bf5a71d70c150",
+    "license": "MIT OR Apache-2.0",
+    "dependency_note": "Independent lockfile preserves base/reth tag base-v2.5.2.6 and the worker's divergent Alloy versions."
+  },
+  "reference_base": {
+    "upstream": "https://github.com/base/base",
+    "revision": "1eda0f7f4cebb823522e62f34fc3e513b1c450b1",
+    "path": "historical/reference",
+    "content_sha256": "9a42cb12f04f02117d290bc9d7c683b428126828a58e71ffb904c359c0f63698",
+    "lockfile_sha256": "da5f3aa69b21251722ba5e24e5573e54c7df969ec4fc69840684d941270c9e71",
+    "license": "MIT",
+    "package_directories": 51,
+    "adaptation": "Standard reth import command exposure is integrated in crates/execution/cli/src/app.rs and src/commands/mod.rs."
+  },
+  "host_reth": {
+    "upstream": "https://github.com/base/reth",
+    "revision": "d201e8932a613e6ec3c1c89d610c47cbc1684f7b",
+    "path": "vendor/reth",
+    "content_sha256": "2a30c227f9b0ba0610cf2491417c04d17fc0e21cde6900637c1bf3a8c45eb62d",
+    "lockfile_sha256": "db1097803236f4dca7735cedb9e2a01b0b6cef9fb4be1bbca24f3b993e7a8710",
+    "licenses": ["Apache-2.0", "MIT"],
+    "original_delta": {
+      "path": "sources/reth-history.patch",
+      "sha256": "85ca603ec153c88e7e417c95b28c7a6a8d3eacbeb0677abe04168e028d65302a",
+      "files": 13,
+      "insertions": 285,
+      "deletions": 45
+    }
+  }
+}

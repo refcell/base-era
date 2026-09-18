@@ -1,0 +1,191 @@
+use alloy_chains::Chain;
+use alloy_genesis::Genesis;
+use alloy_hardforks::Hardfork;
+use alloy_primitives::Address;
+use base_common_genesis::BaseUpgrade;
+use reth_chainspec::ChainSpecBuilder;
+use reth_ethereum_forks::{ChainHardforks, EthereumHardfork, ForkCondition};
+use reth_primitives_traits::SealedHeader;
+
+use crate::{BaseChainSpec, BaseChainSpecError};
+
+/// Chain spec builder for a Base chain.
+#[derive(Debug, Default)]
+pub struct BaseChainSpecBuilder {
+    /// [`ChainSpecBuilder`]
+    inner: ChainSpecBuilder,
+    /// Activation registry admin address.
+    activation_admin_address: Option<Address>,
+}
+
+impl BaseChainSpecBuilder {
+    /// Construct a new builder from the Base Mainnet chain spec.
+    pub fn base_mainnet() -> Self {
+        let base_mainnet = BaseChainSpec::mainnet();
+        let mut inner = ChainSpecBuilder::default()
+            .chain(base_mainnet.chain)
+            .genesis(base_mainnet.genesis.clone());
+        let forks = base_mainnet.hardforks.clone();
+        inner = inner.with_forks(forks);
+        Self { inner, activation_admin_address: base_mainnet.activation_admin_address }
+    }
+
+    /// Set the chain ID.
+    pub fn chain(mut self, chain: Chain) -> Self {
+        self.inner = self.inner.chain(chain);
+        self
+    }
+
+    /// Set the genesis block.
+    pub fn genesis(mut self, genesis: Genesis) -> Self {
+        self.inner = self.inner.genesis(genesis);
+        self
+    }
+
+    /// Add the given fork with the given activation condition to the spec.
+    pub fn with_fork<H: Hardfork>(mut self, fork: H, condition: ForkCondition) -> Self {
+        self.inner = self.inner.with_fork(fork, condition);
+        self
+    }
+
+    /// Add the given forks with the given activation condition to the spec.
+    pub fn with_forks(mut self, forks: ChainHardforks) -> Self {
+        self.inner = self.inner.with_forks(forks);
+        self
+    }
+
+    /// Set the activation registry admin address.
+    pub const fn activation_admin_address(mut self, address: Address) -> Self {
+        self.activation_admin_address = Some(address);
+        self
+    }
+
+    /// Set or clear the activation registry admin address.
+    pub const fn optional_activation_admin_address(mut self, address: Option<Address>) -> Self {
+        self.activation_admin_address = address;
+        self
+    }
+
+    /// Remove the given fork from the spec.
+    pub fn without_fork(mut self, fork: BaseUpgrade) -> Self {
+        self.inner = self.inner.without_fork(fork);
+        self
+    }
+
+    /// Enable Bedrock at genesis.
+    pub fn bedrock_activated(mut self) -> Self {
+        self.inner = self.inner.paris_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Bedrock, ForkCondition::Block(0));
+        self
+    }
+
+    /// Enable Regolith at genesis.
+    pub fn regolith_activated(mut self) -> Self {
+        self = self.bedrock_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Regolith, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Canyon at genesis.
+    pub fn canyon_activated(mut self) -> Self {
+        self = self.regolith_activated();
+        self.inner = self.inner.with_fork(EthereumHardfork::Shanghai, ForkCondition::Timestamp(0));
+        self.inner = self.inner.with_fork(BaseUpgrade::Canyon, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Ecotone at genesis.
+    pub fn ecotone_activated(mut self) -> Self {
+        self = self.canyon_activated();
+        self.inner = self.inner.with_fork(EthereumHardfork::Cancun, ForkCondition::Timestamp(0));
+        self.inner = self.inner.with_fork(BaseUpgrade::Ecotone, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Fjord at genesis.
+    pub fn fjord_activated(mut self) -> Self {
+        self = self.ecotone_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Fjord, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Granite at genesis.
+    pub fn granite_activated(mut self) -> Self {
+        self = self.fjord_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Granite, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Holocene at genesis.
+    pub fn holocene_activated(mut self) -> Self {
+        self = self.granite_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Holocene, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Isthmus at genesis.
+    pub fn isthmus_activated(mut self) -> Self {
+        self = self.holocene_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Isthmus, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Jovian at genesis.
+    pub fn jovian_activated(mut self) -> Self {
+        self = self.isthmus_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Jovian, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Base Azul at genesis.
+    pub fn azul_activated(mut self) -> Self {
+        self = self.jovian_activated();
+        self.inner = self.inner.with_fork(EthereumHardfork::Osaka, ForkCondition::Timestamp(0));
+        self.inner = self.inner.with_fork(BaseUpgrade::Azul, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Beryl at genesis.
+    pub fn beryl_activated(mut self) -> Self {
+        self = self.azul_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Beryl, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Enable Cobalt at genesis.
+    pub fn cobalt_activated(mut self) -> Self {
+        self = self.beryl_activated();
+        self.inner = self.inner.with_fork(BaseUpgrade::Cobalt, ForkCondition::Timestamp(0));
+        self
+    }
+
+    /// Tries to build the resulting [`BaseChainSpec`].
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the chain ID and genesis is not set ([`Self::chain`] and
+    /// [`Self::genesis`]).
+    pub fn try_build(self) -> Result<BaseChainSpec, BaseChainSpecError> {
+        let mut inner = self.inner.build();
+        BaseChainSpec::validate_beryl_activation_admin(
+            &inner.hardforks,
+            self.activation_admin_address,
+            inner.chain.id(),
+        )?;
+        inner.genesis_header = SealedHeader::seal_slow(BaseChainSpec::make_genesis_header(
+            &inner.genesis,
+            &inner.hardforks,
+        ));
+        Ok(BaseChainSpec { inner, activation_admin_address: self.activation_admin_address })
+    }
+
+    /// Build the resulting [`BaseChainSpec`].
+    ///
+    /// # Panics
+    ///
+    /// This function panics if the chain ID and genesis is not set ([`Self::chain`] and
+    /// [`Self::genesis`]), or if Beryl is scheduled without an activation registry admin address.
+    pub fn build(self) -> BaseChainSpec {
+        self.try_build().expect("Beryl-enabled chain spec requires activation admin")
+    }
+}
