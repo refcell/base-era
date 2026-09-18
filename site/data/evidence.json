@@ -1,0 +1,20 @@
+{
+  "provenance": {
+    "label": "Source-spike evidence",
+    "date": "2026-09-18",
+    "checkoutStatus": "Not yet rerun from this checkout",
+    "environment": "AMD Ryzen AI MAX+ 395 · x86-64 Linux · kernel 7.1.8 · Rust 1.96.0"
+  },
+  "checks": [
+    { "value": "95", "label": "replay / validation / RPC", "detail": "PASS · 0 fail · 0 skip" },
+    { "value": "6", "label": "import checks", "detail": "PASS" },
+    { "value": "7", "label": "failure + recovery scenarios", "detail": "PASS" },
+    { "value": "19–21", "label": "native stateless parity", "detail": "full headers match" }
+  ],
+  "latency": {
+    "workerMs": 2537.581,
+    "referenceMs": 2.903,
+    "label": "Repeated historical eth_call median",
+    "note": "Debug history host/reference; release worker. Five samples after the first request."
+  }
+}

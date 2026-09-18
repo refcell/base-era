@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Base Era explores version-isolated historical execution with pinned worker binaries.">
+  <title>Base Era — version-isolated execution</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="topbar">
+    <a class="wordmark" href="#top" aria-label="Base Era home">BASE / ERA</a>
+    <nav aria-label="Primary"><a href="#walkthrough">Walkthrough</a><a href="#evidence">Evidence</a><a href="#run">Run it</a><a href="#context">Context</a></nav>
+    <div class="status"><span></span> Experimental · unofficial project</div>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <p class="eyebrow">Research note 01 / historical execution</p>
+      <h1>Old rules,<br><em>kept executable.</em></h1>
+      <div class="hero-deck">
+        <p>Base Era explores whether a current Base node can delegate old blocks to independently built, immutable workers—without giving those workers ownership of canonical state.</p>
+        <a class="arrow-link" href="#walkthrough">Follow the block boundary <span aria-hidden="true">↓</span></a>
+      </div>
+      <div class="hero-meta"><span>Pre-Isthmus → Isthmus</span><span>Local devnet · 22 blocks</span><span>Source spike · 2026-09-18</span></div>
+    </section>
+
+    <section class="section timeline-section" id="walkthrough">
+      <div class="section-head"><p class="eyebrow">01 / The cutover</p><h2>One chain.<br>Two execution paths.</h2></div>
+      <p class="lede">The compressed devnet activates the real Isthmus fork at block 20. Choose a block to inspect who executes it and why.</p>
+      <div class="timeline" role="group" aria-label="Fork timeline">
+        <div class="track" aria-hidden="true"><i></i></div>
+        <button class="block active" data-block="19" aria-pressed="true"><b>19</b><span>pre-Isthmus parent</span></button>
+        <button class="block activation" data-block="20" aria-pressed="false"><b>20</b><span>activation</span></button>
+        <button class="block" data-block="21" aria-pressed="false"><b>21</b><span>current rules</span></button>
+      </div>
+      <div class="timeline-detail" aria-live="polite">
+        <div><p class="eyebrow" id="route-label">BLOCK 19 · WORKER ROUTE</p><h3 id="route-title">Holocene rules, isolated</h3></div>
+        <p id="route-copy">The host binds the request to block 19’s exact parent and sends complete-block execution to the approved historical worker.</p>
+        <dl><div><dt>Executor</dt><dd id="route-executor">Pinned worker</dd></div><div><dt>State access</dt><dd id="route-state">Immutable parent view</dd></div><div><dt>Persistence</dt><dd>Host only</dd></div></dl>
+      </div>
+    </section>
+
+    <section class="section flow-section">
+      <div class="section-head"><p class="eyebrow">02 / Trust boundary</p><h2>The host lends<br>reads, never writes.</h2></div>
+      <div class="flow" aria-label="Immutable read execution flow">
+        <article><span>01</span><h3>Host selects</h3><p>Chain configuration and block context select current or historical rules—not a wall clock or arbitrary flag.</p></article>
+        <div class="connector" aria-hidden="true">request →</div>
+        <article class="worker"><span>02</span><h3>Worker executes</h3><p>A digest-verified binary asks for parent-bound account, code and storage reads in a Linux sandbox.</p></article>
+        <div class="connector" aria-hidden="true">deltas →</div>
+        <article><span>03</span><h3>Host validates</h3><p>The worker returns receipts and explicit deltas. The host checks bindings, validates roots, then commits or unwinds.</p></article>
+      </div>
+      <p class="flow-note"><strong>No shared Rust objects. No writable database handle.</strong> Versioned serialized messages bind operation, configuration, parent, candidate and executable identity. Infrastructure failures fail closed—never silently back to current rules.</p>
+    </section>
+
+    <section class="section evidence" id="evidence">
+      <div class="section-head"><p class="eyebrow">03 / Evidence</p><h2>What the spike<br>actually showed.</h2></div>
+      <div class="evidence-banner"><div><strong id="evidence-label">Source-spike evidence</strong><span id="evidence-date">Final local run · 2026-09-18</span></div><p id="checkout-status">Not yet rerun from this checkout</p></div>
+      <div class="stats" id="stats"><p>Loading evidence…</p></div>
+      <div class="latency">
+        <div><p class="eyebrow">The uncomfortable number</p><h3>Historical calls were dramatically slower.</h3><p>The unoptimized path repeatedly processed a ~9 MB genesis/manifest and spawned one process per operation. This is a result to fix, not hide.</p></div>
+        <div class="bars" aria-label="Repeated historical call median latency comparison">
+          <div><span>History host + worker</span><i style="--size:100%"></i><b id="worker-latency">2537.581 ms</b></div>
+          <div><span>Original reference</span><i class="reference-bar" style="--size:3%"></i><b id="reference-latency">2.903 ms</b></div>
+          <small id="latency-note">Debug history host/reference; release worker.</small>
+        </div>
+      </div>
+      <p class="source-note">Figures above come from the disposable source spike, not CI or a fresh run of this checkout. The orchestrator can replace <code>site/data/evidence.json</code> with migrated-run results without editing this page.</p>
+    </section>
+
+    <section class="section quickstart" id="run">
+      <div class="section-head"><p class="eyebrow">04 / Reproduce</p><h2>Six commands,<br>one local devnet.</h2></div>
+      <div class="code-wrap"><div class="code-head"><span>Planned demo interface · repository root</span><button id="copy" type="button">Copy commands</button></div><pre><code id="commands">./demo setup
+./demo build
+./demo start
+./demo exercise
+./demo verify
+./demo stop</code></pre></div>
+      <div class="run-notes"><p><strong>These commands are the planned interface.</strong> They become runnable when the demo migration lands; today this checkout does not claim a successful run.</p><p><strong>Supported host:</strong> x86-64 Linux with Landlock ABI 3+ and seccomp. Setup/build may be substantial. The browser page itself performs no blockchain execution.</p></div>
+    </section>
+
+    <section class="section context" id="context">
+      <div class="section-head"><p class="eyebrow">05 / Ethereum context</p><h2>Related direction.<br>Different job.</h2></div>
+      <!-- Editable comparison: reconcile with docs/ethereum-comparison.md when research lands. -->
+      <div class="comparison">
+        <article><h3>EIP-4444 / history expiry</h3><p>Allows clients to stop serving older block bodies and receipts after a retention window. Base Era does <em>not</em> implement that policy: historical bodies remain in the host source and data remains available to this demo.</p><a href="https://eips.ethereum.org/EIPS/eip-4444">Read EIP-4444 ↗</a></article>
+        <article><h3>State expiry / statelessness</h3><p>Ethereum’s statelessness roadmap concerns access to state and witnesses. This spike passes immutable parent-state reads to a native worker; it neither expires state nor introduces a state-expiry scheme.</p><a href="https://ethereum.org/en/roadmap/statelessness/">Ethereum roadmap ↗</a></article>
+        <article><h3>Era / Era1 files</h3><p>Era is a standardized archival file family for historical chain data. “Era” here names an execution-version experiment. It is not an Era/Era1 archive-format implementation.</p><a href="https://github.com/ethereum/portal-network-specs/blob/master/era.md">Era specification ↗</a></article>
+      </div>
+    </section>
+
+    <section class="section limits">
+      <div class="section-head"><p class="eyebrow">06 / Limits</p><h2>A boundary demo,<br>not a finished client.</h2></div>
+      <ul><li><b>Historical bodies remain.</b><span>Selected paths bypass them, but the host tree and dependencies are not physically history-free.</span></li><li><b>Parity is not proof.</b><span>Native stateless execution matched headers 19–21; no zkVM guest, proof or onchain authorization was demonstrated.</span></li><li><b>Coverage is scoped.</b><span>Supported historical calls, estimates and traces work; every simulation API and custom tracer does not.</span></li><li><b>Isolation has a platform.</b><span>Landlock 3+, seccomp and other Linux controls fail closed on unsupported kernels; the worker remains trusted client code.</span></li><li><b>No expiry feature.</b><span>This does not implement Ethereum state expiry or EIP-4444 history expiry.</span></li><li><b>Production work remains.</b><span>Resource budgets, persistent/batched workers, caching, broader corpora, artifact governance and proof integration.</span></li></ul>
+    </section>
+  </main>
+  <footer><a class="wordmark" href="#top">BASE / ERA</a><p>Experimental research built on <a href="https://github.com/base/base">base/base</a>.<br>Unofficial; not affiliated with or endorsed by Base.</p><p class="footer-end">Version-isolated historical execution<br>Local source spike · 2026</p></footer>
+</body>
+</html>
