@@ -8,11 +8,11 @@ in `etc/history-devnet/evidence/final`; it is not reused source-spike evidence.
 | Source inventory | Orchestrator + inventory agents | Complete: `docs/source-inventory.md` and JSON allowlists |
 | Host and harness migration | Orchestrator | Complete: selected source closure, committed sources, runnable `./demo` interface |
 | Frozen worker/reference and reth packaging | Packaging agent | Independent locked builds passed; divergent Alloy versions and frozen-source hashes verified |
-| Showcase website | Site agent + orchestrator | Real migrated stats integrated; desktop/mobile layout and timeline checked; final public inspection pending |
+| Showcase website | Site agent + orchestrator | Complete: migrated stats, desktop/320px/375px screenshots, keyboard timeline and copy checks; public render inspected |
 | Ethereum comparison | Research agent | Sourced EIP-4444, state-expiry/statelessness and Era/Era1 comparison integrated |
 | Fresh builds and live acceptance | Orchestrator | PASS: 95 replay, 6 import, 7 failures, native 19–21; 11 host + 15 worker + 9 integrity tests |
 | Independent correctness/reproducibility review | Review agents | Complete: source/artifact issues fixed and rerun; final evidence audit found no publication blocker |
-| GitHub Pages publication | Orchestrator | Pending deployment and public verification; downloadable binary releases not published |
+| GitHub Pages publication | Orchestrator | [Live](https://refcell.github.io/base-era/); [deployment passed](https://github.com/refcell/base-era/actions/runs/35397057125), public HTTP/interaction/visual checks passed; downloadable binaries not published |
 
 ## Publication rules
 

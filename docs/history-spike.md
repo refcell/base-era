@@ -88,6 +88,25 @@ counts are requests only, not bidirectional traffic. The release-worker startup/
 was 0.708 ms and 55588 KiB peak RSS. Full samples and measurement definitions are in
 [`benchmark.json`](../etc/history-devnet/evidence/final/benchmark.json).
 
+## Independent review and publication
+
+Review covered the migrated source closures, consensus boundary, sandbox, artifact approval and
+acceptance harness. Verified findings led to byte-sorted frozen-source hashing, reference artifact
+verification, rebuilding setup from committed context rather than trusting a tag, and per-stage
+pre-launch artifact records. The complete acceptance run was repeated after these changes.
+
+A final independent audit joined canonical hashes, parents, worker PIDs/digests, exact receipt
+pairs, malformed verdicts, reorg/restart results and native fixture hashes. It found no blocker to
+publishing this scoped demo. The live `base-devnet` executable and standalone `base-reth-node`
+have distinct hashes by design; both are recorded. This review is not a security audit or a claim
+of broad production coverage. Only the credential-free portable evidence was published.
+
+The [Pages showcase](https://refcell.github.io/base-era/) was deployed and checked over public
+HTTPS, including its activation interaction and rendered layout. The accepted local network remains
+in `target/demo-publication`; see [operation commands](history-devnet.md). Builds produce local
+approved artifacts; no downloadable binary release is published. Runtime image tags and package
+downloads remain non-hermetic inputs, documented in the build guide.
+
 ## Proof and production boundaries
 
 The native witness check is not a zkVM proof. Some original proof guest directories
