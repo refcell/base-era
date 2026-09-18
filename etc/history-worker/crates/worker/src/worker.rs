@@ -61,20 +61,159 @@ impl From<io::Error> for DbError {
 pub struct Worker;
 
 impl Worker {
-    /// Reads one request, services execution reads, writes one outcome, and exits.
+    /// Reads requests, services execution reads, and writes outcomes until clean EOF.
     pub fn run() {
-        let outcome = read_frame()
-            .and_then(|body| serde_json::from_slice(&body).map_err(invalid_data))
-            .and_then(execute)
-            .unwrap_or_else(|error| {
-                serde_json::to_value(Outcome::Infrastructure {
-                    request_id: None,
-                    error: error.to_string(),
-                })
-                .expect("serializable outcome")
-            });
-        let _ = write_json(&outcome);
+        let mut session = WorkerSession::new();
+        loop {
+            let body = match read_frame_optional() {
+                Ok(Some(body)) => body,
+                Ok(None) => break,
+                Err(error) => {
+                    let _ = write_json(&infrastructure(error));
+                    break;
+                }
+            };
+            let outcome = serde_json::from_slice(&body)
+                .map_err(invalid_data)
+                .and_then(|request| session.execute(request))
+                .unwrap_or_else(|error| infrastructure(error));
+            if write_json(&outcome).is_err() {
+                break;
+            }
+        }
     }
+}
+
+/// Immutable configuration cached for a worker process session.
+pub struct WorkerSession {
+    executable_sha256: io::Result<String>,
+    configuration: Option<SessionConfiguration>,
+}
+
+/// A validated immutable genesis configuration and its declared identities.
+pub struct SessionConfiguration {
+    genesis: serde_json::Value,
+    spec: Arc<BaseChainSpec>,
+    chain_id: String,
+    genesis_identity: String,
+    genesis_header_hash: String,
+    config_identity: String,
+}
+
+impl WorkerSession {
+    /// Creates a fresh process-like session and computes its executable identity once.
+    pub fn new() -> Self {
+        Self { executable_sha256: executable_identity(), configuration: None }
+    }
+
+    /// Executes one request after validating it against this session.
+    pub fn execute(&mut self, request: ExecuteRequest) -> io::Result<serde_json::Value> {
+        let id = Some(request.request_id.clone());
+        if request.version != VERSION {
+            return terminal(Outcome::Unsupported {
+                request_id: request.request_id,
+                error: format!("protocol version {}", request.version),
+            });
+        }
+        if request.worker_pid != std::process::id() {
+            return terminal(Outcome::Infrastructure {
+                request_id: id,
+                error: "worker pid mismatch".into(),
+            });
+        }
+        let executable_sha256 = self.executable_sha256.as_ref().map_err(|error| {
+            io::Error::new(error.kind(), format!("executable identity unavailable: {error}"))
+        })?;
+        if executable_sha256 != &request.executable_sha256 {
+            return terminal(Outcome::Infrastructure {
+                request_id: id,
+                error: "executable identity mismatch".into(),
+            });
+        }
+        let binding = keccak256(request.binding_payload_bytes().map_err(invalid_data)?);
+        if format!("{binding:#x}") != request.binding_hash {
+            return terminal(Outcome::Infrastructure {
+                request_id: id,
+                error: "request binding mismatch".into(),
+            });
+        }
+        let spec = match self.configuration(&request) {
+            Ok(spec) => spec,
+            Err(error) => {
+                return terminal(Outcome::Infrastructure {
+                    request_id: id,
+                    error: error.to_string(),
+                });
+            }
+        };
+        execute_validated(request, spec)
+    }
+
+    /// Validates and initializes or reuses the immutable session configuration.
+    pub fn configuration(&mut self, request: &ExecuteRequest) -> io::Result<Arc<BaseChainSpec>> {
+        if let Some(configuration) = &self.configuration {
+            if configuration.chain_id != request.chain_id
+                || configuration.genesis_identity != request.genesis_identity
+                || configuration.genesis_header_hash != request.genesis_header_hash
+                || configuration.config_identity != request.config_identity
+                || request.genesis.as_ref().is_some_and(|genesis| genesis != &configuration.genesis)
+            {
+                return Err(invalid_data("incompatible configuration within worker session"));
+            }
+            return Ok(configuration.spec.clone());
+        }
+        let genesis_value = request
+            .genesis
+            .as_ref()
+            .ok_or_else(|| invalid_data("genesis is null before session initialization"))?;
+        let genesis_bytes = serde_json::to_vec(genesis_value).map_err(invalid_data)?;
+        if format!("{:#x}", keccak256(&genesis_bytes)) != request.genesis_identity {
+            return Err(invalid_data("genesis identity mismatch"));
+        }
+        let genesis: Genesis =
+            serde_json::from_value(genesis_value.clone()).map_err(invalid_data)?;
+        let spec = Arc::new(BaseChainSpec::try_from_genesis(genesis).map_err(invalid_data)?);
+        if spec.chain().id().to_string() != request.chain_id {
+            return Err(invalid_data("chain id mismatch"));
+        }
+        if format!("{:#x}", spec.genesis_hash()) != request.genesis_header_hash {
+            return Err(invalid_data("genesis header hash mismatch"));
+        }
+        if format!(
+            "{:#x}",
+            keccak256(serde_json::to_vec(&genesis_value.get("config")).map_err(invalid_data)?)
+        ) != request.config_identity
+        {
+            return Err(invalid_data("config identity mismatch"));
+        }
+        self.configuration = Some(SessionConfiguration {
+            genesis: genesis_value.clone(),
+            spec: spec.clone(),
+            chain_id: request.chain_id.clone(),
+            genesis_identity: request.genesis_identity.clone(),
+            genesis_header_hash: request.genesis_header_hash.clone(),
+            config_identity: request.config_identity.clone(),
+        });
+        Ok(spec)
+    }
+}
+
+impl Default for WorkerSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+/// Builds an infrastructure result for a request-independent failure.
+pub fn infrastructure(error: impl ToString) -> serde_json::Value {
+    serde_json::to_value(Outcome::Infrastructure { request_id: None, error: error.to_string() })
+        .unwrap_or_else(|error| {
+            serde_json::to_value(Outcome::Infrastructure {
+                request_id: None,
+                error: error.to_string(),
+            })
+            .expect("serializable outcome")
+        })
 }
 
 /// Creates an invalid-data I/O error.
@@ -88,15 +227,24 @@ pub fn decode_hex(value: &str) -> io::Result<Vec<u8>> {
 }
 /// Reads one length-prefixed frame from standard input.
 pub fn read_frame() -> io::Result<Vec<u8>> {
+    read_frame_optional()?.ok_or_else(|| io::Error::from(io::ErrorKind::UnexpectedEof))
+}
+/// Reads one frame, returning `None` only for clean EOF between frames.
+pub fn read_frame_optional() -> io::Result<Option<Vec<u8>>> {
     let mut size = [0; 4];
-    io::stdin().read_exact(&mut size)?;
+    let mut input = io::stdin().lock();
+    let read = input.read(&mut size[..1])?;
+    if read == 0 {
+        return Ok(None);
+    }
+    input.read_exact(&mut size[1..])?;
     let n = u32::from_be_bytes(size) as usize;
     if n > MAX_FRAME {
         return Err(invalid_data("frame exceeds 64 MiB"));
     }
     let mut body = vec![0; n];
-    io::stdin().read_exact(&mut body)?;
-    Ok(body)
+    input.read_exact(&mut body)?;
+    Ok(Some(body))
 }
 /// Writes one JSON-encoded, length-prefixed frame to standard output.
 pub fn write_json<T: serde::Serialize>(value: &T) -> io::Result<()> {
@@ -116,63 +264,15 @@ pub fn executable_identity() -> io::Result<String> {
 
 /// Executes a validated worker request.
 pub fn execute(request: ExecuteRequest) -> io::Result<serde_json::Value> {
+    WorkerSession::new().execute(request)
+}
+
+/// Executes a request whose session and deployment bindings have been validated.
+pub fn execute_validated(
+    request: ExecuteRequest,
+    spec: Arc<BaseChainSpec>,
+) -> io::Result<serde_json::Value> {
     let id = Some(request.request_id.clone());
-    if request.version != VERSION {
-        return terminal(Outcome::Unsupported {
-            request_id: request.request_id,
-            error: format!("protocol version {}", request.version),
-        });
-    }
-    if request.worker_pid != std::process::id() {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "worker pid mismatch".into(),
-        });
-    }
-    if executable_identity()?.as_str() != request.executable_sha256 {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "executable identity mismatch".into(),
-        });
-    }
-    let binding = keccak256(request.binding_payload_bytes().map_err(invalid_data)?);
-    if format!("{binding:#x}") != request.binding_hash {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "request binding mismatch".into(),
-        });
-    }
-    let genesis_bytes = serde_json::to_vec(&request.genesis).map_err(invalid_data)?;
-    if format!("{:#x}", keccak256(&genesis_bytes)) != request.genesis_identity {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "genesis identity mismatch".into(),
-        });
-    }
-    let genesis: Genesis = serde_json::from_value(request.genesis.clone()).map_err(invalid_data)?;
-    let spec = BaseChainSpec::try_from_genesis(genesis).map_err(invalid_data)?;
-    if spec.chain().id().to_string() != request.chain_id {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "chain id mismatch".into(),
-        });
-    }
-    if format!("{:#x}", spec.genesis_hash()) != request.genesis_header_hash {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "genesis header hash mismatch".into(),
-        });
-    }
-    if format!(
-        "{:#x}",
-        keccak256(serde_json::to_vec(&request.genesis.get("config")).map_err(invalid_data)?)
-    ) != request.config_identity
-    {
-        return terminal(Outcome::Infrastructure {
-            request_id: id,
-            error: "config identity mismatch".into(),
-        });
-    }
     let mut parent_bytes = &decode_hex(&request.parent_header_rlp)?[..];
     let parent = Header::decode(&mut parent_bytes).map_err(invalid_data)?;
     if !parent_bytes.is_empty() {
@@ -199,9 +299,19 @@ pub fn execute(request: ExecuteRequest) -> io::Result<serde_json::Value> {
         }
         return rpc(&request, &spec, &parent, operation);
     }
-    let child_raw = decode_hex(&request.child_block_rlp)?;
+    let child_raw = match decode_hex(&request.child_block_rlp) {
+        Ok(bytes) => bytes,
+        Err(error) => {
+            return terminal(Outcome::InvalidInput { request_id: id, error: error.to_string() });
+        }
+    };
     let mut child_bytes = &child_raw[..];
-    let child = Block::<BaseTxEnvelope>::decode(&mut child_bytes).map_err(invalid_data)?;
+    let child = match Block::<BaseTxEnvelope>::decode(&mut child_bytes) {
+        Ok(block) => block,
+        Err(error) => {
+            return terminal(Outcome::InvalidInput { request_id: id, error: error.to_string() });
+        }
+    };
     if !child_bytes.is_empty() {
         return terminal(Outcome::InvalidInput {
             request_id: id,
@@ -235,19 +345,18 @@ pub fn execute(request: ExecuteRequest) -> io::Result<serde_json::Value> {
     };
     let provider_error = Arc::new(Mutex::new(None));
     let mut database = RpcDatabase::new(request.request_id.clone(), provider_error.clone());
-    let output =
-        match BaseEvmConfig::base(Arc::new(spec)).executor(&mut database).execute(&recovered) {
-            Ok(v) => v,
-            Err(e) => {
-                let provider_error =
-                    provider_error.lock().expect("provider error mutex poisoned").take();
-                return terminal(if let Some(error) = provider_error {
-                    Outcome::Infrastructure { request_id: id, error }
-                } else {
-                    Outcome::InvalidInput { request_id: id, error: e.to_string() }
-                });
-            }
-        };
+    let output = match BaseEvmConfig::base(spec).executor(&mut database).execute(&recovered) {
+        Ok(v) => v,
+        Err(e) => {
+            let provider_error =
+                provider_error.lock().expect("provider error mutex poisoned").take();
+            return terminal(if let Some(error) = provider_error {
+                Outcome::Infrastructure { request_id: id, error }
+            } else {
+                Outcome::InvalidInput { request_id: id, error: e.to_string() }
+            });
+        }
+    };
     let accounts = convert_accounts(&output.state, &mut database)?;
     let receipts =
         output.result.receipts.iter().enumerate().map(|(i, r)| convert_receipt(i, r)).collect();
@@ -272,7 +381,7 @@ pub fn terminal(value: impl serde::Serialize) -> io::Result<serde_json::Value> {
 /// Executes a supported JSON-RPC operation.
 pub fn rpc(
     request: &ExecuteRequest,
-    spec: &BaseChainSpec,
+    spec: &Arc<BaseChainSpec>,
     header: &Header,
     operation: &serde_json::Value,
 ) -> io::Result<serde_json::Value> {
@@ -347,7 +456,7 @@ pub fn rpc(
     let mut database = State::builder()
         .with_database(RpcDatabase::new(request.request_id.clone(), provider_error.clone()))
         .build();
-    let config = BaseEvmConfig::base(Arc::new(spec.clone()));
+    let config = BaseEvmConfig::base(Arc::clone(spec));
     let mut env = config.evm_env(header).map_err(invalid_data)?;
     env.cfg_env.disable_base_fee = true;
     env.cfg_env.disable_balance_check = true;
@@ -583,7 +692,7 @@ pub fn tracing_options(value: Option<&serde_json::Value>) -> io::Result<GethDebu
 /// Executes a supported debug trace operation.
 pub fn debug_trace(
     request: &ExecuteRequest,
-    spec: &BaseChainSpec,
+    spec: &Arc<BaseChainSpec>,
     state_header: &Header,
     method: &str,
     params: &[serde_json::Value],
@@ -604,7 +713,7 @@ pub fn debug_trace(
     let mut database = State::builder()
         .with_database(RpcDatabase::new(request.request_id.clone(), provider_error.clone()))
         .build();
-    let config = BaseEvmConfig::base(Arc::new(spec.clone()));
+    let config = BaseEvmConfig::base(Arc::clone(spec));
 
     let result = if method == "debug_traceCall" {
         let call: TransactionRequest =

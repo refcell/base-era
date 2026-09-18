@@ -40,8 +40,7 @@ use revm_inspectors::transfer::TransferInspector;
 #[cfg(feature = "history")]
 use {
     base_common_evm::BaseSpecId,
-    base_common_genesis::BaseUpgrade as GenesisUpgrade,
-    base_execution_chainspec::BaseChainSpec,
+    base_execution_evm::HistoricalExecution,
     base_execution_history::HistoryWorker,
     serde_json::json,
     std::sync::atomic::{AtomicU64, Ordering},
@@ -475,23 +474,11 @@ where
     let manifest = std::env::var_os("BASE_HISTORY_MANIFEST")
         .ok_or_else(|| BaseEthApiError::Eth(EthApiError::InternalEthError))?;
     let worker = HistoryWorker::from_manifest(manifest)?;
-    let frozen = BaseChainSpec::try_from_genesis(
-        serde_json::from_value(worker.manifest.genesis.clone())
-            .map_err(|_| EthApiError::InternalEthError)?,
-    )
-    .map_err(|_| EthApiError::InternalEthError)?;
-    if frozen.genesis_hash() != spec.genesis_hash()
-        || frozen.chain().id() != spec.chain().id()
-        || GenesisUpgrade::EXECUTION_VARIANTS
-            .iter()
-            .any(|fork| frozen.fork_condition(*fork) != spec.fork_condition(*fork))
-    {
-        return Err(EthApiError::InternalEthError.into());
-    }
+    HistoricalExecution::validate_configuration(spec, &worker)?;
 
     static NEXT_REQUEST: AtomicU64 = AtomicU64::new(1);
     let request_id = format!(
-        "{}-{}-{}",
+        "rpc-{}-{}-{}",
         std::process::id(),
         NEXT_REQUEST.fetch_add(1, Ordering::Relaxed),
         header.hash_slow()

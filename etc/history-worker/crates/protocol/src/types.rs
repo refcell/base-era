@@ -25,8 +25,8 @@ pub struct ExecuteRequest {
     pub genesis_header_hash: String,
     /// Keccak-256 of the serialized genesis config.
     pub config_identity: String,
-    /// Full chain genesis JSON.
-    pub genesis: Value,
+    /// Full chain genesis JSON, or `None` to reuse the session's validated genesis.
+    pub genesis: Option<Value>,
     /// Canonical parent header RLP.
     pub parent_header_rlp: String,
     /// Canonical child block RLP.
@@ -79,8 +79,8 @@ pub struct BindingPayload<'a> {
     pub genesis_header_hash: &'a str,
     /// Keccak-256 of the serialized genesis config.
     pub config_identity: &'a str,
-    /// Full chain genesis JSON.
-    pub genesis: &'a Value,
+    /// Full chain genesis JSON, or null to reuse the session's validated genesis.
+    pub genesis: &'a Option<Value>,
     /// Canonical parent header RLP.
     pub parent_header_rlp: &'a str,
     /// Canonical child block RLP.

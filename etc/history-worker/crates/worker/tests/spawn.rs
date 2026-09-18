@@ -161,7 +161,7 @@ fn request_with_transactions(
             "{:#x}",
             keccak256(serde_json::to_vec(&genesis_value.get("config")).unwrap())
         ),
-        genesis: genesis_value,
+        genesis: Some(genesis_value),
         parent_header_rlp: format!("0x{}", hex::encode(alloy_rlp::encode(parent))),
         child_block_rlp: format!("0x{}", hex::encode(alloy_rlp::encode(child))),
         operation: None,
@@ -464,7 +464,7 @@ fn spawned_worker_rejects_unknown_protocol_before_execution() {
         genesis_identity: "unused".into(),
         genesis_header_hash: "unused".into(),
         config_identity: "unused".into(),
-        genesis: serde_json::json!({}),
+        genesis: Some(serde_json::json!({})),
         parent_header_rlp: "0x".into(),
         child_block_rlp: "0x".into(),
         operation: None,
@@ -473,8 +473,153 @@ fn spawned_worker_rejects_unknown_protocol_before_execution() {
 }
 
 #[test]
+fn spawned_worker_reuses_validated_genesis_but_resets_rpc_state() {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_base-history-worker"))
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    let mut stdout = child.stdout.take().unwrap();
+
+    for index in 0..2 {
+        let mut request = rpc_request(
+            "eth_call",
+            serde_json::json!([{ "from": SENDER, "to": RECIPIENT, "gasPrice": "0x0" }]),
+        );
+        request.request_id = format!("session-{index}");
+        request.worker_pid = child.id();
+        if index == 1 {
+            request.genesis = None;
+        }
+        request.binding_hash =
+            format!("{:#x}", keccak256(request.binding_payload_bytes().unwrap()));
+        write_json_frame(&mut stdin, &request);
+
+        let mut expected_sequence = 1;
+        loop {
+            let frame = read_json_frame(&mut stdout);
+            if frame.get("result").is_some() || frame.get("code").is_some() {
+                assert_eq!(frame["request_id"], request.request_id);
+                assert_eq!(
+                    frame["result"],
+                    if index == 0 {
+                        "0x000000000000000000000000000000000000000000000000000000000000000b"
+                    } else {
+                        "0x000000000000000000000000000000000000000000000000000000000000001d"
+                    },
+                    "fresh request must read its own storage: {frame}"
+                );
+                break;
+            }
+            let read: ReadRequest = serde_json::from_value(frame).unwrap();
+            let (request_id, sequence, value) = match read {
+                ReadRequest::Account { request_id, sequence, address } => {
+                    let account = if address == SENDER.to_string() {
+                        Some(AccountState {
+                            nonce: "3".into(),
+                            balance: "10000".into(),
+                            code: "0x".into(),
+                        })
+                    } else {
+                        Some(AccountState {
+                            nonce: "0".into(),
+                            balance: "700".into(),
+                            code: "0x60005460005260206000f3".into(),
+                        })
+                    };
+                    (
+                        request_id,
+                        sequence,
+                        account.map(|value| serde_json::to_value(value).unwrap()),
+                    )
+                }
+                ReadRequest::Storage { request_id, sequence, .. } => (
+                    request_id,
+                    sequence,
+                    Some(serde_json::json!(format!(
+                        "{:#066x}",
+                        U256::from(if index == 0 { 11 } else { 29 })
+                    ))),
+                ),
+                ReadRequest::Code { request_id, sequence, .. } => {
+                    (request_id, sequence, Some(serde_json::json!("0x")))
+                }
+                ReadRequest::BlockHash { request_id, sequence, .. } => {
+                    (request_id, sequence, Some(serde_json::json!(format!("{:#x}", B256::ZERO))))
+                }
+            };
+            assert_eq!(request_id, request.request_id);
+            assert_eq!(sequence, expected_sequence, "sequence must be request-scoped");
+            expected_sequence += 1;
+            write_json_frame(
+                &mut stdin,
+                &ReadResponse { request_id, sequence, value, error: None },
+            );
+        }
+    }
+    drop(stdin);
+    assert!(child.wait().unwrap().success());
+}
+
+#[test]
+fn spawned_worker_rejects_uninitialized_null_and_session_drift() {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_base-history-worker"))
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    let mut stdout = child.stdout.take().unwrap();
+
+    let mut missing = request(9, "regolith");
+    missing.request_id = "missing-init".into();
+    missing.worker_pid = child.id();
+    missing.genesis = None;
+    missing.binding_hash = format!("{:#x}", keccak256(missing.binding_payload_bytes().unwrap()));
+    write_json_frame(&mut stdin, &missing);
+    assert_eq!(read_json_frame(&mut stdout)["outcome"], "infrastructure");
+
+    let mut initial = request(9, "regolith");
+    initial.request_id = "initialize".into();
+    initial.worker_pid = child.id();
+    initial.operation = Some(serde_json::json!({ "method": "unsupported", "params": [] }));
+    initial.child_block_rlp.clear();
+    initial.binding_hash = format!("{:#x}", keccak256(initial.binding_payload_bytes().unwrap()));
+    write_json_frame(&mut stdin, &initial);
+    assert_eq!(read_json_frame(&mut stdout)["code"], -32601);
+
+    let mut drift = initial.clone();
+    drift.request_id = "drift".into();
+    drift.chain_id = "902".into();
+    drift.binding_hash = format!("{:#x}", keccak256(drift.binding_payload_bytes().unwrap()));
+    write_json_frame(&mut stdin, &drift);
+    assert_eq!(read_json_frame(&mut stdout)["outcome"], "infrastructure");
+
+    let mut stale = initial;
+    stale.request_id = "stale-binding".into();
+    write_json_frame(&mut stdin, &stale);
+    assert_eq!(read_json_frame(&mut stdout)["outcome"], "infrastructure");
+
+    drop(stdin);
+    assert!(child.wait().unwrap().success());
+}
+
+#[test]
 fn spawned_worker_classifies_malformed_request_as_infrastructure() {
     assert!(matches!(invoke(br#"{"version":1}"#), Outcome::Infrastructure { .. }));
+}
+
+#[test]
+fn spawned_worker_classifies_malformed_candidate_as_invalid() {
+    for encoded in ["0xzz", "0xf8", "0xc0"] {
+        let mut candidate = request(9, "regolith");
+        candidate.child_block_rlp = encoded.into();
+        assert!(matches!(
+            execute_fixture(candidate, false),
+            Outcome::InvalidInput { request_id: Some(_), .. }
+        ));
+    }
 }
 
 #[test]

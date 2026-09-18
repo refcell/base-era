@@ -42,9 +42,7 @@ base-common-evm.workspace = true
 base-execution-evm.workspace = true
 base-execution-trie.workspace = true
 base-execution-txpool.workspace = true
-base-common-genesis = { workspace = true, optional = true }
 base-execution-history = { workspace = true, optional = true }
-base-execution-chainspec = { workspace = true, optional = true }
 base-observability-events.workspace = true
 base-execution-payload-builder.workspace = true
 
@@ -128,8 +126,7 @@ metrics = [
 ]
 history = [
 	"dep:alloy-rlp",
-	"dep:base-common-genesis",
-	"dep:base-execution-chainspec",
+	"base-execution-evm/history",
 	"dep:base-execution-history",
 	"dep:serde_json",
 ]

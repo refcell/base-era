@@ -2,7 +2,8 @@
 
 mod client;
 pub use client::{
-    ChildGuard, HistoryWorker, HistoryWorkerError, WorkerManifest, infra, infrastructure,
+    ChildGuard, HistoryWorker, HistoryWorkerError, WorkerManifest, WorkerSession, infra,
+    infrastructure,
 };
 
 mod outcome;

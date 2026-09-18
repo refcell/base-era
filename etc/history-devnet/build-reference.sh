@@ -12,10 +12,10 @@ metadata="$root/target/history-reference-build.json"
 python3 "$root/etc/history-devnet/artifacts.py" --source reference_base
 export CARGO_TARGET_DIR="$build_target"
 export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-3}
-cargo build --manifest-path "$source/Cargo.toml" --locked \
+cargo build --manifest-path "$source/Cargo.toml" --locked --profile profiling \
     -p base-reth-node --bin base-reth-node --no-default-features
 
-built="$build_target/debug/base-reth-node"
+built="$build_target/profiling/base-reth-node"
 digest=$(sha256sum "$built" | cut -d' ' -f1)
 destination="$artifacts/$digest/base-reth-node"
 mkdir -p "$(dirname "$destination")"
@@ -46,11 +46,11 @@ cat >"$metadata.tmp" <<EOF
     "cargo": "$(cargo --version)"
   },
   "build": {
-    "command": "cargo build --locked -p base-reth-node --bin base-reth-node --no-default-features",
+    "command": "cargo build --locked --profile profiling -p base-reth-node --bin base-reth-node --no-default-features",
     "cargo_target_dir": "$build_target",
     "package": "base-reth-node",
     "binary": "base-reth-node",
-    "profile": "dev",
+    "profile": "profiling",
     "locked": true,
     "no_default_features": true
   }

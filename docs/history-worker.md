@@ -2,9 +2,9 @@
 
 The standalone workspace is `etc/history-worker`; its protocol crate intentionally links only
 Serde. Frames are a four-byte big-endian unsigned length followed by UTF-8 JSON, with a 64 MiB
-limit. The host sends one `ExecuteRequest`; the worker may send ordered `ReadRequest`s and requires
+limit. Protocol version 2 supports serialized sessions. For each `ExecuteRequest`, the worker may send ordered `ReadRequest`s and requires
 the matching `request_id` and strictly increasing `sequence` in each `ReadResponse`, then emits one
-`Outcome` and exits. EOF, malformed/truncated frames, unavailable witness/provider reads, and
+`Outcome`, then waits for another request. Clean EOF ends the process; partial EOF, malformed/truncated frames, unavailable witness/provider reads, and
 provider errors are infrastructure failures—not block invalidity. A nonexistent account and a zero
 storage word are legitimate state values, not missing-witness errors.
 
@@ -17,12 +17,29 @@ frozen spec at the child number/timestamp, and only then compare the advisory `e
 parent and child canonically, verify child parent hash/number/timestamp, and reject trailing RLP.
 Thus an era label can never select execution rules.
 
-The executable SHA-256 is checked before execution and the verified bytes are copied into a fully
-sealed memfd, closing pathname replacement races. The worker hashes its own executable again.
+The executable SHA-256 is checked on every operation, including warm requests and after transport
+lock contention. On launch the verified bytes are copied into a fully sealed memfd, closing pathname
+replacement races. The worker independently hashes its own executable once per process.
 Deployment approves a digest out of band; the request repeats it to bind the invocation. Four
 terminal outcomes exist: `success`, consensus `invalid-input`, unavailable protocol/fork
 `unsupported`, and `infrastructure`. Configuration, artifact, era, protocol binding and provider
 failures are never consensus-invalid verdicts.
+
+The first request supplies full genesis JSON; later requests send `genesis: null`. This omits only
+previously validated immutable configuration, not state or block input. Every request's binding
+covers the actual full/null field, PID, request ID, configuration identities, parent, candidate,
+and operation. Null before initialization or incompatible identities fail closed. Every operation
+creates fresh execution state and a fresh parent-read sequence. No account, storage, code, block
+hash, result, or override cache crosses requests.
+
+The host rereads complete manifest bytes each time, retaining one cached parsed generation and
+one serialized worker session. Effective chain-spec derivation is cached; comparison with the
+active chain's genesis, chain ID and fork conditions is not. A manifest change creates a new
+generation; in-flight callers keep their own immutable generation. Artifact bytes are never trusted
+from pathname metadata alone. Transport, binding and infrastructure failures evict the session;
+the current operation fails without retry or fallback, and a later operation may start a new child.
+The 30-second deadline includes queueing and transport. Concurrency currently serializes rather
+than growing an unbounded process pool.
 
 Before exec, the host clears the environment, marks inherited descriptors close-on-exec, installs
 Landlock (ABI 3 or newer), sets `NO_NEW_PRIVS`, and installs an architecture-checked seccomp filter.

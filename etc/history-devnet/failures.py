@@ -54,6 +54,14 @@ def children(parent):
     return found
 
 
+def memfd_worker(parent):
+    verified = [(pid, exe, status) for pid, exe, status in children(parent)
+                if "memfd:" in exe and "history" in exe.lower()]
+    if len(verified) != 1:
+        raise AssertionError(f"expected one owned memfd history worker, found {verified}")
+    return verified[0]
+
+
 def assert_error(reply, label):
     error = reply.get("error")
     if not error or error.get("code") != -32603:
@@ -66,6 +74,13 @@ def assert_error_message(reply, label, expected):
     message = error.get("message", "")
     if "worker pipe failed" in message or expected not in message:
         raise AssertionError(f"{label}: expected {expected!r} (not a pipe failure), got {reply}")
+    return error
+
+
+def assert_infrastructure_error(reply, label):
+    error = assert_error(reply, label)
+    if "infrastructure" not in error.get("message", "").lower():
+        raise AssertionError(f"{label}: expected operation infrastructure error, got {reply}")
     return error
 
 
@@ -184,7 +199,9 @@ def main():
         **{f"fixture-{name}": value[0] for name, value in fixtures.items()},
     }, (("manifest", args.manifest), ("genesis", args.genesis)))
     host = launches["host"]
-    original["executable"] = str(launches["worker"])
+    disposable_worker = output / "disposable-worker"
+    shutil.copy2(launches["worker"], disposable_worker)
+    original["executable"] = str(disposable_worker)
     original["executable_sha256"] = "0x" + provenance["binaries"]["worker"]["sha256"]
     write_manifest(owned_manifest, original)
     fixtures = {name: (launches[f"fixture-{name}"], provenance["binaries"][f"fixture-{name}"]["sha256"])
@@ -229,26 +246,65 @@ def main():
                          "missingExecutable": missing, "currentWhileBroken": current_bad_manifest,
                          "recovered": recovered, "latestUnchanged": latest_hash})
 
+        warm_pid = memfd_worker(process.pid)[0]
+        warm = rpc(url, "eth_call", [ORACLE, "0x13"])
+        warm_pid_again = memfd_worker(process.pid)[0]
+        if warm.get("result") != ZERO or warm_pid_again != warm_pid:
+            raise AssertionError("sequential historical requests did not reuse the warmed worker")
+        address = "0x1111111111111111111111111111111111111111"
+        isolated = []
+        for number in (11, 29, 11):
+            word = "0x" + f"{number:064x}"
+            reply = rpc(url, "eth_call", [{"to": address}, "0x13", {
+                address: {"code": "0x60005460005260206000f3", "state": {ZERO: word}}
+            }])
+            assert reply.get("result") == word, reply
+            assert memfd_worker(process.pid)[0] == warm_pid
+            isolated.append(reply)
+        evidence.append({"claim": "persistent worker reused with fresh request state",
+                         "firstWorkerPid": warm_pid, "warmWorkerPid": warm_pid_again,
+                         "response": warm, "alternatingStorageOverrides": isolated})
+
+        worker_bytes = disposable_worker.read_bytes()
+        disposable_worker.unlink()
+        removed = rpc(url, "eth_call", [ORACLE, "0x13"])
+        assert_infrastructure_error(removed, "removed artifact bytes")
+        assert rpc(url, "eth_getBlockByNumber", ["latest", False])["result"]["hash"] == latest_hash
+        disposable_worker.write_bytes(b"not the approved worker")
+        os.chmod(disposable_worker, 0o755)
+        replaced = rpc(url, "eth_call", [ORACLE, "0x13"])
+        assert_error_message(replaced, "replaced artifact bytes", "worker artifact digest mismatch")
+        assert rpc(url, "eth_getBlockByNumber", ["latest", False])["result"]["hash"] == latest_hash
+        disposable_worker.write_bytes(worker_bytes)
+        os.chmod(disposable_worker, 0o755)
+        artifact_recovery = rpc(url, "eth_call", [ORACLE, "0x13"])
+        if artifact_recovery.get("result") != ZERO:
+            raise AssertionError(f"artifact restoration did not recover: {artifact_recovery}")
+        evidence.append({"claim": "artifact bytes are revalidated without manifest edits",
+                         "removed": removed, "replaced": replaced, "recovered": artifact_recovery,
+                         "latestUnchanged": latest_hash, "artifactOnly": True})
+
+        victim = memfd_worker(process.pid)
+        os.kill(victim[0], signal.SIGSTOP)
         result = {}
         thread = threading.Thread(target=lambda: result.update(rpc(url, "eth_call", [ORACLE, "0x13"])))
-        thread.start(); victim = None
-        for _ in range(200):
-            candidates = children(process.pid)
-            verified = [(pid, exe, status) for pid, exe, status in candidates
-                        if "memfd:" in exe and "history" in exe.lower()]
-            if len(verified) == 1:
-                victim = verified[0]; break
-            time.sleep(.01)
-        if victim is None: raise AssertionError("could not uniquely identify owned memfd worker child")
+        thread.start()
+        time.sleep(.1)
         os.kill(victim[0], signal.SIGKILL)
         thread.join(30)
-        crash_error = assert_error(result, "worker SIGKILL")
+        if thread.is_alive():
+            raise AssertionError("worker SIGKILL request did not complete")
+        crash_error = assert_infrastructure_error(result, "worker SIGKILL")
         after_crash = rpc(url, "eth_getBlockByNumber", ["latest", False])["result"]["hash"]
         retry = rpc(url, "eth_call", [ORACLE, "0x13"])
+        replacement_pid = memfd_worker(process.pid)[0]
         assert after_crash == latest_hash and retry.get("result") == ZERO
+        if replacement_pid == victim[0]:
+            raise AssertionError("worker recovery did not create a new PID")
         evidence.append({"claim": "in-flight worker crash fails closed", "hostPid": process.pid,
                          "workerPid": victim[0], "workerExe": victim[1], "workerStatus": victim[2],
-                         "error": crash_error, "latestUnchanged": after_crash, "retry": retry})
+                         "error": crash_error, "latestUnchanged": after_crash, "retry": retry,
+                         "replacementWorkerPid": replacement_pid, "stoppedBeforeRequest": True})
 
         expected_errors = {
             "malformed": "EOF while parsing",

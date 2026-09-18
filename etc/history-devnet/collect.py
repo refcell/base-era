@@ -31,7 +31,7 @@ def verify_results(run):
         test.get("result") != "PASS" for test in imported["tests"]
     ):
         raise RuntimeError("import acceptance is incomplete or not passing")
-    if failures.get("result") != "PASS" or failures.get("claims") != 7 or len(failure_evidence) != 7:
+    if failures.get("result") != "PASS" or failures.get("claims") != 9 or len(failure_evidence) != 9:
         raise RuntimeError("failure-injection acceptance is incomplete or not passing")
     if not stateless.get("all_match") or stateless.get("error") or stateless.get("blocks") != [19, 20, 21]:
         raise RuntimeError("native stateless acceptance is incomplete or not passing")

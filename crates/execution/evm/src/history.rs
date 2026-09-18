@@ -1,4 +1,7 @@
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{
+    Arc, Mutex, OnceLock,
+    atomic::{AtomicU64, Ordering},
+};
 
 use alloy_consensus::Header;
 use base_common_chains::Upgrades;
@@ -17,6 +20,42 @@ use revm::Database;
 pub struct HistoricalExecution;
 
 impl HistoricalExecution {
+    /// Validates the caller's effective schedule against cached immutable manifest configuration.
+    /// Only expensive genesis derivation is cached; routing and schedule checks run each time.
+    pub fn validate_configuration<S>(
+        spec: &S,
+        worker: &HistoryWorker,
+    ) -> Result<(), HistoryWorkerError>
+    where
+        S: EthChainSpec<Header = Header> + Upgrades,
+    {
+        static FROZEN: OnceLock<Mutex<Option<(String, Arc<BaseChainSpec>)>>> = OnceLock::new();
+        let frozen = {
+            let mut cache = FROZEN.get_or_init(|| Mutex::new(None)).lock().map_err(|_| {
+                HistoryWorkerError::Infrastructure("configuration cache poisoned".into())
+            })?;
+            if !cache.as_ref().is_some_and(|(identity, _)| identity == &worker.manifest_identity) {
+                let genesis = serde_json::from_value(worker.manifest.genesis.clone())
+                    .map_err(base_execution_history::infra)?;
+                let frozen = BaseChainSpec::try_from_genesis(genesis)
+                    .map_err(base_execution_history::infra)?;
+                *cache = Some((worker.manifest_identity.clone(), Arc::new(frozen)));
+            }
+            Arc::clone(&cache.as_ref().expect("configuration initialized").1)
+        };
+        if frozen.genesis_hash() != spec.genesis_hash()
+            || frozen.chain().id() != spec.chain().id()
+            || BaseUpgrade::EXECUTION_VARIANTS
+                .iter()
+                .any(|fork| frozen.fork_condition(*fork) != spec.fork_condition(*fork))
+        {
+            return Err(HistoryWorkerError::Infrastructure(
+                "historical artifact effective chain configuration mismatch".into(),
+            ));
+        }
+        Ok(())
+    }
+
     /// Routes using the effective chain schedule, never the wall clock.
     pub fn selected(spec: &impl Upgrades, header: &Header) -> bool {
         std::env::var_os("BASE_HISTORY_MANIFEST").is_some()
@@ -46,24 +85,10 @@ impl HistoricalExecution {
             BlockExecutionError::msg("historical artifact configuration disappeared")
         })?;
         let worker = HistoryWorker::from_manifest(manifest_path).map_err(Self::error)?;
-        let frozen = BaseChainSpec::try_from_genesis(
-            serde_json::from_value(worker.manifest.genesis.clone())
-                .map_err(BlockExecutionError::other)?,
-        )
-        .map_err(BlockExecutionError::other)?;
-        if frozen.genesis_hash() != spec.genesis_hash()
-            || frozen.chain().id() != spec.chain().id()
-            || BaseUpgrade::EXECUTION_VARIANTS
-                .iter()
-                .any(|fork| frozen.fork_condition(*fork) != spec.fork_condition(*fork))
-        {
-            return Err(BlockExecutionError::msg(
-                "historical artifact effective chain configuration mismatch",
-            ));
-        }
+        Self::validate_configuration(spec, &worker).map_err(Self::error)?;
         static NEXT_REQUEST: AtomicU64 = AtomicU64::new(1);
         let request_id = format!(
-            "{}-{}-{}",
+            "execute-{}-{}-{}",
             std::process::id(),
             NEXT_REQUEST.fetch_add(1, Ordering::Relaxed),
             block.hash()

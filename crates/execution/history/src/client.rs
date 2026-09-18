@@ -7,6 +7,7 @@ use std::{
     },
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
+    sync::{Arc, Mutex, MutexGuard, OnceLock},
     time::{Duration, Instant},
 };
 
@@ -48,8 +49,26 @@ pub struct WorkerManifest {
 #[derive(Clone, Debug)]
 pub struct HistoryWorker {
     /// Approved executable and immutable chain inputs.
-    pub manifest: WorkerManifest,
+    pub manifest: Arc<WorkerManifest>,
+    /// Stable identity of the complete approved manifest contents.
+    pub manifest_identity: String,
+    /// Serialized transport for this immutable manifest generation.
+    pub session: Arc<Mutex<Option<WorkerSession>>>,
 }
+
+/// A sandboxed process bound to one immutable configuration, never to cached state.
+#[derive(Debug)]
+pub struct WorkerSession {
+    _guard: ChildGuard,
+    stdin: std::process::ChildStdin,
+    stdout: std::process::ChildStdout,
+    worker_pid: u32,
+    configured: bool,
+}
+
+// Keep one idle generation alive between calls. In-flight callers own their generation;
+// a configuration change cannot replace their process or parent-state provider.
+static WORKER: OnceLock<Mutex<Option<(Vec<u8>, HistoryWorker)>>> = OnceLock::new();
 
 /// A fail-closed worker or protocol failure.
 #[derive(Debug, thiserror::Error)]
@@ -82,8 +101,20 @@ impl HistoryWorker {
     /// Reads an approved manifest. The path is explicit so configuration cannot silently drift.
     pub fn from_manifest(path: impl AsRef<Path>) -> Result<Self, HistoryWorkerError> {
         let bytes = fs::read(path).map_err(infra)?;
-        let manifest = serde_json::from_slice(&bytes).map_err(infra)?;
-        Ok(Self { manifest })
+        let mut cached = WORKER
+            .get_or_init(|| Mutex::new(None))
+            .lock()
+            .map_err(|_| infrastructure("manifest cache poisoned"))?;
+        if let Some((previous, worker)) = cached.as_ref()
+            && previous == &bytes
+        {
+            return Ok(worker.clone());
+        }
+        let manifest = Arc::new(serde_json::from_slice(&bytes).map_err(infra)?);
+        let manifest_identity = format!("0x{}", hex::encode(Sha256::digest(&bytes)));
+        let worker = Self { manifest, manifest_identity, session: Arc::new(Mutex::new(None)) };
+        *cached = Some((bytes, worker.clone()));
+        Ok(worker)
     }
 
     /// Executes one fully-bound request while serving immutable parent-state reads.
@@ -100,7 +131,10 @@ impl HistoryWorker {
     {
         let value =
             self.invoke(request_id.clone(), era, parent_header_rlp, child_block_rlp, None, state)?;
-        let outcome = serde_json::from_value::<Outcome>(value).map_err(infra)?;
+        let outcome = serde_json::from_value::<Outcome>(value).map_err(|error| {
+            self.invalidate_session();
+            infra(error)
+        })?;
         match &outcome {
             Outcome::Success { request_id: id, .. } if id == &request_id => Ok(outcome),
             Outcome::InvalidInput { request_id: Some(id), error } if id == &request_id => {
@@ -110,9 +144,13 @@ impl HistoryWorker {
                 Err(HistoryWorkerError::Unsupported(error.clone()))
             }
             Outcome::Infrastructure { request_id: Some(id), error } if id == &request_id => {
+                self.invalidate_session();
                 Err(HistoryWorkerError::Infrastructure(error.clone()))
             }
-            _ => Err(infrastructure("terminal outcome is not bound to request")),
+            _ => {
+                self.invalidate_session();
+                Err(infrastructure("terminal outcome is not bound to request"))
+            }
         }
     }
 
@@ -151,6 +189,7 @@ impl HistoryWorker {
                 data: error.data,
             });
         }
+        self.invalidate_session();
         Err(infrastructure("terminal RPC response is not bound to request"))
     }
 
@@ -167,89 +206,181 @@ impl HistoryWorker {
     where
         DB::Error: std::fmt::Display,
     {
-        let executable = self.verified_executable()?;
-        let sandbox = WorkerSandbox::new().map_err(infra)?;
-        let executable_path = format!("/proc/self/fd/{}", executable.as_raw_fd());
-        let mut command = Command::new(executable_path);
-        command.env_clear().stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped());
-        // SAFETY: `install` performs only syscalls over policy memory prepared before `fork`.
-        unsafe { command.pre_exec(move || sandbox.install()) };
-        let child = command.spawn().map_err(infra)?;
-        let worker_pid = child.id();
         let deadline = Instant::now() + WORKER_TIMEOUT;
-        let mut guard = ChildGuard::new(child);
-        let mut request = ExecuteRequest {
-            version: VERSION,
-            request_id: request_id.clone(),
-            executable_sha256: self.manifest.executable_sha256.clone(),
-            worker_pid,
-            binding_hash: String::new(),
-            era,
-            chain_id: self.manifest.chain_id.clone(),
-            genesis_identity: self.manifest.genesis_identity.clone(),
-            genesis_header_hash: self.manifest.genesis_header_hash.clone(),
-            config_identity: self.manifest.config_identity.clone(),
-            genesis: self.manifest.genesis.clone(),
-            parent_header_rlp,
-            child_block_rlp,
-            operation,
-        };
-        request.binding_hash = format!(
-            "{:#x}",
-            alloy_primitives::keccak256(request.binding_payload_bytes().map_err(infra)?)
-        );
-        let started = Instant::now();
-        tracing::info!(request = %request_id, worker_pid, era = %request.era, operation = ?request.operation, artifact = %request.executable_sha256, configuration = %request.config_identity, binding = %request.binding_hash, "historical worker execution started");
-        let stdin =
-            guard.child_mut().stdin.take().ok_or_else(|| infrastructure("missing worker stdin"))?;
-        let stdout = guard
-            .child_mut()
-            .stdout
-            .take()
-            .ok_or_else(|| infrastructure("missing worker stdout"))?;
-        Self::set_nonblocking(&stdin)?;
-        Self::set_nonblocking(&stdout)?;
-        Self::write_frame(&stdin, &request, deadline)?;
-        let mut sequence = 1;
-        let mut read_bytes = 0usize;
-        let outcome = loop {
-            let (value, frame_bytes): (Value, usize) = Self::read_frame(&stdout, deadline)?;
-            if let Ok(read) = serde_json::from_value::<ReadRequest>(value.clone()) {
-                read_bytes = read_bytes.saturating_add(frame_bytes);
-                let (id, seq) = Self::read_binding(&read);
-                if id != request_id || seq != sequence {
-                    return Err(infrastructure("unbound or out-of-order state read"));
-                }
-                let value = Self::serve_read(state, read)?;
-                Self::write_frame(
-                    &stdin,
-                    &ReadResponse { request_id: request_id.clone(), sequence, value, error: None },
-                    deadline,
-                )?;
-                sequence = sequence
-                    .checked_add(1)
-                    .ok_or_else(|| infrastructure("read sequence overflow"))?;
-                continue;
+        let mut slot = self.lock_session(deadline)?;
+        let result = (|| {
+            // Verify after any queueing, even when a sealed process is already warm.
+            let executable_bytes = self.verified_executable_bytes()?;
+            if slot.is_none() {
+                let executable = Self::sealed_executable(&executable_bytes)?;
+                let sandbox = WorkerSandbox::new().map_err(infra)?;
+                let executable_path = format!("/proc/self/fd/{}", executable.as_raw_fd());
+                let mut command = Command::new(executable_path);
+                command
+                    .env_clear()
+                    .stdin(Stdio::piped())
+                    .stdout(Stdio::piped())
+                    .stderr(Stdio::null());
+                // SAFETY: `install` performs only syscalls over policy memory prepared before `fork`.
+                unsafe { command.pre_exec(move || sandbox.install()) };
+                let mut guard = ChildGuard::new(command.spawn().map_err(infra)?);
+                let worker_pid = guard.child_mut().id();
+                let stdin = guard
+                    .child_mut()
+                    .stdin
+                    .take()
+                    .ok_or_else(|| infrastructure("missing worker stdin"))?;
+                let stdout = guard
+                    .child_mut()
+                    .stdout
+                    .take()
+                    .ok_or_else(|| infrastructure("missing worker stdout"))?;
+                Self::set_nonblocking(&stdin)?;
+                Self::set_nonblocking(&stdout)?;
+                *slot = Some(WorkerSession {
+                    _guard: guard,
+                    stdin,
+                    stdout,
+                    worker_pid,
+                    configured: false,
+                });
             }
-            break value;
-        };
-        drop(stdin);
-        let status = guard.wait(deadline)?;
-        if !status.success() {
-            return Err(infrastructure("worker exited unsuccessfully"));
+            let session = slot.as_mut().expect("session initialized");
+            let worker_pid = session.worker_pid;
+            let mut request = ExecuteRequest {
+                version: VERSION,
+                request_id: request_id.clone(),
+                executable_sha256: self.manifest.executable_sha256.clone(),
+                worker_pid,
+                binding_hash: String::new(),
+                era,
+                chain_id: self.manifest.chain_id.clone(),
+                genesis_identity: self.manifest.genesis_identity.clone(),
+                genesis_header_hash: self.manifest.genesis_header_hash.clone(),
+                config_identity: self.manifest.config_identity.clone(),
+                genesis: if session.configured {
+                    None
+                } else {
+                    Some(self.manifest.genesis.clone())
+                },
+                parent_header_rlp,
+                child_block_rlp,
+                operation,
+            };
+            request.binding_hash = format!(
+                "{:#x}",
+                alloy_primitives::keccak256(request.binding_payload_bytes().map_err(infra)?)
+            );
+            let started = Instant::now();
+            tracing::info!(request = %request_id, worker_pid, era = %request.era, operation = ?request.operation, artifact = %request.executable_sha256, configuration = %request.config_identity, binding = %request.binding_hash, "historical worker execution started");
+            let request_bytes = Self::write_frame(&session.stdin, &request, deadline)?;
+            let mut sequence = 1;
+            let mut read_bytes = 0usize;
+            let outcome = loop {
+                let (value, frame_bytes): (Value, usize) =
+                    Self::read_frame(&session.stdout, deadline)?;
+                if let Ok(read) = serde_json::from_value::<ReadRequest>(value.clone()) {
+                    read_bytes = read_bytes.saturating_add(frame_bytes);
+                    let (id, seq) = Self::read_binding(&read);
+                    if id != request_id || seq != sequence {
+                        return Err(infrastructure("unbound or out-of-order state read"));
+                    }
+                    let value = Self::serve_read(state, read)?;
+                    Self::write_frame(
+                        &session.stdin,
+                        &ReadResponse {
+                            request_id: request_id.clone(),
+                            sequence,
+                            value,
+                            error: None,
+                        },
+                        deadline,
+                    )?;
+                    sequence = sequence
+                        .checked_add(1)
+                        .ok_or_else(|| infrastructure("read sequence overflow"))?;
+                    continue;
+                }
+                break value;
+            };
+            // Validate while still owning the transport lock: another caller must never
+            // reuse a session between receipt of a bad terminal and its eviction.
+            if request.operation.is_some() {
+                let success = serde_json::from_value::<RpcSuccess>(outcome.clone())
+                    .is_ok_and(|reply| reply.request_id == request_id);
+                let error = serde_json::from_value::<RpcError>(outcome.clone())
+                    .is_ok_and(|reply| reply.request_id == request_id);
+                if !success && !error {
+                    return Err(infrastructure("terminal RPC response is not bound to request"));
+                }
+            } else {
+                match serde_json::from_value::<Outcome>(outcome.clone()).map_err(infra)? {
+                    Outcome::Success { request_id: id, .. } if id == request_id => {}
+                    Outcome::InvalidInput { request_id: Some(id), .. } if id == request_id => {}
+                    Outcome::Unsupported { request_id: id, error } if id == request_id => {
+                        return Err(HistoryWorkerError::Unsupported(error));
+                    }
+                    Outcome::Infrastructure { request_id: Some(id), error } if id == request_id => {
+                        return Err(HistoryWorkerError::Infrastructure(error));
+                    }
+                    _ => return Err(infrastructure("terminal outcome is not bound to request")),
+                }
+            }
+            session.configured = true;
+            tracing::info!(request = %request_id, worker_pid, operation = ?request.operation, elapsed_us = started.elapsed().as_micros(), requests = sequence - 1, read_bytes, request_bytes, "historical worker execution completed");
+            Ok(outcome)
+        })();
+        if result.is_err() {
+            *slot = None;
         }
-        tracing::info!(request = %request_id, worker_pid, operation = ?request.operation, elapsed_us = started.elapsed().as_micros(), requests = sequence - 1, read_bytes, "historical worker execution completed");
-        Ok(outcome)
+        result
+    }
+
+    /// Locks this generation's transport without exceeding the caller's deadline.
+    pub fn lock_session(
+        &self,
+        deadline: Instant,
+    ) -> Result<MutexGuard<'_, Option<WorkerSession>>, HistoryWorkerError> {
+        loop {
+            match self.session.try_lock() {
+                Ok(session) => return Ok(session),
+                Err(std::sync::TryLockError::Poisoned(_)) => {
+                    return Err(infrastructure("worker session poisoned"));
+                }
+                Err(std::sync::TryLockError::WouldBlock) if Instant::now() < deadline => {
+                    std::thread::sleep(Duration::from_millis(1));
+                }
+                Err(std::sync::TryLockError::WouldBlock) => {
+                    return Err(infrastructure("worker session lock timeout"));
+                }
+            }
+        }
+    }
+
+    /// Drops an idle failed session. A caller holding the lock drops failures itself.
+    pub fn invalidate_session(&self) {
+        if let Ok(mut session) = self.session.try_lock() {
+            *session = None;
+        }
     }
 
     /// Copies the approved worker bytes into a sealed executable memory file.
     pub fn verified_executable(&self) -> Result<File, HistoryWorkerError> {
+        Self::sealed_executable(&self.verified_executable_bytes()?)
+    }
+
+    /// Rechecks current artifact bytes, even when an existing sealed child is reusable.
+    pub fn verified_executable_bytes(&self) -> Result<Vec<u8>, HistoryWorkerError> {
         let bytes = fs::read(&self.manifest.executable).map_err(infra)?;
         let digest = format!("0x{}", hex::encode(Sha256::digest(&bytes)));
         if digest != self.manifest.executable_sha256 {
             return Err(HistoryWorkerError::ArtifactMismatch);
         }
+        Ok(bytes)
+    }
 
+    /// Seals the exact verified byte sequence for race-free execution.
+    pub fn sealed_executable(bytes: &[u8]) -> Result<File, HistoryWorkerError> {
         // The command executes this exact verified byte sequence, not the mutable manifest path.
         let name = b"base-history-worker\0";
         // SAFETY: `name` is NUL-terminated and the syscall has no pointer output parameters.
@@ -265,7 +396,7 @@ impl HistoryWorker {
         }
         // SAFETY: the successful syscall returned a new descriptor owned by this function.
         let mut executable = unsafe { File::from_raw_fd(fd as i32) };
-        executable.write_all(&bytes).map_err(infra)?;
+        executable.write_all(bytes).map_err(infra)?;
         let seals =
             libc::F_SEAL_WRITE | libc::F_SEAL_GROW | libc::F_SEAL_SHRINK | libc::F_SEAL_SEAL;
         // SAFETY: F_ADD_SEALS operates on the valid memfd and does not access userspace memory.
@@ -426,7 +557,7 @@ impl HistoryWorker {
         writer: &impl AsRawFd,
         value: &impl Serialize,
         deadline: Instant,
-    ) -> Result<(), HistoryWorkerError> {
+    ) -> Result<usize, HistoryWorkerError> {
         let body = serde_json::to_vec(value).map_err(infra)?;
         if body.len() > MAX_FRAME {
             return Err(infrastructure("frame exceeds 64 MiB"));
@@ -434,7 +565,8 @@ impl HistoryWorker {
         let mut frame = Vec::with_capacity(4 + body.len());
         frame.extend_from_slice(&(body.len() as u32).to_be_bytes());
         frame.extend_from_slice(&body);
-        Self::write_all_deadline(writer, &frame, deadline)
+        Self::write_all_deadline(writer, &frame, deadline)?;
+        Ok(frame.len())
     }
 
     /// Reads one length-delimited protocol frame by an absolute deadline.
@@ -573,6 +705,42 @@ mod tests {
     }
 
     #[test]
+    fn manifest_generation_survives_callers_but_not_configuration_changes() {
+        let path =
+            std::env::temp_dir().join(format!("base-era-manifest-{}.json", std::process::id()));
+        let mut manifest = (*test_worker("0x00".into()).manifest).clone();
+        fs::write(&path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+        let first = HistoryWorker::from_manifest(&path).unwrap();
+        let session = std::sync::Arc::downgrade(&first.session);
+        let identity = first.manifest_identity.clone();
+        drop(first);
+        let second = HistoryWorker::from_manifest(&path).unwrap();
+        assert!(std::sync::Arc::ptr_eq(&session.upgrade().unwrap(), &second.session));
+        manifest.genesis = serde_json::json!({"config": {"isthmusTime": 42}});
+        fs::write(&path, serde_json::to_vec(&manifest).unwrap()).unwrap();
+        let changed = HistoryWorker::from_manifest(&path).unwrap();
+        assert_ne!(changed.manifest_identity, identity);
+        assert!(!std::sync::Arc::ptr_eq(&changed.session, &second.session));
+        fs::remove_file(&path).unwrap();
+        assert!(matches!(
+            HistoryWorker::from_manifest(&path),
+            Err(HistoryWorkerError::Infrastructure(_))
+        ));
+    }
+
+    #[test]
+    fn session_contention_obeys_deadline() {
+        let worker = test_worker("0x00".into());
+        let _busy = worker.session.lock().unwrap();
+        let started = Instant::now();
+        assert!(matches!(
+            worker.lock_session(started + Duration::from_millis(20)),
+            Err(HistoryWorkerError::Infrastructure(_))
+        ));
+        assert!(started.elapsed() < Duration::from_secs(1));
+    }
+
+    #[test]
     fn verified_executable_is_fully_sealed() {
         let bytes = fs::read(std::env::current_exe().unwrap()).unwrap();
         let worker = test_worker(format!("0x{}", hex::encode(Sha256::digest(bytes))));
@@ -588,7 +756,7 @@ mod tests {
 
     fn test_worker(executable_sha256: String) -> HistoryWorker {
         HistoryWorker {
-            manifest: WorkerManifest {
+            manifest: std::sync::Arc::new(WorkerManifest {
                 executable: std::env::current_exe().unwrap(),
                 executable_sha256,
                 genesis: Value::Null,
@@ -596,7 +764,9 @@ mod tests {
                 genesis_header_hash: String::new(),
                 config_identity: String::new(),
                 chain_id: String::new(),
-            },
+            }),
+            manifest_identity: String::new(),
+            session: std::sync::Arc::new(std::sync::Mutex::new(None)),
         }
     }
 }

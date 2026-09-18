@@ -62,6 +62,29 @@ def usage_record(usage, elapsed_ms):
     }
 
 
+def child_resources(parent):
+    """Snapshot owned persistent workers before host exit (wait4 may not include them)."""
+    records = []
+    ticks = os.sysconf("SC_CLK_TCK")
+    for status_path in Path("/proc").glob("[0-9]*/status"):
+        try:
+            fields = dict(line.split(":", 1) for line in status_path.read_text().splitlines())
+            if int(fields["PPid"]) != parent:
+                continue
+            executable = os.readlink(status_path.parent / "exe")
+            if "memfd:base-history-worker" not in executable:
+                continue
+            stat = (status_path.parent / "stat").read_text().rsplit(") ", 1)[1].split()
+            records.append({"pid": int(status_path.parent.name), "executable": executable,
+                            "user_seconds": int(stat[11]) / ticks,
+                            "system_seconds": int(stat[12]) / ticks,
+                            "rss_kib": int(fields["VmRSS"].split()[0]),
+                            "peak_rss_kib": int(fields["VmHWM"].split()[0])})
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            continue
+    return records
+
+
 def distribution(values):
     ordered = sorted(values)
     percentile = lambda p: ordered[min(len(ordered) - 1, int((len(ordered) - 1) * p))]
@@ -135,7 +158,7 @@ def main():
     parser.add_argument("--reference-bin", type=Path, default=ROOT / "target/history-reference-node")
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--output", type=Path, default=ROOT / "etc/history-devnet/evidence/benchmark.json")
-    parser.add_argument("--repetitions", type=int, default=5)
+    parser.add_argument("--repetitions", type=int, default=20)
     args = parser.parse_args()
     args.reference_bin = verify_reference(args.reference_bin)
     if args.run_dir.exists():
@@ -159,7 +182,7 @@ def main():
                      "executable_sha256": approval["executable_sha256"]})
     manifest_path = args.run_dir / "worker-manifest.json"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
-    processes, logs, usages = [], [], {}
+    processes, logs, usages, persistent_resources = [], [], {}, {}
     try:
         worker, worker_log, worker_url, worker_ready = launch("worker-host", args.host_bin,
             args.run_dir / "worker-datadir", args.genesis, manifest_path, args.run_dir)
@@ -193,6 +216,8 @@ def main():
                     raise RuntimeError(f"incorrect activation flag for {name}")
             results[name] = entries
     finally:
+        for name, process in zip(("worker", "reference"), processes):
+            persistent_resources[name] = child_resources(process.pid)
         for process in processes:
             if process.poll() is None:
                 os.killpg(process.pid, signal.SIGINT)
@@ -203,8 +228,19 @@ def main():
         for log in logs:
             log.close()
     host_log = (args.run_dir / "worker-host.log").read_text(errors="replace")
-    accesses = [{"elapsed_us": int(a), "request_count": int(b), "request_bytes": int(c)} for a, b, c in
-                re.findall(r"elapsed_us(?:\x1b\[[0-9;]*m)*=(?:\x1b\[[0-9;]*m)*(\d+).*?requests(?:\x1b\[[0-9;]*m)*=(?:\x1b\[[0-9;]*m)*(\d+).*?read_bytes(?:\x1b\[[0-9;]*m)*=(?:\x1b\[[0-9;]*m)*(\d+)", host_log)]
+    plain_log = re.sub(r"\x1b\[[0-9;]*m", "", host_log)
+    accesses = []
+    for line in plain_log.splitlines():
+        fields = {key: int(value) for key, value in
+                  re.findall(r"(worker_pid|elapsed_us|requests|read_bytes|request_bytes)=(\d+)", line)}
+        if {"elapsed_us", "requests", "read_bytes"} <= fields.keys():
+            fields["state_read_request_count"] = fields.pop("requests")
+            fields["state_read_frame_bytes"] = fields.pop("read_bytes")
+            accesses.append(fields)
+    worker_pids = [entry["worker_pid"] for entry in accesses if "worker_pid" in entry]
+    reused_warm_requests = sum(left == right for left, right in zip(worker_pids, worker_pids[1:]))
+    if reused_warm_requests < 2 * args.repetitions:
+        raise RuntimeError("historical benchmark did not demonstrate warm worker reuse")
     evidence = {
         "schema": 1, "measurement_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "cold_definition": "Fresh node processes and owned datadir copies; OS page cache was not dropped.",
@@ -220,8 +256,13 @@ def main():
                         "cpu": next(line.split(":", 1)[1].strip() for line in Path("/proc/cpuinfo").read_text().splitlines() if line.startswith("model name"))},
         "startup_readiness_ms": {"worker": worker_ready, "reference": reference_ready},
         "workloads": results, "worker_state_access_from_host_log": accesses,
+        "persistent_worker_reuse": {"logged_worker_pids": worker_pids,
+                                    "consecutive_same_pid_count": reused_warm_requests,
+                                    "available": bool(worker_pids)},
+        "persistent_worker_resources_before_shutdown": persistent_resources,
         "node_resource_usage_including_waited_descendants": {
-            "method": "Linux wait4 rusage after graceful shutdown; includes descendants each node waited for",
+            "method": "Linux wait4 rusage after graceful shutdown; includes only descendants each node waited for",
+            "limitation": "Persistent worker CPU and peak RSS may be excluded when the host does not wait for that child; these values are not claimed as complete worker cost.",
             "worker": usages["worker"], "reference": usages["reference"]},
         "release_worker_probe": worker_probe(Path(approval["executable"]), args.run_dir),
     }

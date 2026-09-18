@@ -15,7 +15,10 @@ The actual resolved locks intentionally diverge: worker Alloy consensus/EIPs 2.4
 1.7.3 versus host consensus/EIPs 2.4.1 and primitives 1.6.1. Worker reth is the original upstream
 revision; host reth has the external execution/RPC interface patch. No Rust types cross the framed
 JSON boundary. Both workspaces pin Rust 1.96.0. The worker is built in release mode; the measured
-host/reference are debug builds with default features disabled.
+original baseline used debug host/reference builds with default features disabled. The session
+optimization now builds both host and reference with the existing `profiling` profile: opt-level 3,
+no LTO, line-table debug symbols. Comparisons must identify the build profile; an improvement over
+the original demo includes both architecture changes and optimized compilation.
 
 ## Commands
 
@@ -54,7 +57,7 @@ The supported host is Linux with Landlock ABI 3+ and seccomp; unsupported sandbo
 Internet access is needed to fetch pinned dependencies/images on a cold machine. The spike always
 requires the explicit reth override, including ordinary builds without the history feature. No
 dependency source cache is patched. A cold build downloads dependencies and needs substantial disk
-space: allow at least 70 GiB for the separate debug host/reference, release worker and native proof
+space: allow at least 70 GiB for the separate optimized host/reference, release worker and native proof
 fixture builds. `CARGO_BUILD_JOBS` defaults to 3 and can be reduced on smaller machines.
 
 `acceptance.sh` requires a fresh evidence directory and runs live parity, fresh Engine replay/reorg,
