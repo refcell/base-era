@@ -31,6 +31,7 @@ case "$command" in
   verify) "$root/etc/history-devnet/acceptance.sh" "$run" ;;
   evidence) python3 "$root/etc/history-devnet/collect.py" "$run" --output "$run/portable-evidence" ;;
   test)
+    python3 -m unittest discover -s "$root/etc/history-devnet" -p 'test_*.py' -v
     cargo --config "$root/target/history-reth-overrides.toml" test --locked \
       --manifest-path "$root/Cargo.toml" -p base-execution-history
     CARGO_TARGET_DIR="$root/etc/history-worker/target" cargo test --locked \
