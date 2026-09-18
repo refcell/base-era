@@ -1,0 +1,822 @@
+//! The Base RPC API using `jsonrpsee`
+
+use core::net::IpAddr;
+
+use alloy_eips::BlockNumberOrTag;
+use alloy_primitives::B256;
+use base_common_genesis::RollupConfig;
+use base_common_rpc_types_engine::BaseExecutionPayloadEnvelope;
+use base_consensus_gossip::{PeerCount, PeerDump, PeerInfo, PeerStats};
+use base_consensus_safedb::SafeHeadResponse;
+use base_protocol::SyncStatus;
+use base_upgrade_signal::{UpgradeReadiness, UpgradeSignalApplySummary};
+#[cfg_attr(all(target_arch = "wasm32", target_os = "unknown"), allow(unused_imports))]
+use getrandom as _; // required for compiling wasm32-unknown-unknown
+use ipnet::IpNet;
+use jsonrpsee::{
+    core::{RpcResult, SubscriptionResult},
+    proc_macros::rpc,
+};
+use serde::{Deserialize, Serialize};
+
+use crate::{OutputResponse, health::HealthzResponse};
+
+/// Live Raft cluster membership snapshot returned by `conductor_clusterMembership`.
+///
+/// Mirrors the upstream op-conductor `ClusterMembership` struct.
+/// See: <https://github.com/ethereum-optimism/optimism/blob/develop/op-conductor/consensus/iface.go>
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ClusterMembership {
+    /// All servers currently known to the Raft configuration.
+    pub servers: Vec<ServerInfo>,
+    /// Raft configuration index — increments on every membership change.
+    pub version: u64,
+}
+
+/// A single member of the Raft cluster.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ServerInfo {
+    /// Stable Raft server identifier (e.g. `"sequencer-1"`).
+    ///
+    /// Matches the `server_id` operators configure per node and the parameter
+    /// expected by `conductor_transferLeaderToServer`.
+    pub id: String,
+    /// Raft binary-protocol address (e.g. `"op-conductor-1:5051"`).
+    ///
+    /// **NOT** the JSON-RPC URL — the Raft consensus port is distinct from the
+    /// HTTP RPC port. Callers that need to talk JSON-RPC to a peer must derive
+    /// the RPC URL separately (typically by extracting the host and applying a
+    /// port template from local configuration).
+    pub addr: String,
+    /// Whether this server can vote in Raft elections.
+    pub suffrage: ServerSuffrage,
+}
+
+/// Raft suffrage (voting eligibility) for a cluster member.
+///
+/// Wire format is an integer (`0` = voter, `1` = nonvoter), matching the
+/// upstream `ServerSuffrage` enum in op-conductor.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "u8", into = "u8")]
+pub enum ServerSuffrage {
+    /// Server is eligible to vote in Raft elections.
+    Voter,
+    /// Server is a non-voting member (replica only).
+    Nonvoter,
+}
+
+impl TryFrom<u8> for ServerSuffrage {
+    type Error = UnknownServerSuffrage;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(Self::Voter),
+            1 => Ok(Self::Nonvoter),
+            other => Err(UnknownServerSuffrage(other)),
+        }
+    }
+}
+
+impl From<ServerSuffrage> for u8 {
+    fn from(value: ServerSuffrage) -> Self {
+        match value {
+            ServerSuffrage::Voter => 0,
+            ServerSuffrage::Nonvoter => 1,
+        }
+    }
+}
+
+/// Error returned when an unknown `ServerSuffrage` discriminant is decoded.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[error("unknown server suffrage discriminant: {0}")]
+pub struct UnknownServerSuffrage(pub u8);
+
+/// Base rollup node RPC interface.
+///
+/// https://docs.optimism.io/builders/node-operators/json-rpc
+/// https://github.com/ethereum-optimism/optimism/blob/8dd17a7b114a7c25505cd2e15ce4e3d0f7e3f7c1/op-node/node/api.go#L114
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "optimism"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "optimism"))]
+pub trait RollupNodeApi {
+    /// Get the output root at a specific block.
+    #[method(name = "outputAtBlock")]
+    async fn output_at_block(&self, block_number: BlockNumberOrTag) -> RpcResult<OutputResponse>;
+
+    /// Gets the safe head at an L1 block height.
+    #[method(name = "safeHeadAtL1Block")]
+    async fn safe_head_at_l1_block(
+        &self,
+        block_number: BlockNumberOrTag,
+    ) -> RpcResult<SafeHeadResponse>;
+
+    /// Get the synchronization status.
+    #[method(name = "syncStatus")]
+    async fn sync_status(&self) -> RpcResult<SyncStatus>;
+
+    /// Get the rollup configuration parameters.
+    #[method(name = "rollupConfig")]
+    async fn rollup_config(&self) -> RpcResult<RollupConfig>;
+
+    /// Get the software version.
+    #[method(name = "version")]
+    async fn version(&self) -> RpcResult<String>;
+}
+
+/// Base-specific node RPC interface (the `base` namespace).
+///
+/// Read-only, non-admin methods intended for node operators — including external operators — so they
+/// are exposed on the public RPC without requiring the (privileged) `admin` namespace to be enabled.
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "base"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "base"))]
+pub trait BaseApi {
+    /// Reports whether this node is ready for the contract-backed upgrades scheduled on L1.
+    ///
+    /// Reads the live L1 upgrade-signal schedule and compares this node's advertised protocol
+    /// version against each scheduled minimum, returning per-upgrade `supported`/`would_halt` flags
+    /// and an overall `ready`. This is a read-only pre-flight check node operators (internal and
+    /// external) run before an upgrade activates; it never mutates node state.
+    ///
+    /// `target_version`, when supplied, overrides the on-chain minimum for the overall `ready`
+    /// answer so an operator can confirm support for an *announced* upgrade before it is scheduled on
+    /// L1 (the gap between rolling out a release and publishing the schedule). It is plain
+    /// `major.minor.patch` semver, with an optional `-rc.N` pre-release (e.g. `1.2.3` or
+    /// `1.2.3-rc.4`).
+    #[method(name = "upgradeReadiness")]
+    async fn upgrade_readiness(
+        &self,
+        target_version: Option<String>,
+    ) -> RpcResult<UpgradeReadiness>;
+}
+
+/// The opp2p namespace handles peer interactions.
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "opp2p"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "opp2p"))]
+pub trait BaseP2PApi {
+    /// Returns information of node
+    #[method(name = "self")]
+    async fn opp2p_self(&self) -> RpcResult<PeerInfo>;
+
+    /// Returns information of peers
+    #[method(name = "peerCount")]
+    async fn opp2p_peer_count(&self) -> RpcResult<PeerCount>;
+
+    /// Returns information of peers. If `connected` is true, only returns connected peers.
+    #[method(name = "peers")]
+    async fn opp2p_peers(&self, connected: bool) -> RpcResult<PeerDump>;
+
+    /// Returns statistics of peers
+    #[method(name = "peerStats")]
+    async fn opp2p_peer_stats(&self) -> RpcResult<PeerStats>;
+
+    /// Returns the discovery table
+    #[method(name = "discoveryTable")]
+    async fn opp2p_discovery_table(&self) -> RpcResult<Vec<String>>;
+
+    /// Blocks the given peer
+    #[method(name = "blockPeer")]
+    async fn opp2p_block_peer(&self, peer: String) -> RpcResult<()>;
+
+    /// Unblocks the given peer
+    #[method(name = "unblockPeer")]
+    async fn opp2p_unblock_peer(&self, peer: String) -> RpcResult<()>;
+
+    /// Lists blocked peers
+    #[method(name = "listBlockedPeers")]
+    async fn opp2p_list_blocked_peers(&self) -> RpcResult<Vec<String>>;
+
+    /// Blocks the given address
+    #[method(name = "blockAddr")]
+    async fn opp2p_block_addr(&self, ip: IpAddr) -> RpcResult<()>;
+
+    /// Unblocks the given address
+    #[method(name = "unblockAddr")]
+    async fn opp2p_unblock_addr(&self, ip: IpAddr) -> RpcResult<()>;
+
+    /// Lists blocked addresses
+    #[method(name = "listBlockedAddrs")]
+    async fn opp2p_list_blocked_addrs(&self) -> RpcResult<Vec<IpAddr>>;
+
+    /// Blocks the given subnet
+    #[method(name = "blockSubnet")]
+    async fn opp2p_block_subnet(&self, subnet: IpNet) -> RpcResult<()>;
+
+    /// Unblocks the given subnet
+    #[method(name = "unblockSubnet")]
+    async fn opp2p_unblock_subnet(&self, subnet: IpNet) -> RpcResult<()>;
+
+    /// Lists blocked subnets
+    #[method(name = "listBlockedSubnets")]
+    async fn opp2p_list_blocked_subnets(&self) -> RpcResult<Vec<IpNet>>;
+
+    /// Protects the given peer
+    #[method(name = "protectPeer")]
+    async fn opp2p_protect_peer(&self, peer: String) -> RpcResult<()>;
+
+    /// Unprotects the given peer
+    #[method(name = "unprotectPeer")]
+    async fn opp2p_unprotect_peer(&self, peer: String) -> RpcResult<()>;
+
+    /// Connects to the given peer
+    #[method(name = "connectPeer")]
+    async fn opp2p_connect_peer(&self, peer: String) -> RpcResult<()>;
+
+    /// Disconnects from the given peer
+    #[method(name = "disconnectPeer")]
+    async fn opp2p_disconnect_peer(&self, peer: String) -> RpcResult<()>;
+}
+
+/// Websockets API for the node.
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "ws"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "ws"))]
+#[async_trait]
+pub trait Ws {
+    /// Subscribes to the stream of finalized head updates.
+    #[subscription(name = "subscribe_finalized_head", item = base_protocol::L2BlockInfo)]
+    async fn ws_finalized_head_updates(&self) -> SubscriptionResult;
+
+    /// Subscribes to the stream of safe head updates.
+    #[subscription(name = "subscribe_safe_head", item = base_protocol::L2BlockInfo)]
+    async fn ws_safe_head_updates(&self) -> SubscriptionResult;
+
+    /// Subscribes to the stream of unsafe head updates.
+    #[subscription(name = "subscribe_unsafe_head", item = base_protocol::L2BlockInfo)]
+    async fn ws_unsafe_head_updates(&self) -> SubscriptionResult;
+}
+
+/// Development RPC API for engine state introspection.
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "dev"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "dev"))]
+#[async_trait]
+pub trait DevEngineApi {
+    /// Subscribe to engine queue length updates.
+    #[subscription(name = "subscribe_engine_queue_size", item = usize)]
+    async fn dev_subscribe_engine_queue_length(&self) -> SubscriptionResult;
+
+    /// Get the current number of tasks in the engine queue.
+    #[method(name = "taskQueueLength")]
+    async fn dev_task_queue_length(&self) -> RpcResult<usize>;
+}
+
+/// The admin namespace for the consensus node.
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "admin"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "admin"))]
+#[async_trait]
+pub trait AdminApi {
+    /// Posts the unsafe payload.
+    #[method(name = "postUnsafePayload")]
+    async fn admin_post_unsafe_payload(
+        &self,
+        payload: BaseExecutionPayloadEnvelope,
+    ) -> RpcResult<()>;
+
+    /// Clears pending outbound P2P connection attempts.
+    #[method(name = "clearPendingP2pConnections")]
+    async fn admin_clear_pending_p2p_connections(&self) -> RpcResult<usize>;
+
+    /// Checks if the sequencer is active.
+    #[method(name = "sequencerActive")]
+    async fn admin_sequencer_active(&self) -> RpcResult<bool>;
+
+    /// Starts the sequencer.
+    #[method(name = "startSequencer")]
+    async fn admin_start_sequencer(&self, unsafe_head: B256) -> RpcResult<()>;
+
+    /// Stops the sequencer.
+    #[method(name = "stopSequencer")]
+    async fn admin_stop_sequencer(&self) -> RpcResult<B256>;
+
+    /// Checks if the conductor is enabled.
+    #[method(name = "conductorEnabled")]
+    async fn admin_conductor_enabled(&self) -> RpcResult<bool>;
+
+    /// Gets the recover mode.
+    #[method(name = "adminRecoverMode")]
+    async fn admin_recover_mode(&self) -> RpcResult<bool>;
+
+    /// Sets the recover mode.
+    #[method(name = "setRecoverMode")]
+    async fn admin_set_recover_mode(&self, mode: bool) -> RpcResult<()>;
+
+    /// Overrides the leader in the conductor.
+    #[method(name = "overrideLeader")]
+    async fn admin_override_leader(&self) -> RpcResult<()>;
+
+    /// Resets the derivation pipeline.
+    #[method(name = "resetDerivationPipeline")]
+    async fn admin_reset_derivation_pipeline(&self) -> RpcResult<()>;
+
+    /// Refreshes the runtime upgrade signal schedule from L1.
+    #[method(name = "refreshUpgradeSignal")]
+    async fn admin_refresh_upgrade_signal(&self) -> RpcResult<UpgradeSignalApplySummary>;
+}
+
+/// The admin namespace for the consensus node.
+#[cfg_attr(not(feature = "client"), rpc(server))]
+#[cfg_attr(feature = "client", rpc(server, client))]
+pub trait HealthzApi {
+    /// Gets the health of the base-node.
+    #[method(name = "healthz")]
+    async fn healthz(&self) -> RpcResult<HealthzResponse>;
+}
+
+/// The conductor RPC API for HA sequencer cluster management.
+///
+/// Implemented by op-conductor nodes. See:
+/// <https://github.com/ethereum-optimism/optimism/blob/develop/op-conductor/rpc/api.go>
+#[cfg_attr(not(feature = "client"), rpc(server, namespace = "conductor"))]
+#[cfg_attr(feature = "client", rpc(server, client, namespace = "conductor"))]
+pub trait ConductorApi {
+    /// Returns whether this node is the current Raft leader.
+    #[method(name = "leader")]
+    async fn conductor_leader(&self) -> RpcResult<bool>;
+
+    /// Returns whether the conductor is active.
+    #[method(name = "active")]
+    async fn conductor_active(&self) -> RpcResult<bool>;
+
+    /// Commits an unsafe payload to the conductor.
+    #[method(name = "commitUnsafePayload")]
+    async fn conductor_commit_unsafe_payload(
+        &self,
+        payload: BaseExecutionPayloadEnvelope,
+    ) -> RpcResult<()>;
+
+    /// Overrides the leader of the conductor.
+    #[method(name = "overrideLeader")]
+    async fn conductor_override_leader(&self) -> RpcResult<()>;
+
+    /// Transfers Raft leadership to any available peer.
+    #[method(name = "transferLeader")]
+    async fn conductor_transfer_leader(&self) -> RpcResult<()>;
+
+    /// Transfers Raft leadership to a specific peer identified by server ID and Raft address.
+    #[method(name = "transferLeaderToServer")]
+    async fn conductor_transfer_leader_to_server(
+        &self,
+        server_id: String,
+        raft_addr: String,
+    ) -> RpcResult<()>;
+
+    /// Pauses the conductor control loop.
+    #[method(name = "pause")]
+    async fn conductor_pause(&self) -> RpcResult<()>;
+
+    /// Resumes the conductor control loop.
+    #[method(name = "resume")]
+    async fn conductor_resume(&self) -> RpcResult<()>;
+
+    /// Returns true if the conductor control loop is paused.
+    #[method(name = "paused")]
+    async fn conductor_paused(&self) -> RpcResult<bool>;
+
+    /// Returns true if the conductor process is stopped.
+    #[method(name = "stopped")]
+    async fn conductor_stopped(&self) -> RpcResult<bool>;
+
+    /// Returns true if the sequencer this conductor manages reports healthy.
+    #[method(name = "sequencerHealthy")]
+    async fn conductor_sequencer_healthy(&self) -> RpcResult<bool>;
+
+    /// Returns the live Raft cluster membership snapshot.
+    #[method(name = "clusterMembership")]
+    async fn conductor_cluster_membership(&self) -> RpcResult<ClusterMembership>;
+}
+
+#[cfg(test)]
+mod tests {
+    use core::net::IpAddr;
+
+    use alloy_eips::BlockNumberOrTag;
+    use alloy_primitives::B256;
+    use async_trait::async_trait;
+    use base_common_genesis::RollupConfig;
+    use base_common_rpc_types_engine::BaseExecutionPayloadEnvelope;
+    use base_consensus_gossip::{PeerCount, PeerDump, PeerInfo, PeerStats};
+    use base_consensus_safedb::SafeHeadResponse;
+    use base_protocol::SyncStatus;
+    use base_upgrade_signal::UpgradeSignalApplySummary;
+    use ipnet::IpNet;
+    use jsonrpsee::{
+        PendingSubscriptionSink,
+        core::{RpcResult, SubscriptionResult},
+    };
+    use rstest::rstest;
+
+    use super::{
+        AdminApiServer, BaseApiServer, BaseP2PApiServer, ClusterMembership, ConductorApiServer,
+        DevEngineApiServer, HealthzApiServer, RollupNodeApiServer, ServerSuffrage,
+        UpgradeReadiness, WsServer,
+    };
+    use crate::{OutputResponse, health::HealthzResponse};
+
+    struct StubRollupNodeApi;
+
+    #[async_trait]
+    impl RollupNodeApiServer for StubRollupNodeApi {
+        async fn output_at_block(&self, _: BlockNumberOrTag) -> RpcResult<OutputResponse> {
+            unimplemented!()
+        }
+
+        async fn safe_head_at_l1_block(&self, _: BlockNumberOrTag) -> RpcResult<SafeHeadResponse> {
+            unimplemented!()
+        }
+
+        async fn sync_status(&self) -> RpcResult<SyncStatus> {
+            unimplemented!()
+        }
+
+        async fn rollup_config(&self) -> RpcResult<RollupConfig> {
+            unimplemented!()
+        }
+
+        async fn version(&self) -> RpcResult<String> {
+            unimplemented!()
+        }
+    }
+
+    #[rstest]
+    #[case("optimism_outputAtBlock")]
+    #[case("optimism_safeHeadAtL1Block")]
+    #[case("optimism_syncStatus")]
+    #[case("optimism_rollupConfig")]
+    #[case("optimism_version")]
+    fn rollup_node_api_wire_names(#[case] expected: &str) {
+        let module = StubRollupNodeApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    struct StubBaseApi;
+
+    #[async_trait]
+    impl BaseApiServer for StubBaseApi {
+        async fn upgrade_readiness(&self, _: Option<String>) -> RpcResult<UpgradeReadiness> {
+            unimplemented!()
+        }
+    }
+
+    #[test]
+    fn base_api_wire_names() {
+        let module = StubBaseApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&"base_upgradeReadiness"), "missing method, got: {names:?}");
+    }
+
+    struct StubBaseP2PApi;
+
+    #[async_trait]
+    impl BaseP2PApiServer for StubBaseP2PApi {
+        async fn opp2p_self(&self) -> RpcResult<PeerInfo> {
+            unimplemented!()
+        }
+
+        async fn opp2p_peer_count(&self) -> RpcResult<PeerCount> {
+            unimplemented!()
+        }
+
+        async fn opp2p_peers(&self, _: bool) -> RpcResult<PeerDump> {
+            unimplemented!()
+        }
+
+        async fn opp2p_peer_stats(&self) -> RpcResult<PeerStats> {
+            unimplemented!()
+        }
+
+        async fn opp2p_discovery_table(&self) -> RpcResult<Vec<String>> {
+            unimplemented!()
+        }
+
+        async fn opp2p_block_peer(&self, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_unblock_peer(&self, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_list_blocked_peers(&self) -> RpcResult<Vec<String>> {
+            unimplemented!()
+        }
+
+        async fn opp2p_block_addr(&self, _: IpAddr) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_unblock_addr(&self, _: IpAddr) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_list_blocked_addrs(&self) -> RpcResult<Vec<IpAddr>> {
+            unimplemented!()
+        }
+
+        async fn opp2p_block_subnet(&self, _: IpNet) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_unblock_subnet(&self, _: IpNet) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_list_blocked_subnets(&self) -> RpcResult<Vec<IpNet>> {
+            unimplemented!()
+        }
+
+        async fn opp2p_protect_peer(&self, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_unprotect_peer(&self, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_connect_peer(&self, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn opp2p_disconnect_peer(&self, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+    }
+
+    #[rstest]
+    #[case("opp2p_self")]
+    #[case("opp2p_peerCount")]
+    #[case("opp2p_peers")]
+    #[case("opp2p_peerStats")]
+    #[case("opp2p_discoveryTable")]
+    #[case("opp2p_blockPeer")]
+    #[case("opp2p_unblockPeer")]
+    #[case("opp2p_listBlockedPeers")]
+    #[case("opp2p_blockAddr")]
+    #[case("opp2p_unblockAddr")]
+    #[case("opp2p_listBlockedAddrs")]
+    #[case("opp2p_blockSubnet")]
+    #[case("opp2p_unblockSubnet")]
+    #[case("opp2p_listBlockedSubnets")]
+    #[case("opp2p_protectPeer")]
+    #[case("opp2p_unprotectPeer")]
+    #[case("opp2p_connectPeer")]
+    #[case("opp2p_disconnectPeer")]
+    fn p2p_api_wire_names(#[case] expected: &str) {
+        let module = StubBaseP2PApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    struct StubWs;
+
+    #[async_trait]
+    impl WsServer for StubWs {
+        async fn ws_finalized_head_updates(
+            &self,
+            sink: PendingSubscriptionSink,
+        ) -> SubscriptionResult {
+            drop(sink);
+            Ok(())
+        }
+
+        async fn ws_safe_head_updates(&self, sink: PendingSubscriptionSink) -> SubscriptionResult {
+            drop(sink);
+            Ok(())
+        }
+
+        async fn ws_unsafe_head_updates(
+            &self,
+            sink: PendingSubscriptionSink,
+        ) -> SubscriptionResult {
+            drop(sink);
+            Ok(())
+        }
+    }
+
+    #[rstest]
+    #[case("ws_subscribe_finalized_head")]
+    #[case("ws_subscribe_safe_head")]
+    #[case("ws_subscribe_unsafe_head")]
+    fn ws_api_wire_names(#[case] expected: &str) {
+        let module = StubWs.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    struct StubDevEngineApi;
+
+    #[async_trait]
+    impl DevEngineApiServer for StubDevEngineApi {
+        async fn dev_subscribe_engine_queue_length(
+            &self,
+            sink: PendingSubscriptionSink,
+        ) -> SubscriptionResult {
+            drop(sink);
+            Ok(())
+        }
+
+        async fn dev_task_queue_length(&self) -> RpcResult<usize> {
+            unimplemented!()
+        }
+    }
+
+    #[rstest]
+    #[case("dev_subscribe_engine_queue_size")]
+    #[case("dev_taskQueueLength")]
+    fn dev_engine_api_wire_names(#[case] expected: &str) {
+        let module = StubDevEngineApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    struct StubAdminApi;
+
+    #[async_trait]
+    impl AdminApiServer for StubAdminApi {
+        async fn admin_post_unsafe_payload(
+            &self,
+            _: BaseExecutionPayloadEnvelope,
+        ) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn admin_clear_pending_p2p_connections(&self) -> RpcResult<usize> {
+            unimplemented!()
+        }
+
+        async fn admin_sequencer_active(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn admin_start_sequencer(&self, _: B256) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn admin_stop_sequencer(&self) -> RpcResult<B256> {
+            unimplemented!()
+        }
+
+        async fn admin_conductor_enabled(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn admin_recover_mode(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn admin_set_recover_mode(&self, _: bool) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn admin_override_leader(&self) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn admin_reset_derivation_pipeline(&self) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn admin_refresh_upgrade_signal(&self) -> RpcResult<UpgradeSignalApplySummary> {
+            unimplemented!()
+        }
+    }
+
+    #[rstest]
+    #[case("admin_postUnsafePayload")]
+    #[case("admin_clearPendingP2pConnections")]
+    #[case("admin_sequencerActive")]
+    #[case("admin_startSequencer")]
+    #[case("admin_stopSequencer")]
+    #[case("admin_conductorEnabled")]
+    #[case("admin_adminRecoverMode")]
+    #[case("admin_setRecoverMode")]
+    #[case("admin_overrideLeader")]
+    #[case("admin_resetDerivationPipeline")]
+    #[case("admin_refreshUpgradeSignal")]
+    fn admin_api_wire_names(#[case] expected: &str) {
+        let module = StubAdminApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    struct StubHealthzApi;
+
+    #[async_trait]
+    impl HealthzApiServer for StubHealthzApi {
+        async fn healthz(&self) -> RpcResult<HealthzResponse> {
+            unimplemented!()
+        }
+    }
+
+    #[rstest]
+    #[case("healthz")]
+    fn healthz_api_wire_names(#[case] expected: &str) {
+        let module = StubHealthzApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    struct StubConductorApi;
+
+    #[async_trait]
+    impl ConductorApiServer for StubConductorApi {
+        async fn conductor_leader(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn conductor_active(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn conductor_commit_unsafe_payload(
+            &self,
+            _: BaseExecutionPayloadEnvelope,
+        ) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn conductor_override_leader(&self) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn conductor_transfer_leader(&self) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn conductor_transfer_leader_to_server(&self, _: String, _: String) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn conductor_pause(&self) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn conductor_resume(&self) -> RpcResult<()> {
+            unimplemented!()
+        }
+
+        async fn conductor_paused(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn conductor_stopped(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn conductor_sequencer_healthy(&self) -> RpcResult<bool> {
+            unimplemented!()
+        }
+
+        async fn conductor_cluster_membership(&self) -> RpcResult<ClusterMembership> {
+            unimplemented!()
+        }
+    }
+
+    #[rstest]
+    #[case("conductor_leader")]
+    #[case("conductor_active")]
+    #[case("conductor_commitUnsafePayload")]
+    #[case("conductor_overrideLeader")]
+    #[case("conductor_transferLeader")]
+    #[case("conductor_transferLeaderToServer")]
+    #[case("conductor_pause")]
+    #[case("conductor_resume")]
+    #[case("conductor_paused")]
+    #[case("conductor_stopped")]
+    #[case("conductor_sequencerHealthy")]
+    #[case("conductor_clusterMembership")]
+    fn conductor_api_wire_names(#[case] expected: &str) {
+        let module = StubConductorApi.into_rpc();
+        let names: Vec<&str> = module.method_names().collect();
+        assert!(names.contains(&expected), "missing method {expected}, got: {names:?}");
+    }
+
+    #[test]
+    fn server_suffrage_wire_format_is_numeric() {
+        assert_eq!(serde_json::to_string(&ServerSuffrage::Voter).unwrap(), "0");
+        assert_eq!(serde_json::to_string(&ServerSuffrage::Nonvoter).unwrap(), "1");
+        assert_eq!(serde_json::from_str::<ServerSuffrage>("0").unwrap(), ServerSuffrage::Voter);
+        assert_eq!(serde_json::from_str::<ServerSuffrage>("1").unwrap(), ServerSuffrage::Nonvoter);
+        assert!(serde_json::from_str::<ServerSuffrage>("2").is_err());
+    }
+
+    #[test]
+    fn cluster_membership_round_trips_upstream_wire_format() {
+        let json = r#"{
+            "servers": [
+                {"id": "sequencer-1", "addr": "10.0.1.10:50050", "suffrage": 0},
+                {"id": "sequencer-2", "addr": "10.0.1.11:50050", "suffrage": 0},
+                {"id": "sequencer-3", "addr": "10.0.1.12:50050", "suffrage": 1}
+            ],
+            "version": 42
+        }"#;
+        let membership: ClusterMembership = serde_json::from_str(json).unwrap();
+        assert_eq!(membership.version, 42);
+        assert_eq!(membership.servers.len(), 3);
+        assert_eq!(membership.servers[0].id, "sequencer-1");
+        assert_eq!(membership.servers[0].addr, "10.0.1.10:50050");
+        assert_eq!(membership.servers[0].suffrage, ServerSuffrage::Voter);
+        assert_eq!(membership.servers[2].suffrage, ServerSuffrage::Nonvoter);
+
+        let reserialized = serde_json::to_value(&membership).unwrap();
+        let original: serde_json::Value = serde_json::from_str(json).unwrap();
+        assert_eq!(reserialized, original);
+    }
+}

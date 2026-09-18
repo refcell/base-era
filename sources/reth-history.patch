@@ -1,0 +1,738 @@
+diff --git c/crates/e2e-test-utils/src/rpc.rs w/crates/e2e-test-utils/src/rpc.rs
+index ff030c390..ca9e92dcb 100644
+--- c/crates/e2e-test-utils/src/rpc.rs
++++ w/crates/e2e-test-utils/src/rpc.rs
+@@ -34,7 +34,10 @@ where
+     pub async fn envelope_by_hash(
+         &self,
+         hash: B256,
+-    ) -> eyre::Result<EthereumTxEnvelope<TxEip4844Variant<BlobTransactionSidecarVariant>>> {
++    ) -> eyre::Result<EthereumTxEnvelope<TxEip4844Variant<BlobTransactionSidecarVariant>>>
++    where
++        EthApi: reth_rpc_eth_api::helpers::FullEthApi,
++    {
+         let tx = self.inner.debug_api().raw_transaction(hash).await?.unwrap();
+         let tx = tx.to_vec();
+         Ok(EthereumTxEnvelope::decode_2718(&mut tx.as_ref()).unwrap())
+diff --git c/crates/engine/invalid-block-hooks/src/witness.rs w/crates/engine/invalid-block-hooks/src/witness.rs
+index 574b8545c..15cf57ef1 100644
+--- c/crates/engine/invalid-block-hooks/src/witness.rs
++++ w/crates/engine/invalid-block-hooks/src/witness.rs
+@@ -220,7 +220,7 @@ where
+             self.provider.state_by_block_hash(parent_header.hash())?,
+         ));
+ 
+-        executor.execute_one(block)?;
++        executor.execute_one_with_parent(block, parent_header)?;
+         let db = executor.into_state();
+         let (codes, preimages, hashed_state, bundle_state) = collect_execution_data(db)?;
+ 
+diff --git c/crates/engine/tree/src/tree/payload_processor/mod.rs w/crates/engine/tree/src/tree/payload_processor/mod.rs
+index 628155f3c..dcc46eaa1 100644
+--- c/crates/engine/tree/src/tree/payload_processor/mod.rs
++++ w/crates/engine/tree/src/tree/payload_processor/mod.rs
+@@ -173,6 +173,7 @@ where
+         hint_stream: Option<StateRootHintStream>,
+         hashed_update_stream: Option<StateRootUpdateStream>,
+         parallel_bal_execution: bool,
++        external_execution: bool,
+     ) -> IteratorPayloadHandle<Evm, I>
+     where
+         P: DatabaseProviderFactory + Clone + 'static,
+@@ -192,6 +193,7 @@ where
+             hint_stream,
+             hashed_update_stream,
+             parallel_bal_execution,
++            external_execution,
+         );
+         PayloadHandle { prewarm_handle, transactions: execution_rx, _span: Span::current() }
+     }
+@@ -343,6 +345,7 @@ where
+         hint_stream: Option<StateRootHintStream>,
+         hashed_update_stream: Option<StateRootUpdateStream>,
+         parallel_bal_execution: bool,
++        external_execution: bool,
+     ) -> CacheTaskHandle<<Evm::Primitives as NodePrimitives>::Receipt>
+     where
+         P: DatabaseProviderFactory + Clone + 'static,
+@@ -360,7 +363,8 @@ where
+                 bal: env.decoded_bal.clone().expect("BAL dispatch implies decoded BAL"),
+                 updates: hashed_update_stream,
+             }
+-        } else if self.disable_transaction_prewarming ||
++        } else if external_execution ||
++            self.disable_transaction_prewarming ||
+             env.transaction_count < SMALL_BLOCK_TX_THRESHOLD
+         {
+             PrewarmMode::Skipped
+diff --git c/crates/engine/tree/src/tree/payload_validator.rs w/crates/engine/tree/src/tree/payload_validator.rs
+index 9c4dde82d..0e82bc032 100644
+--- c/crates/engine/tree/src/tree/payload_validator.rs
++++ w/crates/engine/tree/src/tree/payload_validator.rs
+@@ -598,6 +598,21 @@ where
+ 
+         let parallel_bal_execution = ensure_ok!(self.bal_path_eligible(env.decoded_bal.as_deref()));
+ 
++        if validated_block.get().is_err() {
++            return Err(validated_block
++                .try_into_inner()
++                .expect("sole handle")
++                .expect_err("checked error"));
++        }
++        let external_execution = self.evm_config.uses_external_execution(
++            validated_block.get().as_ref().expect("validated above").header(),
++        );
++        // External execution returns a complete delta rather than an incremental hook stream.
++        // Use the ordinary synchronous trie calculation; all root validation remains enabled.
++        let root_config = self.config.clone().with_has_enough_parallelism(
++            !external_execution && self.config.has_enough_parallelism(),
++        );
++
+         // Prepare the state-root job before execution so it can provide streaming hooks.
+         let mut state_root_job =
+             ensure_ok!(self.state_root_strategy.prepare(StateRootJobContext::new(
+@@ -607,7 +622,7 @@ where
+                 &parent_block,
+                 provider_builder.clone(),
+                 overlay_factory,
+-                &self.config,
++                &root_config,
+                 parallel_bal_execution,
+                 ctx.state_mut(),
+             )));
+@@ -635,6 +650,7 @@ where
+             hint_stream,
+             hashed_update_stream,
+             parallel_bal_execution,
++            external_execution,
+         ));
+ 
+         // Create optional cache stats for detailed block logging
+@@ -718,6 +734,7 @@ where
+                     state_provider,
+                     env,
+                     &input,
++                    &parent_block,
+                     &mut handle,
+                     execution_state_hook,
+                 ),
+@@ -986,6 +1003,7 @@ where
+         state_provider: S,
+         env: ExecutionEnv<Evm>,
+         input: &BlockOrPayload<T>,
++        parent: &SealedHeader<N::BlockHeader>,
+         handle: &mut PayloadHandle<impl ExecutableTxFor<Evm>, Err, N::Receipt>,
+         state_hook: Option<Box<dyn OnStateHook + 'static>>,
+     ) -> Result<
+@@ -1015,6 +1033,29 @@ where
+                 .build()
+         });
+ 
++        let candidate = self
++            .convert_to_block(input.clone())
++            .map_err(|e| InsertBlockErrorKind::Other(Box::new(e)))?;
++        if self.evm_config.uses_external_execution(candidate.header()) {
++            let block = RecoveredBlock::try_recover_sealed(candidate)
++                .map_err(|e| InsertBlockErrorKind::Other(Box::new(e)))?;
++            let output = self
++                .evm_config
++                .execute_block_external(&mut db, &block, Some(parent.header()))?
++                .ok_or_else(|| {
++                    InsertBlockErrorKind::Other(
++                        "external execution route returned no result".into(),
++                    )
++                })?;
++            let (receipt_tx, receipt_rx) =
++                self.spawn_receipt_root_task(output.result.receipts.len());
++            for (index, receipt) in output.result.receipts.iter().enumerate() {
++                let _ = receipt_tx.send(IndexedReceipt::new(index, receipt.clone()));
++            }
++            drop(receipt_tx);
++            return Ok((output, block.senders().to_vec(), receipt_rx, None));
++        }
++
+         let (spec_id, mut executor) = {
+             let _span = debug_span!(target: "engine::tree", "create_evm").entered();
+             let spec_id = *env.evm_env.spec_id();
+@@ -1368,6 +1409,7 @@ where
+         hint_stream: Option<StateRootHintStream>,
+         hashed_update_stream: Option<StateRootUpdateStream>,
+         parallel_bal_execution: bool,
++        external_execution: bool,
+     ) -> Result<
+         PayloadHandle<
+             impl ExecutableTxFor<Evm> + use<N, P, Evm, V, T>,
+@@ -1384,6 +1426,7 @@ where
+             hint_stream,
+             hashed_update_stream,
+             parallel_bal_execution,
++            external_execution,
+         );
+ 
+         self.metrics.block_validation.spawn_payload_processor.record(start.elapsed().as_secs_f64());
+@@ -1866,6 +1909,10 @@ where
+         // Warming reuses the head block's own environment rather than predicting the next
+         // block's: attribute-level accuracy (timestamp, basefee) doesn't matter for collecting
+         // state reads, and the worker disables the fee checks a stale basefee would trip.
++        // An external era must not execute locally, even as a discarded prewarm optimization.
++        if self.evm_config.uses_external_execution(parent.header()) {
++            return
++        }
+         let evm_env = match self.evm_config.evm_env(parent.header()) {
+             Ok(evm_env) => evm_env,
+             Err(err) => {
+diff --git c/crates/evm/evm/src/execute.rs w/crates/evm/evm/src/execute.rs
+index 8035ac809..4281bdd8d 100644
+--- c/crates/evm/evm/src/execute.rs
++++ w/crates/evm/evm/src/execute.rs
+@@ -41,6 +41,16 @@ pub trait Executor<DB: Database>: Sized {
+         block: &RecoveredBlock<<Self::Primitives as NodePrimitives>::Block>,
+     ) -> Result<BlockExecutionResult<<Self::Primitives as NodePrimitives>::Receipt>, Self::Error>;
+ 
++    /// Executes a single block with its parent header available to execution backends.
++    fn execute_one_with_parent(
++        &mut self,
++        block: &RecoveredBlock<<Self::Primitives as NodePrimitives>::Block>,
++        _parent: &HeaderTy<Self::Primitives>,
++    ) -> Result<BlockExecutionResult<<Self::Primitives as NodePrimitives>::Receipt>, Self::Error>
++    {
++        self.execute_one(block)
++    }
++
+     /// Executes the EVM with the given input and accepts a state hook closure that is invoked with
+     /// the EVM state after execution.
+     fn execute_one_with_state_hook<F>(
+@@ -578,21 +588,24 @@ impl<F, DB: Database> BasicBlockExecutor<F, DB> {
+         let db = State::builder().with_database(db).with_bundle_update().build();
+         Self { strategy_factory, db }
+     }
+-}
+ 
+-impl<F, DB> Executor<DB> for BasicBlockExecutor<F, DB>
+-where
+-    F: ConfigureEvm,
+-    DB: Database,
+-{
+-    type Primitives = F::Primitives;
+-    type Error = BlockExecutionError;
+-
+-    fn execute_one(
++    fn execute_one_with_optional_parent(
+         &mut self,
+-        block: &RecoveredBlock<<Self::Primitives as NodePrimitives>::Block>,
+-    ) -> Result<BlockExecutionResult<<Self::Primitives as NodePrimitives>::Receipt>, Self::Error>
++        block: &RecoveredBlock<<F::Primitives as NodePrimitives>::Block>,
++        parent: Option<&HeaderTy<F::Primitives>>,
++    ) -> Result<BlockExecutionResult<<F::Primitives as NodePrimitives>::Receipt>, BlockExecutionError>
++    where
++        F: ConfigureEvm,
+     {
++        if let Some(output) =
++            self.strategy_factory.execute_block_external(&mut self.db, block, parent)?
++        {
++            self.db.bundle_state.extend(output.state);
++            self.db.cache = Default::default();
++            self.db.use_preloaded_bundle = true;
++            return Ok(output.result)
++        }
++
+         let mut executor = self
+             .strategy_factory
+             .executor_for_block(&mut self.db, block)
+@@ -625,6 +638,32 @@ where
+ 
+         Ok(result)
+     }
++}
++
++impl<F, DB> Executor<DB> for BasicBlockExecutor<F, DB>
++where
++    F: ConfigureEvm,
++    DB: Database,
++{
++    type Primitives = F::Primitives;
++    type Error = BlockExecutionError;
++
++    fn execute_one(
++        &mut self,
++        block: &RecoveredBlock<<Self::Primitives as NodePrimitives>::Block>,
++    ) -> Result<BlockExecutionResult<<Self::Primitives as NodePrimitives>::Receipt>, Self::Error>
++    {
++        self.execute_one_with_optional_parent(block, None)
++    }
++
++    fn execute_one_with_parent(
++        &mut self,
++        block: &RecoveredBlock<<Self::Primitives as NodePrimitives>::Block>,
++        parent: &HeaderTy<Self::Primitives>,
++    ) -> Result<BlockExecutionResult<<Self::Primitives as NodePrimitives>::Receipt>, Self::Error>
++    {
++        self.execute_one_with_optional_parent(block, Some(parent))
++    }
+ 
+     fn execute_one_with_state_hook<H>(
+         &mut self,
+diff --git c/crates/evm/evm/src/lib.rs w/crates/evm/evm/src/lib.rs
+index 4dfb0b6a8..c81710692 100644
+--- c/crates/evm/evm/src/lib.rs
++++ w/crates/evm/evm/src/lib.rs
+@@ -26,10 +26,11 @@ use alloy_evm::{
+ };
+ use alloy_primitives::{Address, Bytes, B256};
+ use core::{error::Error, fmt::Debug};
+-use execute::{BasicBlockExecutor, BlockAssembler, BlockBuilder};
++use execute::{BasicBlockExecutor, BlockAssembler, BlockBuilder, BlockBuilderOutcome};
+ use reth_execution_errors::BlockExecutionError;
+ use reth_primitives_traits::{
+-    BlockTy, HeaderTy, NodePrimitives, ReceiptTy, SealedBlock, SealedHeader, TxTy,
++    BlockTy, HeaderTy, NodePrimitives, ReceiptTy, Recovered, RecoveredBlock, SealedBlock,
++    SealedHeader, TxTy,
+ };
+ use revm::{database::State, primitives::hardfork::SpecId};
+ 
+@@ -212,6 +213,39 @@ pub trait ConfigureEvm: Clone + Debug + Send + Sync + Unpin {
+         Block = BlockTy<Self::Primitives>,
+     >;
+ 
++    /// Optionally executes a complete recovered block outside the local EVM.
++    ///
++    /// Implementations must return `None` when routing is disabled. Errors are deliberately
++    /// execution errors so callers retain the invalid-input versus infrastructure distinction.
++    fn execute_block_external<DB: Database>(
++        &self,
++        _state: &mut State<DB>,
++        _block: &RecoveredBlock<BlockTy<Self::Primitives>>,
++        _parent: Option<&HeaderTy<Self::Primitives>>,
++    ) -> Result<
++        Option<reth_execution_types::BlockExecutionOutput<ReceiptTy<Self::Primitives>>>,
++        BlockExecutionError,
++    > {
++        Ok(None)
++    }
++
++    /// Whether the header requires the externally configured execution backend.
++    fn uses_external_execution(&self, _header: &HeaderTy<Self::Primitives>) -> bool {
++        false
++    }
++
++    /// Optionally builds a complete next block using an external execution backend.
++    fn build_block_external<DB: Database>(
++        &self,
++        _state: &mut State<DB>,
++        _parent: &SealedHeader<HeaderTy<Self::Primitives>>,
++        _attributes: Self::NextBlockEnvCtx,
++        _transactions: Vec<Recovered<TxTy<Self::Primitives>>>,
++        _state_provider: &dyn reth_storage_api::StateProvider,
++    ) -> Result<Option<BlockBuilderOutcome<Self::Primitives>>, BlockExecutionError> {
++        Ok(None)
++    }
++
+     /// Returns reference to the configured [`BlockExecutorFactory`].
+     fn block_executor_factory(&self) -> &Self::BlockExecutorFactory;
+ 
+diff --git c/crates/exex/exex/src/backfill/job.rs w/crates/exex/exex/src/backfill/job.rs
+index 5473b48da..1206a6417 100644
+--- c/crates/exex/exex/src/backfill/job.rs
++++ w/crates/exex/exex/src/backfill/job.rs
+@@ -11,7 +11,7 @@ use alloy_primitives::BlockNumber;
+ use reth_ethereum_primitives::Receipt;
+ use reth_evm::execute::{BlockExecutionError, BlockExecutionOutput, Executor};
+ use reth_node_api::{Block as _, BlockBody as _, NodePrimitives};
+-use reth_primitives_traits::{format_gas_throughput, RecoveredBlock, SignedTransaction};
++use reth_primitives_traits::{format_gas_throughput, HeaderTy, RecoveredBlock, SignedTransaction};
+ use reth_provider::{
+     BlockReader, Chain, ExecutionOutcome, HeaderProvider, ProviderError, StateProviderFactory,
+     TransactionVariant,
+@@ -41,7 +41,9 @@ pub struct BackfillJob<E, P> {
+ impl<E, P> Iterator for BackfillJob<E, P>
+ where
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+-    P: HeaderProvider + BlockReader<Transaction: SignedTransaction> + StateProviderFactory,
++    P: HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + BlockReader<Transaction: SignedTransaction>
++        + StateProviderFactory,
+ {
+     type Item = BackfillJobResult<Chain<E::Primitives>>;
+ 
+@@ -57,7 +59,9 @@ where
+ impl<E, P> BackfillJob<E, P>
+ where
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+-    P: BlockReader<Transaction: SignedTransaction> + HeaderProvider + StateProviderFactory,
++    P: BlockReader<Transaction: SignedTransaction>
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory,
+ {
+     /// Converts the backfill job into a single block backfill job.
+     pub fn into_single_blocks(self) -> SingleBlockBackfillJob<E, P> {
+@@ -100,6 +104,12 @@ where
+                 .map_err(BlockExecutionError::other)?
+                 .ok_or_else(|| ProviderError::HeaderNotFound(block_number.into()))
+                 .map_err(BlockExecutionError::other)?;
++            let parent = self
++                .provider
++                .header(block.parent_hash())
++                .map_err(BlockExecutionError::other)?
++                .ok_or_else(|| ProviderError::HeaderNotFound(block.parent_hash().into()))
++                .map_err(BlockExecutionError::other)?;
+ 
+             fetch_block_duration += fetch_block_start.elapsed();
+ 
+@@ -116,7 +126,7 @@ where
+             let (header, body) = block.split_sealed_header_body();
+             let block = P::Block::new_sealed(header, body).with_senders(senders);
+ 
+-            results.push(executor.execute_one(&block)?);
++            results.push(executor.execute_one_with_parent(&block, &parent)?);
+             execution_duration += execute_start.elapsed();
+ 
+             // Seal the block back and save it
+@@ -169,7 +179,7 @@ pub struct SingleBlockBackfillJob<E, P> {
+ impl<E, P> Iterator for SingleBlockBackfillJob<E, P>
+ where
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+-    P: HeaderProvider + BlockReader + StateProviderFactory,
++    P: HeaderProvider<Header = HeaderTy<E::Primitives>> + BlockReader + StateProviderFactory,
+ {
+     type Item = BackfillJobResult<(
+         RecoveredBlock<P::Block>,
+@@ -184,7 +194,7 @@ where
+ impl<E, P> SingleBlockBackfillJob<E, P>
+ where
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+-    P: HeaderProvider + BlockReader + StateProviderFactory,
++    P: HeaderProvider<Header = HeaderTy<E::Primitives>> + BlockReader + StateProviderFactory,
+ {
+     /// Converts the single block backfill job into a stream.
+     pub fn into_stream(
+@@ -212,9 +222,15 @@ where
+             .map_err(BlockExecutionError::other)?
+             .ok_or_else(|| ProviderError::HeaderNotFound(block_number.into()))
+             .map_err(BlockExecutionError::other)?;
++        let parent = self
++            .provider
++            .header(block_with_senders.parent_hash())
++            .map_err(BlockExecutionError::other)?
++            .ok_or_else(|| ProviderError::HeaderNotFound(block_with_senders.parent_hash().into()))
++            .map_err(BlockExecutionError::other)?;
+ 
+         // Configure the executor to use the previous block's state.
+-        let executor = self.evm_config.batch_executor(StateProviderDatabase::new(
++        let mut executor = self.evm_config.batch_executor(StateProviderDatabase::new(
+             self.provider
+                 .history_by_block_number(block_number.saturating_sub(1))
+                 .map_err(BlockExecutionError::other)?,
+@@ -222,7 +238,9 @@ where
+ 
+         trace!(target: "exex::backfill", number = block_number, txs = block_with_senders.body().transaction_count(), "Executing block");
+ 
+-        let block_execution_output = executor.execute(&block_with_senders)?;
++        let result = executor.execute_one_with_parent(&block_with_senders, &parent)?;
++        let block_execution_output =
++            BlockExecutionOutput { state: executor.into_state().take_bundle(), result };
+ 
+         Ok((block_with_senders, block_execution_output))
+     }
+diff --git c/crates/exex/exex/src/backfill/stream.rs w/crates/exex/exex/src/backfill/stream.rs
+index 7be3d26cb..0dd6a7155 100644
+--- c/crates/exex/exex/src/backfill/stream.rs
++++ w/crates/exex/exex/src/backfill/stream.rs
+@@ -11,8 +11,8 @@ use reth_evm::{
+     ConfigureEvm,
+ };
+ use reth_node_api::NodePrimitives;
+-use reth_primitives_traits::RecoveredBlock;
+-use reth_provider::{BlockReader, Chain, StateProviderFactory};
++use reth_primitives_traits::{HeaderTy, RecoveredBlock};
++use reth_provider::{BlockReader, Chain, HeaderProvider, StateProviderFactory};
+ use reth_prune_types::PruneModes;
+ use reth_stages_api::ExecutionStageThresholds;
+ use reth_tracing::tracing::debug;
+@@ -108,7 +108,7 @@ where
+                 // next.
+                 self.push_front(job);
+ 
+-                return Poll::Ready(Some(job_result))
++                return Poll::Ready(Some(job_result));
+             };
+         }
+ 
+@@ -119,7 +119,12 @@ where
+ impl<E, P> Stream for StreamBackfillJob<E, P, SingleBlockStreamItem<E::Primitives>>
+ where
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+-    P: BlockReader + StateProviderFactory + Clone + Unpin + 'static,
++    P: BlockReader
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory
++        + Clone
++        + Unpin
++        + 'static,
+ {
+     type Item = BackfillJobResult<SingleBlockStreamItem<E::Primitives>>;
+ 
+@@ -152,7 +157,12 @@ where
+ impl<E, P> Stream for StreamBackfillJob<E, P, BatchBlockStreamItem<E::Primitives>>
+ where
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+-    P: BlockReader + StateProviderFactory + Clone + Unpin + 'static,
++    P: BlockReader
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory
++        + Clone
++        + Unpin
++        + 'static,
+ {
+     type Item = BackfillJobResult<BatchBlockStreamItem<E::Primitives>>;
+ 
+diff --git c/crates/exex/exex/src/notifications.rs w/crates/exex/exex/src/notifications.rs
+index c8efb6773..89ec23f7c 100644
+--- c/crates/exex/exex/src/notifications.rs
++++ w/crates/exex/exex/src/notifications.rs
+@@ -6,6 +6,7 @@ use reth_ethereum_primitives::EthPrimitives;
+ use reth_evm::ConfigureEvm;
+ use reth_exex_types::ExExHead;
+ use reth_node_api::NodePrimitives;
++use reth_primitives_traits::HeaderTy;
+ use reth_provider::{BlockNumReader, BlockReader, Chain, HeaderProvider, StateProviderFactory};
+ use reth_stages_api::ExecutionStageThresholds;
+ use reth_tracing::tracing::debug;
+@@ -164,7 +165,12 @@ where
+ 
+ impl<P, E> ExExNotificationsStream<E::Primitives> for ExExNotifications<P, E>
+ where
+-    P: BlockReader + HeaderProvider + StateProviderFactory + Clone + Unpin + 'static,
++    P: BlockReader
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory
++        + Clone
++        + Unpin
++        + 'static,
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + Clone + Unpin + 'static,
+ {
+     fn set_without_head(&mut self) {
+@@ -221,7 +227,12 @@ where
+ 
+ impl<P, E> Stream for ExExNotifications<P, E>
+ where
+-    P: BlockReader + HeaderProvider + StateProviderFactory + Clone + Unpin + 'static,
++    P: BlockReader
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory
++        + Clone
++        + Unpin
++        + 'static,
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + 'static,
+ {
+     type Item = eyre::Result<ExExNotification<E::Primitives>>;
+@@ -385,7 +396,12 @@ where
+ 
+ impl<P, E> ExExNotificationsWithHead<P, E>
+ where
+-    P: BlockReader + HeaderProvider + StateProviderFactory + Clone + Unpin + 'static,
++    P: BlockReader
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory
++        + Clone
++        + Unpin
++        + 'static,
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + Clone + Unpin + 'static,
+ {
+     /// Checks if the ExEx head is on the canonical chain.
+@@ -475,7 +491,12 @@ where
+ 
+ impl<P, E> Stream for ExExNotificationsWithHead<P, E>
+ where
+-    P: BlockReader + HeaderProvider + StateProviderFactory + Clone + Unpin + 'static,
++    P: BlockReader
++        + HeaderProvider<Header = HeaderTy<E::Primitives>>
++        + StateProviderFactory
++        + Clone
++        + Unpin
++        + 'static,
+     E: ConfigureEvm<Primitives: NodePrimitives<Block = P::Block>> + Clone + Unpin + 'static,
+ {
+     type Item = eyre::Result<ExExNotification<E::Primitives>>;
+diff --git c/crates/rpc/rpc-builder/src/lib.rs w/crates/rpc/rpc-builder/src/lib.rs
+index 3e818dabc..d7dc7ae34 100644
+--- c/crates/rpc/rpc-builder/src/lib.rs
++++ w/crates/rpc/rpc-builder/src/lib.rs
+@@ -708,7 +708,7 @@ where
+     /// If called outside of the tokio runtime. See also [`Self::eth_api`]
+     pub fn register_debug(&mut self) -> &mut Self
+     where
+-        EthApi: EthTransactions + TraceExt,
++        EthApi: EthTransactions + reth_rpc_eth_api::helpers::FullEthApi + TraceExt,
+     {
+         let debug_api = self.debug_api();
+         self.modules.insert(RethRpcModule::Debug, debug_api.into_rpc().into());
+diff --git c/crates/rpc/rpc-eth-api/src/helpers/call.rs w/crates/rpc/rpc-eth-api/src/helpers/call.rs
+index 060d23652..3efeb53df 100644
+--- c/crates/rpc/rpc-eth-api/src/helpers/call.rs
++++ w/crates/rpc/rpc-eth-api/src/helpers/call.rs
+@@ -54,6 +54,17 @@ pub type SimulatedBlocksResult<N, E> = Result<Vec<SimulatedBlock<RpcBlock<N>>>,
+ /// Execution related functions for the [`EthApiServer`](crate::EthApiServer) trait in
+ /// the `eth_` namespace.
+ pub trait EthCall: EstimateCall + Call + LoadPendingBlock + LoadBlock + FullEthApiTypes {
++    /// Routes a debug RPC to an alternate historical execution backend when available.
++    fn historical_debug_rpc(
++        &self,
++        _method: &str,
++        _params: Vec<serde_json::Value>,
++        _block: Option<BlockId>,
++        _transaction: Option<B256>,
++    ) -> impl Future<Output = Result<Option<serde_json::Value>, Self::Error>> + Send {
++        async { Ok(None) }
++    }
++
+     /// Estimate gas needed for execution of the `request` at the [`BlockId`].
+     fn estimate_gas_at(
+         &self,
+diff --git c/crates/rpc/rpc/src/debug.rs w/crates/rpc/rpc/src/debug.rs
+index 9860eae2f..3752346ab 100644
+--- c/crates/rpc/rpc/src/debug.rs
++++ w/crates/rpc/rpc/src/debug.rs
+@@ -27,7 +27,7 @@ use reth_revm::{db::State, witness::ExecutionWitnessRecord};
+ use reth_rpc_api::DebugApiServer;
+ use reth_rpc_convert::RpcTxReq;
+ use reth_rpc_eth_api::{
+-    helpers::{EthTransactions, TraceExt},
++    helpers::{EthTransactions, FullEthApi, TraceExt},
+     FromEthApiError, FromEvmError, RpcConvert, RpcNodeCore,
+ };
+ use reth_rpc_eth_types::{EthApiError, StateCacheDb};
+@@ -104,7 +104,7 @@ where
+ 
+ impl<Eth> DebugApi<Eth>
+ where
+-    Eth: TraceExt,
++    Eth: FullEthApi + TraceExt,
+ {
+     /// Acquires a permit to execute a tracing call.
+     async fn acquire_trace_permit(&self) -> Result<OwnedSemaphorePermit, AcquireError> {
+@@ -203,6 +203,18 @@ where
+         block_id: BlockId,
+         opts: GethDebugTracingOptions,
+     ) -> Result<Vec<TraceResult>, Eth::Error> {
++        if let Some(value) = self
++            .eth_api()
++            .historical_debug_rpc(
++                "debug_traceBlock",
++                vec![serde_json::to_value(&opts).map_err(|_| EthApiError::InternalEthError)?],
++                Some(block_id),
++                None,
++            )
++            .await?
++        {
++            return serde_json::from_value(value).map_err(|_| EthApiError::InternalEthError.into())
++        }
+         let block = self
+             .eth_api()
+             .recovered_block(block_id)
+@@ -225,6 +237,18 @@ where
+         tx_hash: B256,
+         opts: GethDebugTracingOptions,
+     ) -> Result<GethTrace, Eth::Error> {
++        if let Some(value) = self
++            .eth_api()
++            .historical_debug_rpc(
++                "debug_traceTransaction",
++                vec![serde_json::to_value(&opts).map_err(|_| EthApiError::InternalEthError)?],
++                None,
++                Some(tx_hash),
++            )
++            .await?
++        {
++            return serde_json::from_value(value).map_err(|_| EthApiError::InternalEthError.into())
++        }
+         let (transaction, block) = match self.eth_api().transaction_and_block(tx_hash).await? {
+             None => return Err(EthApiError::TracingTransactionNotFound.into()),
+             Some(res) => res,
+@@ -286,6 +310,21 @@ where
+         opts: GethDebugTracingCallOptions,
+     ) -> Result<GethTrace, Eth::Error> {
+         let at = block_id.unwrap_or_default();
++        if let Some(value) = self
++            .eth_api()
++            .historical_debug_rpc(
++                "debug_traceCall",
++                vec![
++                    serde_json::to_value(&call).map_err(|_| EthApiError::InternalEthError)?,
++                    serde_json::to_value(&opts).map_err(|_| EthApiError::InternalEthError)?,
++                ],
++                Some(at),
++                None,
++            )
++            .await?
++        {
++            return serde_json::from_value(value).map_err(|_| EthApiError::InternalEthError.into())
++        }
+         let GethDebugTracingCallOptions {
+             tracing_options,
+             state_overrides,
+@@ -521,6 +560,32 @@ where
+         let block_number = block.header().number();
+         self.eth_api()
+             .spawn_with_state_at_block(block.parent_hash(), move |eth_api, mut db| {
++                if eth_api.evm_config().uses_external_execution(block.header()) {
++                    let parent = eth_api
++                        .provider()
++                        .header(block.parent_hash())?
++                        .ok_or(EthApiError::HeaderNotFound(block.parent_hash().into()))?;
++                    let output = eth_api
++                        .evm_config()
++                        .execute_block_external(&mut db, &block, Some(&parent))
++                        .map_err(|err| EthApiError::Internal(err.into()))?
++                        .ok_or_else(|| {
++                            EthApiError::Internal(RethError::msg(
++                                "external execution route returned no result",
++                            ))
++                        })?;
++                    db.bundle_state = output.state;
++
++                    return Ok(ExecutionWitnessRecord::new(&db)
++                        .into_execution_witness(
++                            &db.database.0,
++                            eth_api.provider(),
++                            block_number,
++                            mode,
++                        )
++                        .map_err(EthApiError::from)?)
++                }
++
+                 let block_executor = eth_api.evm_config().executor(&mut db);
+ 
+                 let mut witness = None;
+@@ -743,7 +808,7 @@ where
+ #[async_trait]
+ impl<Eth> DebugApiServer<RpcTxReq<Eth::NetworkTypes>> for DebugApi<Eth>
+ where
+-    Eth: EthTransactions + TraceExt,
++    Eth: EthTransactions + FullEthApi + TraceExt,
+ {
+     /// Handler for `debug_getRawHeader`
+     async fn raw_header(&self, block_id: BlockId) -> RpcResult<Bytes> {
+diff --git c/crates/stages/stages/src/stages/execution/mod.rs w/crates/stages/stages/src/stages/execution/mod.rs
+index 61253135c..8c0970fa1 100644
+--- c/crates/stages/stages/src/stages/execution/mod.rs
++++ w/crates/stages/stages/src/stages/execution/mod.rs
+@@ -352,10 +352,16 @@ where
+             // Execute the block
+             let execute_start = Instant::now();
+ 
++            let parent = provider.header(block.header().parent_hash())?.ok_or_else(|| {
++                ProviderError::HeaderNotFound(block.header().parent_hash().into())
++            })?;
++
+             let result = self.metrics.metered_one(&block, |input| {
+-                executor.execute_one(input).map_err(|error| StageError::Block {
+-                    block: Box::new(block.block_with_parent()),
+-                    error: BlockErrorKind::Execution(error),
++                executor.execute_one_with_parent(input, &parent).map_err(|error| {
++                    StageError::Block {
++                        block: Box::new(block.block_with_parent()),
++                        error: BlockErrorKind::Execution(error),
++                    }
+                 })
+             })?;
+ 

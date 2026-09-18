@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "digest_algorithm": "sha256(LC_ALL=C sorted NUL-safe `sha256sum` output for every regular file)",
+  "historical_base": {
+    "upstream": "https://github.com/base/base",
+    "revision": "1eda0f7f4cebb823522e62f34fc3e513b1c450b1",
+    "path": "etc/history-worker/historical/base",
+    "content_sha256": "09a3bfbdf1cf8e542821d5498a3698a9959819af9f063fd22e7b69c4f747ee97",
+    "lockfile_sha256": "da5f3aa69b21251722ba5e24e5573e54c7df969ec4fc69840684d941270c9e71",
+    "license": "MIT",
+    "package_directories": 29
+  },
+  "worker": {
+    "path": "etc/history-worker",
+    "lockfile_sha256": "a7058df0dd535616407558ebbf96e233dc1ec7e412fb2242fe1bf5a71d70c150",
+    "license": "MIT OR Apache-2.0",
+    "dependency_note": "Independent lockfile preserves base/reth tag base-v2.5.2.6 and the worker's divergent Alloy versions."
+  },
+  "reference_base": {
+    "upstream": "https://github.com/base/base",
+    "revision": "1eda0f7f4cebb823522e62f34fc3e513b1c450b1",
+    "path": "historical/reference",
+    "content_sha256": "0f6c39fa289a686de4a3a7e5c23aae374f1d61505867050221c89eae898ebaa3",
+    "lockfile_sha256": "ac2b63fa6eb1b432facb526626c11c8d7d2d5e4586d3617a12c0a219d94c2608",
+    "original_lockfile_sha256": "da5f3aa69b21251722ba5e24e5573e54c7df969ec4fc69840684d941270c9e71",
+    "lockfile_normalization": "Cargo removed unused workspace packages; no new package name/version/source/checksum identities were introduced.",
+    "license": "MIT",
+    "package_directories": 51,
+    "adaptation": "Standard reth import command exposure is integrated in crates/execution/cli/src/app.rs and src/commands/mod.rs."
+  },
+  "host_reth": {
+    "upstream": "https://github.com/base/reth",
+    "revision": "5877708bbf9219c44758cd2ce28a365f738661f7",
+    "source_checkout_local_commit": "d201e8932a613e6ec3c1c89d610c47cbc1684f7b",
+    "path": "vendor/reth",
+    "content_sha256": "378fb28b7cdbc3f337a2ade10896bd611ac4bbe87019dbc788d3f98ee21dacde",
+    "lockfile_sha256": "db1097803236f4dca7735cedb9e2a01b0b6cef9fb4be1bbca24f3b993e7a8710",
+    "licenses": ["Apache-2.0", "MIT"],
+    "original_delta": {
+      "path": "sources/reth-history.patch",
+      "sha256": "c2607711fdcc2cd41573c46a3d76c7f28bb180f7ef64c08eb4c222eb1d0c82ad",
+      "files": 13,
+      "insertions": 300,
+      "deletions": 42
+    }
+  }
+}

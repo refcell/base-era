@@ -13,14 +13,14 @@ It is **not** an Era/Era1 archive-format implementation or an official Base proj
 
 ## Status
 
-The source spike has run successfully on a disposable local devnet. **This repository currently
-contains the project introduction only:** demo sources, reproducible setup, evidence and release
-artifacts have not yet been migrated here. There is no runnable quickstart or downloadable binary
-release in this repository yet.
+The source spike has run successfully on a disposable local devnet. **Migration is in progress:**
+this repository now contains the selected host source, independently frozen historical/reference
+sources, vendored reth, the devnet harness and a static showcase site. Fresh builds and acceptance
+are being run from this checkout; the earlier spike's results below are not yet migration results.
 
-The repository layout is being evaluated so that the demo makes both its behavior and its exact
-changes from upstream Base and reth easy to inspect. Publishing this README does not claim that
-historical implementation code has already been deleted from Base trunk.
+The local entry point is `./demo help`. Follow [the task board](TASK_BOARD.md) for current evidence.
+There is no published binary release yet. The source baseline is a separate commit so integration
+changes can be reviewed without mistaking omitted tooling for removed historical logic.
 
 ## How it works
 

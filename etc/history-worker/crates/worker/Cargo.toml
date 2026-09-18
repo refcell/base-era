@@ -1,0 +1,32 @@
+[package]
+name = "base-history-worker"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+revm = { version = "42.0.1", features = ["std", "optional_balance_check", "optional_eip3607", "optional_fee_charge", "optional_no_base_fee", "optional_block_gas_limit"] }
+base-common-consensus = { path = "../../historical/base/crates/common/consensus", features = ["reth"] }
+base-execution-chainspec = { path = "../../historical/base/crates/execution/chainspec" }
+base-execution-evm = { path = "../../historical/base/crates/execution/evm" }
+base-common-chains = { path = "../../historical/base/crates/common/chains" }
+reth-evm = { git = "https://github.com/base/reth", tag = "base-v2.5.2.6" }
+base-common-evm = { path = "../../historical/base/crates/common/evm" }
+alloy-evm = { version = "0.38.0", features = ["overrides"] }
+base-history-protocol = { path = "../protocol" }
+reth-primitives-traits = "0.6.0"
+alloy-rpc-types-trace = "2.3.0"
+alloy-rpc-types-eth = "2.3.0"
+revm-inspectors = "0.42.0"
+alloy-primitives = "1.6.1"
+alloy-consensus = "2.3.0"
+alloy-genesis = "2.3.0"
+alloy-rlp = "0.3.16"
+serde_json = "1.0"
+sha2 = "0.10"
+serde = "1.0"
+hex = "0.4"
+
+[lints]
+workspace = true

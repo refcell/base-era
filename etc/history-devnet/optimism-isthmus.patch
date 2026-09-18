@@ -1,0 +1,21 @@
+diff --git a/op-deployer/cmd/op-deployer/main.go b/op-deployer/cmd/op-deployer/main.go
+index 8e544e408..763a87aa2 100644
+--- a/op-deployer/cmd/op-deployer/main.go
++++ b/op-deployer/cmd/op-deployer/main.go
+@@ -146,6 +146,16 @@ func run() error {
+ 	if err != nil {
+ 		return err
+ 	}
++	if isthmusBlock, ok := upgrades["isthmus"]; ok {
++		isthmusOffset, err := upgrades.timestamp(isthmusBlock, 0, 2)
++		if err != nil {
++			return err
++		}
++		intent.Chains[0].DeployOverrides = map[string]any{
++			"l2GenesisIsthmusTimeOffset": fmt.Sprintf("0x%x", isthmusOffset),
++			"l2GenesisJovianTimeOffset":  "0x15180",
++		}
++	}
+ 
+ 	st := &state.State{Version: 1, OpDeployerVersion: version.VersionWithMeta}
+ 	if salt := os.Getenv("BASE_DEVNET_SALT"); salt != "" {

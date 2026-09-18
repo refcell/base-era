@@ -1,0 +1,497 @@
+//! Types related to transactions for Base chains.
+
+use alloy_consensus::{Transaction as TransactionTrait, Typed2718, transaction::Recovered};
+use alloy_eips::{eip2930::AccessList, eip7702::SignedAuthorization};
+use alloy_primitives::{Address, B256, BlockHash, Bytes, ChainId, TxKind, U256};
+use alloy_serde::OtherFields;
+use base_common_consensus::{BaseTransactionInfo, BaseTxEnvelope};
+use serde::{Deserialize, Serialize};
+
+mod request;
+pub use request::{BaseTransactionRequest, Eip8130AuthScheme, Eip8130RequestFields};
+
+/// Base transaction type
+#[derive(
+    Clone, Debug, PartialEq, Eq, Serialize, Deserialize, derive_more::Deref, derive_more::DerefMut,
+)]
+#[cfg_attr(all(any(test, feature = "arbitrary"), feature = "k256"), derive(arbitrary::Arbitrary))]
+#[serde(try_from = "tx_serde::TransactionSerdeHelper", into = "tx_serde::TransactionSerdeHelper")]
+pub struct Transaction {
+    /// Ethereum Transaction Types
+    #[deref]
+    #[deref_mut]
+    pub inner: alloy_rpc_types_eth::Transaction<BaseTxEnvelope>,
+
+    /// Full block timestamp in milliseconds when sub-second timing is available.
+    pub block_timestamp_ms: Option<u64>,
+
+    /// Nonce for deposit transactions. Only present in RPC responses.
+    pub deposit_nonce: Option<u64>,
+
+    /// Deposit receipt version for deposit transactions post-canyon
+    pub deposit_receipt_version: Option<u64>,
+}
+
+impl Transaction {
+    /// Converts a consensus `tx` with an additional context `tx_info` into an RPC [`Transaction`].
+    pub fn from_transaction(tx: Recovered<BaseTxEnvelope>, tx_info: BaseTransactionInfo) -> Self {
+        let base_fee = tx_info.inner.base_fee;
+        let effective_gas_price = if tx.is_deposit() {
+            // For deposits, we must always set the `gasPrice` field to 0 in rpc
+            // deposit tx don't have a gas price field, but serde of `Transaction` will take care of
+            // it
+            0
+        } else {
+            base_fee
+                .map(|base_fee| {
+                    tx.effective_tip_per_gas(base_fee).unwrap_or_default() + base_fee as u128
+                })
+                .unwrap_or_else(|| tx.max_fee_per_gas())
+        };
+
+        Self {
+            inner: alloy_rpc_types_eth::Transaction {
+                inner: tx,
+                block_hash: tx_info.inner.block_hash,
+                block_number: tx_info.inner.block_number,
+                block_timestamp: tx_info.inner.block_timestamp,
+                transaction_index: tx_info.inner.index,
+                effective_gas_price: Some(effective_gas_price),
+            },
+            block_timestamp_ms: tx_info.block_timestamp_ms,
+            deposit_nonce: tx_info.deposit_meta.deposit_nonce,
+            deposit_receipt_version: tx_info.deposit_meta.deposit_receipt_version,
+        }
+    }
+}
+
+impl Typed2718 for Transaction {
+    fn ty(&self) -> u8 {
+        self.inner.ty()
+    }
+}
+
+impl TransactionTrait for Transaction {
+    fn chain_id(&self) -> Option<ChainId> {
+        self.inner.chain_id()
+    }
+
+    fn nonce(&self) -> u64 {
+        self.inner.nonce()
+    }
+
+    fn gas_limit(&self) -> u64 {
+        self.inner.gas_limit()
+    }
+
+    fn gas_price(&self) -> Option<u128> {
+        self.inner.gas_price()
+    }
+
+    fn max_fee_per_gas(&self) -> u128 {
+        self.inner.max_fee_per_gas()
+    }
+
+    fn max_priority_fee_per_gas(&self) -> Option<u128> {
+        self.inner.max_priority_fee_per_gas()
+    }
+
+    fn max_fee_per_blob_gas(&self) -> Option<u128> {
+        self.inner.max_fee_per_blob_gas()
+    }
+
+    fn priority_fee_or_price(&self) -> u128 {
+        self.inner.priority_fee_or_price()
+    }
+
+    fn effective_gas_price(&self, base_fee: Option<u64>) -> u128 {
+        self.inner.effective_gas_price(base_fee)
+    }
+
+    fn is_dynamic_fee(&self) -> bool {
+        self.inner.is_dynamic_fee()
+    }
+
+    fn kind(&self) -> TxKind {
+        self.inner.kind()
+    }
+
+    fn is_create(&self) -> bool {
+        self.inner.is_create()
+    }
+
+    fn to(&self) -> Option<Address> {
+        self.inner.to()
+    }
+
+    fn value(&self) -> U256 {
+        self.inner.value()
+    }
+
+    fn input(&self) -> &Bytes {
+        self.inner.input()
+    }
+
+    fn access_list(&self) -> Option<&AccessList> {
+        self.inner.access_list()
+    }
+
+    fn blob_versioned_hashes(&self) -> Option<&[B256]> {
+        self.inner.blob_versioned_hashes()
+    }
+
+    fn authorization_list(&self) -> Option<&[SignedAuthorization]> {
+        self.inner.authorization_list()
+    }
+}
+
+impl alloy_network_primitives::TransactionResponse for Transaction {
+    fn tx_hash(&self) -> alloy_primitives::TxHash {
+        self.inner.tx_hash()
+    }
+
+    fn block_hash(&self) -> Option<BlockHash> {
+        self.inner.block_hash()
+    }
+
+    fn block_number(&self) -> Option<u64> {
+        self.inner.block_number()
+    }
+
+    fn transaction_index(&self) -> Option<u64> {
+        self.inner.transaction_index()
+    }
+
+    fn from(&self) -> Address {
+        self.inner.from()
+    }
+}
+
+/// Base chain-specific transaction fields
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BaseTransactionFields {
+    /// The ETH value to mint on L2
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "alloy_serde::quantity::opt")]
+    pub mint: Option<u128>,
+    /// Hash that uniquely identifies the source of the deposit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_hash: Option<B256>,
+    /// Field indicating whether the transaction is a system transaction, and therefore
+    /// exempt from the L2 gas limit.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub is_system_tx: Option<bool>,
+    /// Deposit receipt version for deposit transactions post-canyon
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "alloy_serde::quantity::opt")]
+    pub deposit_receipt_version: Option<u64>,
+}
+
+impl TryFrom<BaseTransactionFields> for OtherFields {
+    type Error = serde_json::Error;
+
+    fn try_from(value: BaseTransactionFields) -> Result<Self, Self::Error> {
+        serde_json::to_value(value)?.try_into()
+    }
+}
+
+impl AsRef<BaseTxEnvelope> for Transaction {
+    fn as_ref(&self) -> &BaseTxEnvelope {
+        self.inner.as_ref()
+    }
+}
+
+mod tx_serde {
+    //! Helper module for serializing and deserializing Base [`Transaction`].
+    //!
+    //! This is needed because we might need to deserialize the `from` field into both
+    //! [`alloy_consensus::transaction::Recovered::signer`] which resides in
+    //! [`alloy_rpc_types_eth::Transaction::inner`] and [`base_common_consensus::TxDeposit::from`].
+    //!
+    //! Additionally, we need similar logic for the `gasPrice` field
+    use alloy_consensus::{Transaction as TransactionTrait, transaction::Recovered};
+    use base_common_consensus::BaseTxEnvelope;
+    use serde::{Deserialize, Serialize, de::Error};
+
+    use super::{Address, B256, BlockHash, Transaction};
+
+    /// Helper struct which will be flattened into the transaction and will only contain `from`
+    /// field if inner [`BaseTxEnvelope`] did not consume it.
+    #[derive(Serialize, Deserialize)]
+    struct OptionalFields {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        from: Option<Address>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        hash: Option<B256>,
+        #[serde(
+            default,
+            rename = "gasPrice",
+            skip_serializing_if = "Option::is_none",
+            with = "alloy_serde::quantity::opt"
+        )]
+        effective_gas_price: Option<u128>,
+        #[serde(
+            default,
+            rename = "nonce",
+            skip_serializing_if = "Option::is_none",
+            with = "alloy_serde::quantity::opt"
+        )]
+        deposit_nonce: Option<u64>,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub(crate) struct TransactionSerdeHelper {
+        #[serde(flatten)]
+        inner: BaseTxEnvelope,
+        #[serde(default)]
+        block_hash: Option<BlockHash>,
+        #[serde(default, with = "alloy_serde::quantity::opt")]
+        block_number: Option<u64>,
+        #[serde(default, with = "alloy_serde::quantity::opt")]
+        transaction_index: Option<u64>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            with = "alloy_serde::quantity::opt"
+        )]
+        block_timestamp: Option<u64>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            with = "alloy_serde::quantity::opt"
+        )]
+        block_timestamp_ms: Option<u64>,
+        #[serde(
+            default,
+            skip_serializing_if = "Option::is_none",
+            with = "alloy_serde::quantity::opt"
+        )]
+        deposit_receipt_version: Option<u64>,
+
+        #[serde(flatten)]
+        other: OptionalFields,
+    }
+
+    impl From<Transaction> for TransactionSerdeHelper {
+        fn from(value: Transaction) -> Self {
+            let Transaction {
+                inner:
+                    alloy_rpc_types_eth::Transaction {
+                        inner,
+                        block_hash,
+                        block_number,
+                        block_timestamp,
+                        transaction_index,
+                        effective_gas_price,
+                    },
+                block_timestamp_ms,
+                deposit_receipt_version,
+                deposit_nonce,
+            } = value;
+
+            // if inner transaction is a deposit, then don't serialize `from` directly
+            let from = if inner.as_deposit().is_some() { None } else { Some(inner.signer()) };
+
+            // EIP-8130's consensus serde omits its cached hash so deserialization recomputes it.
+            // Add the canonical hash at the RPC layer without duplicating hashes for other types.
+            let hash = inner.as_eip8130().map(|tx| *tx.hash());
+
+            // if inner transaction has its own `gasPrice` don't serialize it in this struct.
+            let effective_gas_price = effective_gas_price.filter(|_| inner.gas_price().is_none());
+
+            Self {
+                inner: inner.into_inner(),
+                block_hash,
+                block_number,
+                transaction_index,
+                block_timestamp,
+                block_timestamp_ms,
+                deposit_receipt_version,
+                other: OptionalFields { hash, from, effective_gas_price, deposit_nonce },
+            }
+        }
+    }
+
+    impl TryFrom<TransactionSerdeHelper> for Transaction {
+        type Error = serde_json::Error;
+
+        fn try_from(value: TransactionSerdeHelper) -> Result<Self, Self::Error> {
+            let TransactionSerdeHelper {
+                inner,
+                block_hash,
+                block_number,
+                transaction_index,
+                block_timestamp,
+                block_timestamp_ms,
+                deposit_receipt_version,
+                other,
+            } = value;
+
+            // Try to get `from` field from inner envelope or from `MaybeFrom`, otherwise return
+            // error
+            let from = if let Some(from) = other.from {
+                from
+            } else {
+                inner
+                    .as_deposit()
+                    .map(|v| v.from)
+                    .ok_or_else(|| serde_json::Error::custom("missing `from` field"))?
+            };
+
+            // Only serialize deposit_nonce if inner transaction is deposit to avoid duplicated keys
+            let deposit_nonce = other.deposit_nonce.filter(|_| inner.is_deposit());
+
+            let effective_gas_price = other.effective_gas_price.or_else(|| inner.gas_price());
+
+            Ok(Self {
+                inner: alloy_rpc_types_eth::Transaction {
+                    inner: Recovered::new_unchecked(inner, from),
+                    block_hash,
+                    block_number,
+                    block_timestamp,
+                    transaction_index,
+                    effective_gas_price,
+                },
+                block_timestamp_ms,
+                deposit_receipt_version,
+                deposit_nonce,
+            })
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use alloc::vec;
+
+    use alloy_eips::eip2718::Encodable2718;
+    use alloy_primitives::Bytes;
+    use base_common_consensus::{Eip8130Signed, TxEip8130};
+
+    use super::*;
+
+    #[test]
+    fn can_deserialize_deposit() {
+        // cast rpc eth_getTransactionByHash
+        // 0xbc9329afac05556497441e2b3ee4c5d4da7ca0b2a4c212c212d0739e94a24df9
+        let rpc_tx = r#"{"blockHash":"0x9d86bb313ebeedf4f9f82bf8a19b426be656a365648a7c089b618771311db9f9","blockNumber":"0x798ad0b","hash":"0xbc9329afac05556497441e2b3ee4c5d4da7ca0b2a4c212c212d0739e94a24df9","transactionIndex":"0x0","type":"0x7e","nonce":"0x152ea95","input":"0x440a5e200000146b000f79c50000000000000003000000006725333f000000000141e287000000000000000000000000000000000000000000000000000000012439ee7e0000000000000000000000000000000000000000000000000000000063f363e973e96e7145ff001c81b9562cba7b6104eeb12a2bc4ab9f07c27d45cd81a986620000000000000000000000006887246668a3b87f54deb3b94ba47a6f63f32985","mint":"0x0","sourceHash":"0x04e9a69416471ead93b02f0c279ab11ca0b635db5c1726a56faf22623bafde52","r":"0x0","s":"0x0","v":"0x0","yParity":"0x0","gas":"0xf4240","from":"0xdeaddeaddeaddeaddeaddeaddeaddeaddead0001","to":"0x4200000000000000000000000000000000000015","depositReceiptVersion":"0x1","value":"0x0","gasPrice":"0x0"}"#;
+
+        let tx = serde_json::from_str::<Transaction>(rpc_tx).unwrap();
+
+        let BaseTxEnvelope::Deposit(inner) = tx.as_ref() else {
+            panic!("Expected deposit transaction");
+        };
+        assert_eq!(tx.inner.inner.signer(), inner.from);
+        assert_eq!(tx.deposit_nonce, Some(22211221));
+        assert_eq!(tx.inner.effective_gas_price, Some(0));
+
+        let deserialized = serde_json::to_value(&tx).unwrap();
+        let expected = serde_json::from_str::<serde_json::Value>(rpc_tx).unwrap();
+        similar_asserts::assert_eq!(deserialized, expected);
+    }
+
+    #[test]
+    fn ordinary_transaction_serialization_is_unchanged() {
+        let rpc_tx = r#"{"blockHash":"0x7e5d03caac4eb2b613ae9c919ef3afcc8ed0e384f31ee746381d3c8739475d2a","blockNumber":"0x4","from":"0x7435ed30a8b4aeb0877cef0c6e8cffe834eb865f","gas":"0x5208","gasPrice":"0x23237dee","hash":"0x3f38cdc805c02e152bfed34471a3a13a786fed436b3aec0c3eca35d23e2cdd2c","input":"0x","nonce":"0xc","to":"0x4dde844b71bcdf95512fb4dc94e84fb67b512ed8","transactionIndex":"0x0","value":"0x1","type":"0x0","chainId":"0xc72dd9d5e883e","v":"0x18e5bb3abd10a0","r":"0x3d61f5d7e93eecd0669a31eb640ab3349e9e5868a44c2be1337c90a893b51990","s":"0xc55f44ba123af37d0e73ed75e578647c3f473805349936f64ea902ea9e03bc7"}"#;
+
+        let tx = serde_json::from_str::<Transaction>(rpc_tx).unwrap();
+        let serialized = serde_json::to_string(&tx).unwrap();
+
+        assert_eq!(serialized.matches("\"hash\":").count(), 1);
+        let actual = serde_json::from_str::<serde_json::Value>(&serialized).unwrap();
+        let expected = serde_json::from_str::<serde_json::Value>(rpc_tx).unwrap();
+        similar_asserts::assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn can_serialize_eip8130() {
+        let tx_body = TxEip8130 {
+            chain_id: 8453,
+            sender: Some(Address::with_last_byte(0x11)),
+            nonce_key: U256::from(0u64),
+            nonce_sequence: 7,
+            valid_after: 0,
+            valid_before: 0,
+            max_priority_fee_per_gas: 1_000_000_000,
+            max_fee_per_gas: 5_000_000_000,
+            gas_limit: 1_000_000,
+            account_changes: vec![],
+            calls: vec![],
+            metadata: Bytes::new(),
+            payer: None,
+        };
+        let sender_auth = Bytes::from_static(&[0xAB; 32]);
+        let payer_auth = Bytes::new();
+        let signed = Eip8130Signed::new(tx_body, sender_auth, payer_auth);
+        let canonical_hash = alloy_primitives::keccak256(signed.encoded_2718());
+        let envelope = BaseTxEnvelope::Eip8130(signed);
+
+        // Wrap the envelope with its explicit sender directly rather than going
+        // through `try_into_recovered`, which pulls in secp256k1 signature
+        // recovery (the `k256` feature). This test only exercises serialization,
+        // and an EIP-8130 tx with an explicit `sender` recovers to exactly that
+        // address, so the unchecked wrapper is equivalent here and keeps the
+        // default-feature `cargo test` build working.
+        let recovered = Recovered::new_unchecked(envelope, Address::with_last_byte(0x11));
+        let tx_info = BaseTransactionInfo {
+            inner: alloy_rpc_types_eth::TransactionInfo {
+                hash: Some(canonical_hash),
+                block_hash: Some(B256::repeat_byte(0x01)),
+                block_number: Some(100),
+                block_timestamp: Some(1_700_000_000),
+                index: Some(0),
+                base_fee: Some(1_000_000_000),
+            },
+            deposit_meta: Default::default(),
+            block_timestamp_ms: Some(1_700_000_000_200),
+        };
+        let rpc_tx = Transaction::from_transaction(recovered, tx_info);
+
+        assert_eq!(rpc_tx.ty(), 0x79);
+        assert_eq!(rpc_tx.deposit_nonce, None);
+        assert_eq!(rpc_tx.deposit_receipt_version, None);
+        assert_eq!(rpc_tx.inner.inner.signer(), Address::with_last_byte(0x11));
+
+        let serialized = serde_json::to_string(&rpc_tx).expect("serialize eip-8130 rpc tx");
+        let value: serde_json::Value = serde_json::from_str(&serialized).unwrap();
+
+        assert_eq!(value["type"], "0x79", "tx type byte exposed in RPC response");
+        assert_eq!(value["hash"], serde_json::to_value(canonical_hash).unwrap());
+        assert_eq!(value["from"], "0x0000000000000000000000000000000000000011");
+        assert_eq!(value["blockNumber"], "0x64");
+        assert_eq!(value["blockTimestampMs"], "0x18bcfe568c8");
+        assert_eq!(value["transactionIndex"], "0x0");
+
+        let tx_payload = &value["tx"];
+        assert!(tx_payload.is_object(), "EIP-8130 inner tx payload present");
+        assert_eq!(tx_payload["chainId"], 8453);
+        assert_eq!(tx_payload["nonceKey"], "0x0");
+        assert_eq!(tx_payload["nonceSequence"], 7);
+        assert_eq!(tx_payload["gasLimit"], 1_000_000);
+        assert!(tx_payload["accountChanges"].is_array());
+        assert!(tx_payload["calls"].is_array());
+        assert_eq!(tx_payload["sender"], "0x0000000000000000000000000000000000000011");
+
+        assert_eq!(value["senderAuth"], format!("0x{}", "ab".repeat(32)));
+        assert_eq!(value["payerAuth"], "0x");
+
+        let mut untrusted_value = value.clone();
+        untrusted_value["hash"] = serde_json::to_value(B256::ZERO).unwrap();
+        let deserialized: Transaction = serde_json::from_value(untrusted_value).unwrap();
+        let reserialized = serde_json::to_value(deserialized).unwrap();
+        assert_eq!(
+            reserialized["hash"],
+            serde_json::to_value(canonical_hash).unwrap(),
+            "RPC deserialization recomputes the EIP-8130 hash from its payload"
+        );
+
+        assert!(value.get("sourceHash").is_none(), "no deposit-only fields leak");
+        assert!(value.get("depositReceiptVersion").is_none());
+        assert!(value.get("mint").is_none());
+
+        let mut transaction_without_millis = rpc_tx;
+        transaction_without_millis.block_timestamp_ms = None;
+        let value = serde_json::to_value(transaction_without_millis).unwrap();
+        assert!(value.get("blockTimestampMs").is_none());
+    }
+}

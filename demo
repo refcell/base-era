@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Reproducible local-only entry point. State is kept under ignored target/.
+set -euo pipefail
+root=$(cd "$(dirname "$0")" && pwd)
+command=${1:-help}
+run=${BASE_ERA_RUN_DIR:-"$root/target/demo-run"}
+run=$(realpath -m "$run")
+export CARGO_BUILD_JOBS=${CARGO_BUILD_JOBS:-3}
+export CARGO_TARGET_DIR="$root/target"
+
+case "$command" in
+  setup)
+    test "$(uname -s)" = Linux || { echo "The worker sandbox requires Linux." >&2; exit 1; }
+    for tool in cargo rustc python3 docker jq cast gcc clang pkg-config rg sha256sum; do
+      command -v "$tool" >/dev/null || { echo "Missing prerequisite: $tool" >&2; exit 1; }
+    done
+    docker info >/dev/null
+    mkdir -p "$root/target"
+    python3 "$root/tools/reth-config.py" > "$root/target/history-reth-overrides.toml"
+    "$root/etc/history-worker/scripts/verify-base.sh"
+    "$root/etc/history-devnet/build-setup-image.sh"
+    ;;
+  build)
+    "$root/etc/history-devnet/build.sh"
+    "$root/etc/history-devnet/build-reference.sh"
+    cargo --config "$root/target/history-reth-overrides.toml" build --locked \
+      --manifest-path "$root/Cargo.toml" -p base-proof-executor --features test-utils --example fixture
+    ;;
+  start) "$root/etc/history-devnet/start.sh" "$run"; jq '{status, builder_rpc_url, verifier_rpc_url, l1_rpc_url, isthmus_block}' "$run/runtime.json" ;;
+  exercise) "$root/etc/history-devnet/exercise.sh" "$run" ;;
+  verify) "$root/etc/history-devnet/acceptance.sh" "$run" ;;
+  evidence) python3 "$root/etc/history-devnet/collect.py" "$run" --output "$run/portable-evidence" ;;
+  test)
+    python3 -m unittest discover -s "$root/etc/history-devnet" -p 'test_*.py' -v
+    cargo --config "$root/target/history-reth-overrides.toml" test --locked \
+      --manifest-path "$root/Cargo.toml" -p base-execution-history
+    CARGO_TARGET_DIR="$root/etc/history-worker/target" cargo test --locked \
+      --manifest-path "$root/etc/history-worker/Cargo.toml" --all-targets
+    ;;
+  stop) "$root/etc/history-devnet/stop.sh" "$run" ;;
+  status) jq '{status, builder_rpc_url, verifier_rpc_url, l1_rpc_url, isthmus_block}' "$run/runtime.json" ;;
+  help|--help|-h)
+    printf '%s\n' 'Usage: ./demo {setup|build|start|exercise|verify|evidence|test|status|stop}' \
+      'Requires Linux (Landlock ABI 3+, seccomp), Docker, Rust 1.96 and Foundry cast.' \
+      'Use BASE_ERA_RUN_DIR=/absolute/fresh/path for another disposable run.' \
+      'start refuses existing run directories; no command deletes your chain data.'
+    ;;
+  *) echo "Unknown command: $command; use ./demo help" >&2; exit 2 ;;
+esac

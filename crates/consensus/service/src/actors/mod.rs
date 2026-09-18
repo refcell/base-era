@@ -1,0 +1,73 @@
+//! [`NodeActor`] services for the node.
+//!
+//! [NodeActor]: super::NodeActor
+
+mod traits;
+pub use traits::{CancellableContext, NodeActor};
+
+mod checkpoint;
+pub use checkpoint::{
+    CheckpointActor, CheckpointClient, CheckpointDB, CheckpointError, CheckpointRequest,
+    CheckpointWriter, NoopCheckpointWriter,
+};
+
+mod engine;
+#[cfg(test)]
+pub use engine::MockEngineDerivationClient;
+pub use engine::{
+    BuildRequest, EngineActor, EngineActorRequest, EngineClientError, EngineClientResult,
+    EngineConfig, EngineDerivationClient, EngineError, EngineProcessor, EngineRequestReceiver,
+    EngineRpcProcessor, EngineRpcRequest, GetPayloadRequest, InsertUnsafePayloadRequest,
+    QueuedEngineDerivationClient, ReconcileShadowRequest, ResetOrigin, ResetOutcome, ResetReason,
+    ResetRequest, ResetRequestOutcome, ValidatorEngineRequestHandler,
+};
+
+mod rpc;
+pub(crate) use rpc::launch_rpc_server;
+pub use rpc::{
+    QueuedEngineRpcClient, QueuedSequencerAdminAPIClient, RpcActor, RpcActorError, RpcContext,
+};
+
+mod derivation;
+pub use derivation::{
+    DelegateDerivationActor, DerivationActor, DerivationActorRequest, DerivationClientError,
+    DerivationClientResult, DerivationDelegateClient, DerivationDelegateClientError,
+    DerivationEngineClient, DerivationError, DerivationState, DerivationStateMachine,
+    DerivationStateTransitionError, DerivationStateUpdate, L2Finalizer,
+    QueuedDerivationEngineClient,
+};
+
+mod l1_watcher;
+pub use l1_watcher::{
+    AlloyL1BlockFetcher, BlockStream, L1BlockFetcher, L1WatcherActor, L1WatcherActorError,
+    L1WatcherDerivationClient, L1WatcherQueryExecutor, L1WatcherQueryProcessor, LogRetrier,
+    QueuedL1WatcherDerivationClient,
+};
+
+mod upgrade_signal;
+pub use upgrade_signal::{UpgradeSignalMetricsActor, UpgradeSignalNodeConfig};
+
+mod network;
+#[cfg(test)]
+pub use network::MockUnsafePayloadGossipClient;
+pub use network::{
+    GossipTransport, NetworkActor, NetworkActorError, NetworkBuilder, NetworkBuilderError,
+    NetworkConfig, NetworkDriver, NetworkDriverError, NetworkEngineClient, NetworkHandler,
+    NetworkInboundData, QueuedNetworkEngineClient, QueuedUnsafePayloadGossipClient,
+    UnsafePayloadGossipClient, UnsafePayloadGossipClientError,
+};
+
+mod sequencer;
+pub use sequencer::{
+    BuildOutcome, BuildPipelineState, CanonicalReconciliationInputs, CanonicalUnsafeCatchup,
+    Conductor, ConductorClient, ConductorError, DelayedL1OriginSelectorProvider, L1OriginSelector,
+    L1OriginSelectorError, L1OriginSelectorProvider, OriginSelector, PayloadBuilder, PayloadSealer,
+    PendingStopSender, PoolActivation, PrefetchedChainProvider, PrefetchedChainProviderError,
+    PreparedL1Origin, QueuedSequencerEngineClient, RecoveryModeGuard, ScheduledTicker, SealState,
+    SealStepError, SealStepOutcome, SequencerActor, SequencerActorError, SequencerAdminQuery,
+    SequencerConfig, SequencerEngineClient, SequencerEngineRequestCoordinator,
+    SequencerEngineState, ShadowCycle, ShadowFunding, ShadowReconciliationGate,
+    ShadowReconciliationTask, ShadowSequencingState, UnsealedPayloadHandle,
+};
+#[cfg(test)]
+pub use sequencer::{MockConductor, MockOriginSelector, MockSequencerEngineClient};
