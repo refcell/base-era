@@ -1,6 +1,15 @@
 # Base Era source-copy inventory
 
-## Recommendation
+## Historical status
+
+This document records the **pre-migration source-spike inventory** used to select Base Era's source
+closure. Its counts and commands describe the old checkout and were not rerun here. The migration
+uses those results: host crates are at their normal paths, frozen worker source is committed under
+`etc/history-worker/historical/base`, the independent reference under `historical/reference`, and
+integrated reth under `vendor/reth`. Independent builds from this checkout succeeded; fresh full
+acceptance evidence remains pending.
+
+## Recommendation (as measured before migration)
 
 Copy a **bounded source fork**, not a rolling patch overlay and not a handful of
 EVM files. Initially preserve Base's relative paths and its existing devnet
@@ -13,8 +22,8 @@ Upstream updates then become deliberate source merges plus parity testing;
 updating `base/base` cannot silently change this demo. Copying does not eliminate
 future integration work, but it removes patch application from the demo's setup.
 
-This is an inventory, **not a completed migration or a clean-copy build result**.
-No source or binary release was published by this inventory task.
+This inventory itself was not a migration or clean-copy build result. The migration was completed
+later; its acceptance status must not be inferred from these measurements.
 
 ## What was measured
 
@@ -110,9 +119,9 @@ and both `crates/protocol` and `crates/worker`. The worker keeps its own workspa
 lockfile and original reth dependency graph. Host and worker may share the
 protocol's source definition; they do not share Rust instances or execution code.
 
-Replace `generated/base` with a checked-in frozen source workspace, such as
-`historical/base/`, copied from the original Base revision, **not the modified
-host tree**. The 18 compiled directories are listed in the JSON. Preserving their
+The migration implemented this recommendation at `etc/history-worker/historical/base`, copied from
+the original Base revision rather than the modified host tree. The 18 compiled directories are
+listed in the JSON. Preserving their
 dependency declarations requires 11 more Base package manifests/sources:
 
 ```text
@@ -129,18 +138,16 @@ crates/utilities/test-utils
 crates/utilities/upgrade-signal
 ```
 
-Hence **29 is the conservative copy set**, not 18. Alternatively remove unused
-dev/optional declarations and validate the narrower frozen workspace; this has
-not been done. Preserve historical workspace metadata and licensing, prune its
-members, update worker paths, and remove the enclosing-repository `git archive`
-assumption in `materialize-base.sh`. These 29 directories total about 35.2 MiB.
+Hence **29 was the conservative copy set**, not 18. The committed frozen workspace preserves the
+required manifests and licensing without generated-source setup. These 29 directories measured
+about 35.2 MiB in the source spike.
 
 The reference is another independent source root: 50 compiled Base packages,
 plus `crates/utilities/test-utils` for manifest resolution. It uses the original
 Base lockfile and unmodified execution. Its only intentional adaptation is
 exposing reth's standard import command in `crates/execution/cli/src/app.rs` and
-`src/commands/mod.rs`. Commit that adaptation into the reference source rather
-than applying `reference-cli.patch` during setup. Those 51 directories total
+`src/commands/mod.rs`. The migration commits that adaptation in `historical/reference`; the
+retained `reference-cli.patch` is provenance, not a setup step. Those 51 directories total
 about 43.3 MiB. Never build the reference from the implementation under test.
 
 For a compact default checkout, frozen historical/reference sources can instead
@@ -157,9 +164,9 @@ The source delta is 300 insertions and 42 deletions; the local `.cargo-ok` marke
 is not part of that source change. A full tracked reth checkout is about 41 MiB.
 Its workspace/build dependencies are a separate inventory from the Base list.
 
-Replace `etc/history-reth/setup.sh`'s clone-and-apply operation with that pinned
-source, and replace `target/history-reth-overrides.toml` with stable dependency
-locations. Keep the worker/reference on original reth. Do not edit Cargo caches.
+The migration implemented this with committed `vendor/reth`. `tools/reth-config.py` emits Cargo
+path overrides to that tree. `sources/reth-history.patch` is audit-only and is not applied during
+setup. Keep the worker/reference on original reth. Do not edit Cargo caches.
 
 There is a **second non-Base source modification**:
 `etc/history-devnet/optimism-isthmus.patch` changes Base Optimism's offline genesis
@@ -191,10 +198,8 @@ Retain a reviewed evidence bundle and `docs/history-*.md` for the showcase;
 acceptance does not depend on the old evidence to produce new results.
 
 Do not copy `.devnet`, target directories, databases, runtime JWT/key material,
-local Cargo caches, artifact symlinks, process files or unsanitized logs. The
-frozen source currently under `generated/` or `target/` is the deliberate
-exception: copy the selected original sources into named immutable roots, not
-those generated directories wholesale.
+local Cargo caches, artifact symlinks, process files or unsanitized logs. The migration instead
+commits selected original sources in explicitly named immutable roots.
 
 External setup inputs include pinned eth-beacon-genesis and eth2-val-tools
 sources, Go/Alpine base images, L1 reth and Lighthouse images. Runtime image tags
@@ -222,49 +227,10 @@ legacy bodies in host source. This inventory does not turn that into a deletion
 demonstration. A vendored reth tree plus multiple frozen Base trees can make this
 repository larger overall even when the active implementation gets smaller.
 
-## Reproducing the inventory
+## Inventory reproducibility note
 
-Run these from the existing spike checkout after its normal dependency setup.
-They plan builds, not execute them. `--offline` assumes dependencies are already
-available. The measured planner was Cargo/Rust nightly 1.100.0, dated 2026-09-02;
-the actual project's build toolchain remains 1.96.0.
-
-```bash
-cargo +nightly --config target/history-reth-overrides.toml metadata \
-  --format-version 1 --locked --offline > target/history-metadata-final.json
-cargo +nightly --config target/history-reth-overrides.toml build \
-  -Z unstable-options --unit-graph --locked --offline \
-  -p base-reth-node -p base-system-tests -p base-execution-evm -p base-execution-rpc \
-  --bin base-reth-node --bin base-devnet --no-default-features \
-  --features base-execution-evm/history,base-execution-rpc/history \
-  > target/history-copy-host-units.json
-cargo +nightly --config target/history-reth-overrides.toml build \
-  -Z unstable-options --unit-graph --locked --offline \
-  -p base-proof-executor --features test-utils --example fixture \
-  > target/history-copy-proof-units.json
-cargo +nightly build -Z unstable-options --unit-graph --locked --offline \
-  --manifest-path etc/history-worker/Cargo.toml --release --bin base-history-worker \
-  > target/history-copy-worker-units.json
-cargo +nightly --config target/history-reth-overrides.toml test \
-  -Z unstable-options --unit-graph --locked --offline -p base-execution-history \
-  > target/history-copy-host-tests-units.json
-cargo +nightly test -Z unstable-options --unit-graph --locked --offline \
-  --manifest-path etc/history-worker/Cargo.toml --all-targets \
-  > target/history-copy-worker-tests-units.json
-cargo +nightly build -Z unstable-options --unit-graph --locked --offline \
-  --manifest-path target/history-reference-source/Cargo.toml \
-  -p base-reth-node --bin base-reth-node --no-default-features \
-  > target/history-copy-reference-units.json
-```
-
-Then, from Base Era:
-
-```bash
-python3 tools/source_inventory.py /path/to/base-spike > docs/source-inventory.json
-```
-
-The JSON's host `copy_files` covers the selected package directories, not the
-root files, scripts or separately frozen sources enumerated in this report.
-Graph digests include local absolute paths and are local evidence identifiers,
-not portable artifact identities. No clean-copy compile or devnet rerun was
-performed for this inventory; those are the next migration verification gates.
+The old inventory used Cargo nightly 1.100.0 unit graphs in the source-spike checkout. Its obsolete
+generated paths and setup commands are intentionally omitted here. `source-inventory.json` preserves
+the selected package paths, allowlist, omitted members, graph hashes, and lockfile hashes. Graph
+digests may include old absolute paths and are historical local evidence identifiers, not portable
+artifact identities or proof that migrated acceptance passed.

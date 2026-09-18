@@ -22,5 +22,5 @@ used only to exercise failure handling; successful historical execution always u
 artifact. Protocol version negotiation is covered separately by the real worker spawn tests.
 
 By default the script derives genesis and `replay-evidence/worker-datadir` from `--run-dir`; use
-`--datadir` if replay used another output directory. The checked-in portable result is
-`etc/history-devnet/evidence/final/failures.json`.
+`--datadir` if replay used another output directory. The original source spike passed these
+scenarios; migrated evidence is pending at `etc/history-devnet/evidence/final/failures.json`.

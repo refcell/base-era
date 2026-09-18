@@ -1,73 +1,75 @@
-# Version-isolated historical execution — local spike report
+# Version-isolated historical execution
 
-The final 2026-09-18 run completed successfully on `/tmp/base-history-final-3`. This is a working
-local-node spike, not a production client or complete repository-wide history retirement.
-The reproducible entry point is [the build guide](history-spike-build.md); the portable final
-evidence is [here](../etc/history-devnet/evidence/final/). Earlier evidence outside `final/` is
-development history, not evidence for the final artifacts.
+This repository is the migrated Base Era demo. PR1 is merged, the host is the selected Base source
+closure, and the worker and reference build independently from committed frozen sources. Fresh
+acceptance is currently running in `target/demo-publication`.
+
+> **Evidence pending:** do not treat the source-spike results below as results from this checkout.
+> Migrated acceptance evidence will be published under
+> [`etc/history-devnet/evidence/final/`](../etc/history-devnet/evidence/final/) when the run finishes.
 
 ## Architecture and scope
 
-The host owns its canonical database, forkchoice, commit and unwind. With `BASE_HISTORY_MANIFEST`
-enabled, complete pre-Isthmus block execution goes to an approved worker subprocess; Isthmus and
-later execution remains local. The selector uses the chain's configured activation, not the wall
-clock. The worker independently derives its precise fork from the frozen chain specification.
-The compressed devnet activates Isthmus at block 20's timestamp: blocks 1–19 use Holocene rules,
-20 onward use Isthmus. This is a real fork: activation injects upgrade deposits, changes
-GasPriceOracle's Isthmus flag, and introduces the requests/withdrawals commitment rules. Block 20
-has a pre-Isthmus parent; changing only an arbitrary routing flag would not pass these checks.
+The host owns its canonical database, forkchoice, commit, and unwind. With
+`BASE_HISTORY_MANIFEST` enabled, complete pre-Isthmus block execution goes to an approved worker
+subprocess; Isthmus and later execution remains local. Selection uses the configured chain
+activation, while the worker independently derives the precise fork from its frozen chain spec.
+The compressed devnet activates Isthmus at block 20: blocks 1–19 use Holocene rules and block 20
+onward uses Isthmus. This exercises upgrade deposits, the GasPriceOracle flag, and
+requests/withdrawals commitments rather than an arbitrary routing switch.
 
-Reth's complete-block hook, not a transaction-only EVM hook, covers Engine execution, the staged
-import/sync executor, backfill/ExEx, and witness execution. Historical prewarming and the
-locally-built-payload shortcut are disabled. Historical payload assembly remotely reexecutes
-transaction prefixes and returns normal execution output; Engine validation still runs. RPC call,
-estimate, and supported debug-trace paths route separately using their actual state/block context.
+Reth's complete-block hook covers Engine execution, staged import/sync, backfill/ExEx, and witness
+execution. Historical payload assembly remotely reexecutes transaction prefixes; ordinary Engine
+validation remains host-side. RPC call, estimate, and supported trace paths route using their real
+state and block context.
 
-The [versioned protocol](history-worker.md) sends canonical input RLP and binds the operation,
-configuration/genesis identities, exact parent, candidate, artifact digest, request and PID. The
-worker asks for immutable parent-view reads, performs execution itself, and returns explicit
-account/code/storage deltas and canonical receipt bytes. Before-values and storage-wipe semantics
-allow the host to reconstruct reverts. Nothing shares writable state or Rust trait objects.
-The host verifies result bindings and adapts the output before ordinary consensus/root validation
-and persistence. Infrastructure failure is not INVALID and never falls back to local legacy code.
+The [versioned protocol](history-worker.md) binds operation, configuration/genesis identities,
+parent, candidate, artifact digest, request, and PID. The worker requests immutable parent-view
+reads and returns account/code/storage deltas and canonical receipt bytes. Before-values and
+storage-wipe semantics support host reverts. Infrastructure failure is not `INVALID` and never
+falls back to local legacy execution.
 
-Executable bytes are SHA-256 verified and sealed in a memfd. Linux Landlock, seccomp, cleared
-environment and close-on-exec inherited descriptors prevent direct host database access, writes,
-network access and process-memory access. The worker remains a trusted client component; this is
-not a defense against kernel exploits. Unsupported sandbox kernels fail closed.
+Executable bytes are SHA-256 verified and run from a sealed memfd. Linux Landlock, seccomp, a
+cleared environment, and close-on-exec descriptors deny direct database, write, network, and
+process-memory access. The worker remains trusted consensus code; this is not protection against
+kernel exploits, and unsupported sandbox kernels fail closed.
 
-## Acceptance board and evidence
+## Migrated source layout and provenance
 
-| Criterion / ownership | Final evidence and outcome |
-|---|---|
-| A — worker/build | Separate workspace, lockfile and pinned source; independent host/reference/worker builds. Worker Alloy consensus/EIPs 2.4.2 and primitives 1.7.3 versus host 2.4.1/1.6.1. Worker uses original reth; host uses patched incompatible hooks. Pins/digests are in `final/provenance.json`. The reth patch applied to a fresh original checkout with locked metadata; the complete setup image built from scratch. |
-| B — devnet | `final/live.json`: sequencer and independently deriving verifier agree across 19/20/21/22, including balances, contract storage `0x1234`, receipts and Isthmus flag false→true. `final/routing.json` joins block/parent/config identities to real worker PIDs and digests for 1–19, with no block-worker invocations for 20–22. |
-| C — host replay | `final/replay.json`: **95 PASS, 0 FAIL, 0 SKIP**. Fresh empty nodes replay 1–22 through authenticated Engine APIs and match original reference commitments; graceful restart preserves historical RPC. Raw import independently exercises the staged executor. |
-| D — state/reorg | Replay selects an alternate 19–22 branch across the boundary and restores canonical state. Unit/subprocess tests exercise creation, deletion, code/storage changes, wipe/recreation, block-by-block reverts and distinct parent views. Sandbox test denies canonical-file writes and inherited-FD access. |
-| E — validation | `final/import.json`: **6 PASS** for canonical imports and malformed pre/post-cutover roots on host/reference; failed imports leave head at genesis. Replay compares six malformed Engine payload verdicts, not just roots. Worker fixtures cover Regolith deposit nonce, Canyon receipt version and CREATE2 deployment. |
-| F — RPC | Replay compares exact reference JSON for pre/post-cutover calls, estimates, default/callTracer traces, transaction/block traces, and code/state overrides. Unsupported historical tracers and trace-call `txIndex` fail explicitly. |
-| G — failures | `final/failures.json`: **7 scenarios pass**: real execution, missing/wrong artifact and recovery, in-flight SIGKILL and recovery, malformed/schema-incompatible/stale replies, and a partial-frame timeout with child reaping. Replay additionally requires Engine artifact failure to be an internal error with no commit. Real-worker tests reject incompatible protocol/configuration identities. |
-| H — native proof | `final/stateless.json`: native witness capture/offline replay for **19, 20, 21** all exit 0 and match the full RPC header hash. The three self-contained archives are in `final/corpus/`. zkVM work is explicitly separate below. |
-| I — isolation | Real workers perform historical execution; wrong/missing artifact tests establish causality. Source/dependency and residual-history inventory below distinguishes extracted execution from compatibility metadata and unextracted components. |
-| J — review/measurements | Independent agents reviewed host/reth integration, protocol/state adaptation, sandbox and acceptance evidence. Verified findings were fixed and the complete final acceptance rerun passed. CPU/RSS/startup/traffic/RPC measurements are in `final/benchmark.json`; import throughput is in `final/import.json`. |
+- The host uses the selected crates in this repository.
+- The worker's frozen Base source is committed at
+  [`etc/history-worker/historical/base`](../etc/history-worker/historical/base), pinned to Base
+  `1eda0f7f4cebb823522e62f34fc3e513b1c450b1`.
+- The independent reference is committed at
+  [`historical/reference`](../historical/reference) at the same Base pin.
+- Integrated reth is committed at [`vendor/reth`](../vendor/reth). Upstream reth is pinned to
+  `5877708bbf9219c44758cd2ce28a365f738661f7` (`base-v2.5.2.6`); the imported integration source
+  records local commit `d201e8932a613e6ec3c1c89d610c47cbc1684f7b`.
+- [`tools/reth-config.py`](../tools/reth-config.py) generates Cargo path overrides for the committed
+  reth tree. [`sources/reth-history.patch`](../sources/reth-history.patch) is an audit artifact,
+  not a setup-time patch.
 
-Focused checks also passed: **11 host history tests**, **15 worker subprocess tests**, scoped
-Clippy, ordinary no-history-feature compilation, script syntax and patch whitespace checks.
-This is not a claim that every test in the full Base monorepo ran.
+Exact frozen-source metadata is in
+[`sources/frozen-sources.json`](../sources/frozen-sources.json). Independent host, reference, and
+worker builds have succeeded from this checkout; that does not substitute for the pending full
+acceptance run.
 
-Independent review led to fixes for deposit receipt metadata, empty-receipt terminal gas,
-request commitments, artifact pathname races, partial-frame deadlines, inherited process authority,
-configuration-error classification, and post-result transaction/output checks. A suspected payload
-prefix double-application was investigated and rejected: its read cache stores parent reads;
-execution deltas are not committed into it. The retained protocol limit is 64 MiB per frame and
-a 30-second absolute invocation deadline; an aggregate read/byte budget is still production work.
+Historical execution bodies still exist in selected host crates and dependency graphs even where
+the external boundary bypasses them. Host header/env/receipt-root assembly, validation,
+old-parent/new-child fee compatibility, derivation upgrade transactions, and transaction-pool
+admission remain host-side. Reth/revm also retain historical branches. Pending simulation,
+`eth_simulateV1`, unsupported custom tracers, and trace-call `txIndex` are outside the extracted
+historical RPC boundary. There is no claim of a physically history-free binary.
 
-## Measurements
+## Original source-spike evidence (historical only)
 
-Environment: AMD Ryzen AI MAX+ 395, x86-64 Linux 7.1.8-arch1-3, Rust 1.96.0, Python 3.14.7.
-Host/reference are comparable debug builds; the independently built worker is release. Five
-repeated samples follow the observed first request. “Cold” means fresh processes and owned database
-copies, **not** dropped OS page caches. The live devnet remained active during measurements.
+The pre-migration source spike reported 95 replay passes, six import passes, seven failure-scenario
+passes, and native witness replay parity for blocks 19–21. It also reported exact sequencer/verifier
+agreement around blocks 19–22, reorg restoration, malformed payload parity, and worker causality.
+Those observations motivated this migration but **have not yet been re-established by the fresh
+migrated acceptance run**.
+
+On an AMD Ryzen AI MAX+ 395 running x86-64 Linux 7.1.8 and Rust 1.96.0, that original spike measured:
 
 | Operation | History host | Original reference |
 |---|---:|---:|
@@ -75,81 +77,25 @@ copies, **not** dropped OS page caches. The live devnet remained active during m
 | Historical call, first / repeated median | 2524.066 / 2537.581 ms | 6.102 / 2.903 ms |
 | Historical estimate, first / repeated median | 2698.938 / 2704.166 ms | 4.381 / 2.159 ms |
 | Current call, repeated median | 4.241 ms | 3.062 ms |
-| Readiness of fresh node process | 2323.313 ms | 1655.564 ms |
-| Benchmark CPU, user + system | 32.564 + 1.085 s | 1.604 + 0.221 s |
+| Fresh-process readiness | 2323.313 ms | 1655.564 ms |
 | Benchmark peak RSS | 745704 KiB | 249364 KiB |
 
-CPU/RSS use Linux `wait4` after graceful shutdown and include waited-for descendants; peak RSS is
-not a sum of simultaneously resident processes. A bare release-worker startup plus unsupported
-protocol parse took 0.890 ms; that probe excludes host verification, sandbox setup and real
-execution. Real historical requests each made 12 state reads, with 2562–2574 bytes of serialized
-read **requests**, not total bidirectional traffic, and 206–221 ms inside worker transport.
-The dominant observed end-to-end cost is repeated processing/serialization of the roughly 9 MB
-genesis and manifest plus one process per operation. This spike is intentionally not optimized;
-metadata-only block retrieval is not presented as an execution benchmark.
+These were debug host/reference builds and a release worker. “Cold” meant fresh processes and
+copied databases, not dropped page caches. One process was spawned per operation, and repeated
+serialization of the roughly 9 MiB genesis/manifest dominated observed cost. The numbers are not
+migrated-release benchmarks.
 
-## Source isolation, policy and remaining history
+## Proof and production boundaries
 
-- **Historical source:** `etc/history-worker/scripts/materialize-base.sh` independently archives
-  pinned Base into `etc/history-worker/generated/base`. Its `crates/common/{evm,consensus}` and
-  `crates/execution/{evm,chainspec,...}` supply historical implementation bodies, with original
-  pinned reth/revm; the worker adapter lives in `etc/history-worker/crates/worker`. Generated
-  source is reproducible, ignored data, not an unexplained cache modification.
-- **Host:** `crates/execution/history` owns protocol transport, sandbox and delta adaptation;
-  `crates/execution/evm/src/history.rs` owns selection/binding. Historical bodies remain in the
-  host source tree/dependency graph but are bypassed for the extracted execution/RPC boundary.
-  Host header/env/receipt-root assembly and validation, and old-parent/new-child fee compatibility,
-  remain. This does not claim a physically history-free binary.
-- **Reth:** the complete fork delta is `etc/history-reth/0001-external-complete-block-hook.patch`.
-  Its executor, Engine, stage, ExEx, witness and RPC hooks preserve normal validation and storage
-  ownership. Reth/revm dependencies still contain historical branches.
-- **Derivation/pool/RPC:** derivation still injects protocol upgrade transactions; transaction-pool
-  admission remains host-side. Pending simulation and `eth_simulateV1` are outside the extracted
-  historical RPC boundary. Supported debug traces have exact-reference compatibility; this is
-  not a promise to support every custom JavaScript/native tracer.
-- **Policy:** absent Isthmus means all selected history remains remote; genesis-active Isthmus
-  means no pre-Isthmus route. Worker spec selection retains block-based rules. Requests freeze
-  their manifest/configuration; chain schedule drift fails closed, rather than reinterpreting an
-  in-flight request. There is no timestamp-only result cache. A consensus-preserving security fix
-  is a new reviewed immutable worker digest and approval, not mutation of an approved artifact.
+The source spike's native witness check was not a zkVM proof. Some original proof guest directories
+are intentionally absent from this selected checkout; the omitted range guest can be inspected in
+the pinned upstream Base source at
+[`crates/proof/zk/programs/succinct/range/ethereum/src/main.rs`](https://github.com/base/base/blob/1eda0f7f4cebb823522e62f34fc3e513b1c450b1/crates/proof/zk/programs/succinct/range/ethereum/src/main.rs).
+A schedule ID commits configuration, not an external executable's semantics. zkVM deployment still
+requires guest-compatible execution, independently built guest/VK identities, boundary proofs,
+aggregation changes where needed, and verifier authorization. No new zkVM proof or on-chain
+authorization is claimed.
 
-## Proof boundary
-
-Native proof behavior is unchanged and was verified on the boundary corpus. The actual zkVM
-range guest is `crates/proof/zk/programs/succinct/range/ethereum/src/main.rs`; it invokes
-`run_range_program` and the witness executor. Aggregation verifies against `multi_block_vkey`
-and commits the image hash alongside schedule/config identifiers. Backend contract bindings
-authorize aggregation/range verification keys and the rollup configuration hash.
-
-A schedule ID commits configuration, **not** an external worker's executable semantics. Deploying
-this architecture in proofs still requires a guest-compatible execution design, independently
-built guest program/VK identities, boundary proofs under those programs, aggregation changes as
-needed, and verifier authorization of those identities. No new zkVM proof, guest deployment or
-on-chain authorization is claimed. A native process worker is not a zk proof.
-
-## Reproduce and operate
-
-Follow [history-spike-build.md](history-spike-build.md) for clean setup/build commands, then:
-
-```sh
-RUN="$PWD/target/history-devnet-run"
-etc/history-devnet/start.sh "$RUN"
-etc/history-devnet/exercise.sh "$RUN"
-etc/history-devnet/acceptance.sh "$RUN"
-python3 etc/history-devnet/collect.py "$RUN" --output "$RUN/portable-evidence"
-etc/history-devnet/stop.sh "$RUN"
-```
-
-The successful network was left running: L1 `http://localhost:35221/`, sequencer
-`http://127.0.0.1:34919/`, verifier `http://127.0.0.1:39747/`, owned stack PID **3774267**.
-Stop it with `etc/history-devnet/stop.sh /tmp/base-history-final-3`. Ports/PIDs are runtime values;
-a fresh start records its own endpoints. Never publish `runtime.json` or JWT files.
-Subordinate replay/import/fault/benchmark/proof nodes have been stopped; their data and logs remain.
-
-All Base changes are local and uncommitted on `main`, based on
-`1eda0f7f4cebb823522e62f34fc3e513b1c450b1`. The owned reth checkout is on local `master` at
-`d201e8932a613e6ec3c1c89d610c47cbc1684f7b` plus working changes; the recorded patch is relative to
-upstream `5877708bbf9219c44758cd2ce28a365f738661f7` and therefore includes both. No push,
-publication or shared-network deployment was performed. Productionization requires protocol
-resource budgets, batching/persistent workers and config caching, a broader historical/custom-chain
-corpus, complete historical API coverage, artifact governance and the proof work above.
+Productionization also requires protocol-wide resource budgets (the current frame limit is 64 MiB
+and invocation deadline is 30 seconds), batching or persistent workers, configuration caching, a
+broader historical/custom-chain corpus, fuller historical API coverage, and artifact governance.

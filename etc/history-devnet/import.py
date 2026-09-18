@@ -12,7 +12,7 @@ import sys
 import time
 import urllib.request
 
-from artifacts import verify_reference
+from artifacts import capture_provenance, complete_provenance, verify_reference
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -163,6 +163,17 @@ def main():
     args.manifest = args.manifest or args.run_dir / "manifest.json"
     out = args.output or ROOT / f"target/history-import-{time.strftime('%Y%m%d-%H%M%S')}"
     out.mkdir(parents=True, exist_ok=False)
+    approved = json.loads(args.manifest.read_text())
+    provenance, launches = capture_provenance(out, "import", {
+        "host": args.worker_bin, "reference": args.reference_bin,
+        "worker": approved["executable"],
+    }, (("manifest", args.manifest), ("genesis", runtime_genesis(args.run_dir))))
+    args.worker_bin, args.reference_bin = launches["host"], launches["reference"]
+    owned_manifest = out / "worker-manifest.json"
+    approved.update(executable=str(launches["worker"]),
+                    executable_sha256="0x" + provenance["binaries"]["worker"]["sha256"])
+    owned_manifest.write_text(json.dumps(approved, indent=2) + "\n")
+    args.manifest = owned_manifest
     summary = {"output": str(out), "tests": []}
     try:
         source, genesis = runtime_source(args.run_dir), runtime_genesis(args.run_dir)
@@ -233,6 +244,7 @@ def main():
     except Exception as error:
         summary.update(result="FAIL", failure=str(error))
     (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    complete_provenance(out, provenance)
     print(json.dumps(summary, indent=2), file=sys.stdout if summary["result"] == "PASS" else sys.stderr)
     return 0 if summary["result"] == "PASS" else 1
 

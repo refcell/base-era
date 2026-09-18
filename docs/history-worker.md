@@ -47,9 +47,9 @@ are block fields. No dependency status enum crosses the wire.
 
 ## Reproducibility and integration
 
-`scripts/materialize-base.sh` verifies and archives Base revision
-`1eda0f7f4cebb823522e62f34fc3e513b1c450b1` into ignored `generated/base`. That revision pins reth
-tag `base-v2.5.2.6` (commit `5877708bbf9219c44758cd2ce28a365f738661f7`). An execution adapter's concrete call is:
+The committed workspace at `etc/history-worker/historical/base` is frozen from Base revision
+`1eda0f7f4cebb823522e62f34fc3e513b1c450b1`. That revision pins reth tag `base-v2.5.2.6`
+(commit `5877708bbf9219c44758cd2ce28a365f738661f7`). An execution adapter's concrete call is:
 
 ```rust,ignore
 let output = BasicBlockExecutor::new(
@@ -78,9 +78,10 @@ UTF-8 JSON in declaration order containing every request field (including genesi
 chain ID, era, and protocol version); only `binding_hash` itself is omitted. Hosts should call the
 protocol method rather than duplicate this serialization.
 
-The worker subprocess tests exercise Canyon receipt/CREATE2 transitions, Regolith account creation,
+The original source-spike worker subprocess tests exercised Canyon receipt/CREATE2 transitions, Regolith account creation,
 code/storage deletion, separate parent views, calls, estimation and tracing. Live Isthmus cutover,
-Engine replay/reorg, import rejection and failure recovery results are linked from `history-spike.md`.
+Engine replay/reorg, import rejection and failure recovery observations are described with their
+historical status in `history-spike.md`; migrated acceptance evidence is pending.
 `block_reversions` is reserved and empty in this one-block protocol: the host reconstructs inverse
 entries from validated before-values and retains the parent snapshot to restore slots omitted by
 a wipe. Canonical receipt RLP is authoritative; duplicated deposit fields are informational. The

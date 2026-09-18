@@ -16,7 +16,7 @@ import sys
 import time
 import urllib.request
 
-from artifacts import verify_reference
+from artifacts import capture_provenance, complete_provenance, verify_reference
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -313,6 +313,13 @@ def main():
         if not all((args.worker_bin, args.reference_bin, args.genesis, args.manifest)):
             parser.error("provide both endpoint options, or both binaries plus --genesis and --manifest")
         args.reference_bin = verify_reference(args.reference_bin)
+        approved = json.loads(Path(args.manifest).read_text())
+        provenance, launches = capture_provenance(out, "replay", {
+            "host": args.worker_bin, "reference": args.reference_bin,
+            "worker": approved["executable"],
+        }, (("manifest", args.manifest), ("genesis", args.genesis)))
+        args.worker_bin = launches["host"]
+        args.reference_bin = launches["reference"]
         for name in ("worker", "reference"):
             datadir = out / (name + "-datadir")
             if datadir.exists() and any(datadir.iterdir()): parser.error(f"owned datadir is not empty: {datadir}")
@@ -320,6 +327,9 @@ def main():
         jwt_file = out / "jwt.hex"; jwt_file.write_text(secret + "\n"); os.chmod(jwt_file, 0o600)
         owned_manifest = out / "worker-manifest.json"
         shutil.copy2(args.manifest, owned_manifest)
+        approved["executable"] = str(launches["worker"])
+        approved["executable_sha256"] = "0x" + provenance["binaries"]["worker"]["sha256"]
+        owned_manifest.write_text(json.dumps(approved, indent=2) + "\n")
         worker_env = os.environ.copy(); worker_env["BASE_HISTORY_MANIFEST"] = str(owned_manifest.resolve())
         reference_env = os.environ.copy(); reference_env.pop("BASE_HISTORY_MANIFEST", None)
         wp, args.worker_engine, args.worker_rpc = launch(args.worker_bin, args.genesis, out / "worker-datadir", jwt_file, args.node_arg, worker_env)
@@ -477,6 +487,8 @@ def main():
         for process in processes:
             try: process.wait(timeout=10)
             except subprocess.TimeoutExpired: process.terminate()
+        if not endpoint_mode:
+            complete_provenance(out, provenance)
     failed = [item for item in summary if item.get("result") == "FAIL"]
     passed = [item for item in summary if item.get("result") == "PASS"]
     skipped = [item for item in summary if item.get("result") == "SKIP"]

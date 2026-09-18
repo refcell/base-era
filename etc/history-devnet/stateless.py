@@ -15,6 +15,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+from artifacts import capture_provenance, complete_provenance
+
 
 BLOCKS = (19, 20, 21)
 
@@ -73,6 +75,16 @@ def main():
     (output / "logs").mkdir(parents=True)
     fixtures = output / "fixtures"
     fixtures.mkdir()
+    approved = json.loads(manifest.read_text())
+    provenance, launches = capture_provenance(output, "stateless", {
+        "host": node_binary, "worker": approved["executable"], "fixture": fixture_binary,
+    }, (("manifest", manifest), ("genesis", genesis), ("rollup", rollup)))
+    node_binary, fixture_binary = launches["host"], launches["fixture"]
+    owned_manifest = output / "worker-manifest.json"
+    approved.update(executable=str(launches["worker"]),
+                    executable_sha256="0x" + provenance["binaries"]["worker"]["sha256"])
+    owned_manifest.write_text(json.dumps(approved, indent=2) + "\n")
+    manifest = owned_manifest
     datadir = output / "datadir"
     shutil.copytree(source, datadir)
     http_port, auth_port, p2p_port = port(), port(), port()
@@ -156,6 +168,7 @@ def main():
             result["node"] = "stopped_after_error"
         result["node_exit"] = process.returncode if process is not None else None
         (output / "results.json").write_text(json.dumps(result, indent=2) + "\n")
+        complete_provenance(output, provenance)
     if failure:
         print(f"stateless parity failed: {failure}", file=sys.stderr)
         return 1

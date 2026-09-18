@@ -14,6 +14,8 @@ import threading
 import time
 import urllib.request
 
+from artifacts import capture_provenance, complete_provenance
+
 
 ROOT = Path(__file__).resolve().parents[2]
 ORACLE = {"to": "0x420000000000000000000000000000000000000F", "data": "0xb54501bc"}
@@ -167,9 +169,8 @@ def main():
         except (FileNotFoundError, PermissionError):
             pass
 
-    # Copy the executable only after checking that no build process currently has it open.
-    host_source = Path(args.host).resolve(); host = output / "history-host-node"
-    shutil.copy2(host_source, host)
+    # Freeze the executable only after checking that no build process currently has it open.
+    host_source = Path(args.host).resolve(); host = host_source
     datadir = source_datadir
     if not args.use_existing_datadir:
         datadir = output / "worker-datadir"
@@ -178,6 +179,16 @@ def main():
     owned_manifest = output / "manifest.json"
     write_manifest(owned_manifest, original)
     fixtures = build_fixtures(output)
+    provenance, launches = capture_provenance(output, "failures", {
+        "host": host, "worker": original["executable"],
+        **{f"fixture-{name}": value[0] for name, value in fixtures.items()},
+    }, (("manifest", args.manifest), ("genesis", args.genesis)))
+    host = launches["host"]
+    original["executable"] = str(launches["worker"])
+    original["executable_sha256"] = "0x" + provenance["binaries"]["worker"]["sha256"]
+    write_manifest(owned_manifest, original)
+    fixtures = {name: (launches[f"fixture-{name}"], provenance["binaries"][f"fixture-{name}"]["sha256"])
+                for name in fixtures}
     http, engine, p2p = free_port(), free_port(), free_port()
     env = os.environ.copy(); env["BASE_HISTORY_MANIFEST"] = str(owned_manifest)
     log = (output / "host.log").open("wb")
@@ -272,6 +283,7 @@ def main():
         (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
     summary = {"result": "PASS", "output": str(output), "claims": len(evidence)}
     (output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    complete_provenance(output, provenance)
     print(json.dumps(summary, indent=2))
 
 

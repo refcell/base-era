@@ -75,6 +75,52 @@ class ArtifactApprovalTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "different source approval"):
             artifacts.verify_reference(self.binary)
 
+    def test_provenance_rejects_missing_stale_and_replaced_artifacts(self):
+        output = self.root / "evidence"
+        binary = self.root / "node"; binary.write_bytes(b"node")
+        config = self.root / "config"; config.write_bytes(b"config")
+        record, _ = artifacts.capture_provenance(output, "test", {"host": binary}, (("config", config),))
+        artifacts.complete_provenance(output, record)
+        artifacts.validate_provenance(output / "provenance.json", "test")
+        (output / "provenance.json").unlink()
+        with self.assertRaisesRegex(RuntimeError, "missing provenance"):
+            artifacts.validate_provenance(output / "provenance.json", "test")
+        artifacts.complete_provenance(output, record)
+        binary.write_bytes(b"replacement")
+        with self.assertRaisesRegex(RuntimeError, "changed"):
+            artifacts.validate_provenance(output / "provenance.json", "test")
+
+    def test_provenance_rejects_mismatched_stage(self):
+        output = self.root / "evidence2"
+        binary = self.root / "node2"; binary.write_bytes(b"node")
+        record, _ = artifacts.capture_provenance(output, "replay", {"host": binary})
+        artifacts.complete_provenance(output, record)
+        with self.assertRaisesRegex(RuntimeError, "stage mismatch"):
+            artifacts.validate_provenance(output / "provenance.json", "import")
+
+    def test_provenance_detects_retargeted_alias_and_preserves_roles(self):
+        alias = self.root / "host-alias"
+        alias.symlink_to(self.artifact)
+        output = self.root / "alias-evidence"
+        record, launches = artifacts.capture_provenance(
+            output, "import", {"host": alias, "reference": self.artifact})
+        # Import uses executable basenames to name independent datadirs.
+        self.assertNotEqual(launches["host"].name, launches["reference"].name)
+        artifacts.complete_provenance(output, record)
+        replacement = self.root / "replacement"
+        replacement.write_bytes(b"different implementation")
+        alias.unlink()
+        alias.symlink_to(replacement)
+        with self.assertRaisesRegex(RuntimeError, "host provenance input changed"):
+            artifacts.validate_provenance(output / "provenance.json", "import")
+
+    def test_provenance_does_not_reapprove_wrong_worker(self):
+        manifest = self.root / "worker-manifest.json"
+        manifest.write_text(json.dumps({"executable_sha256": "0x" + "00" * 32}))
+        with self.assertRaisesRegex(RuntimeError, "does not match approved digest"):
+            artifacts.capture_provenance(self.root / "wrong-worker", "replay",
+                                         {"worker": self.artifact}, (("manifest", manifest),))
+
 
 if __name__ == "__main__":
     unittest.main()

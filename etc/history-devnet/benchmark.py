@@ -17,7 +17,7 @@ import subprocess
 import time
 import urllib.request
 
-from artifacts import verify_reference
+from artifacts import capture_provenance, complete_provenance, verify_reference
 
 ROOT = Path(__file__).resolve().parents[2]
 ORACLE = {"to": "0x420000000000000000000000000000000000000F", "data": "0xb54501bc"}
@@ -146,6 +146,14 @@ def main():
     (args.run_dir / "jwt.hex").write_text("11" * 32 + "\n")
     os.chmod(args.run_dir / "jwt.hex", 0o600)
     approval = json.loads(args.approval.read_text())
+    provenance, launches = capture_provenance(args.run_dir, "benchmark", {
+        "host": args.host_bin, "reference": args.reference_bin,
+        "worker": approval["executable"],
+    }, (("approval", args.approval), ("manifest", args.source_manifest),
+        ("genesis", args.genesis)))
+    args.host_bin, args.reference_bin = launches["host"], launches["reference"]
+    approval["executable"] = str(launches["worker"])
+    approval["executable_sha256"] = "0x" + provenance["binaries"]["worker"]["sha256"]
     manifest = json.loads(args.source_manifest.read_text())
     manifest.update({"executable": approval["executable"],
                      "executable_sha256": approval["executable_sha256"]})
@@ -219,6 +227,7 @@ def main():
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(evidence, indent=2) + "\n")
+    complete_provenance(args.run_dir, provenance)
     print(args.output)
 
 

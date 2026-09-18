@@ -11,12 +11,11 @@ runs full-state imports (without `--no-state`), starts each imported database wi
 a historical state query. Separate fresh databases import blocks 1..18 plus a bad block 19 state
 root and blocks 1..19 plus a bad block 20 receipts root using `--fail-on-invalid-block`.
 
-## 2026-09-18 result
+## Original source-spike result (2026-09-18)
 
-Both real artifacts expose `import` and passed. Full evidence, help output, command logs, owned
-databases, RLP files, exit codes, and timings are in `/tmp/base-history-final-3/import-evidence/`; the
-machine-readable result is `summary.json`; its portable extract is
-`etc/history-devnet/evidence/final/import.json`.
+The pre-migration source spike reported that both real artifacts exposed `import` and passed.
+The table and commitments below are historical context, not results from this checkout. Fresh
+migrated evidence is pending at `etc/history-devnet/evidence/final/import.json`.
 
 | Check | History host | Reference Base/reth |
 |---|---:|---:|
@@ -34,5 +33,6 @@ valid input prefix was committed.
 RLP SHA-256 commitments are `9484736956156c1c051f366b00d370633b359d170d8df7983b7e2fa7b33a0de4`
 (canonical), `28a0e685c0abeaff3942e50acc9aa77eb8936689dcf775ffc3729455d3a64ca6`
 (bad block 19), and `6514dfff58ed39d4ec7168d7cf0019e7df4b56767bc5fd5c1fd5cbc8a4079e3f`
-(bad block 20). The reference artifact differs from the original Base/reth source only by the two
-CLI exposure edits recorded in `etc/history-devnet/reference-cli.patch`.
+(bad block 20). In the source spike, the reference artifact differed from original Base/reth only by
+the two CLI exposure edits recorded in `etc/history-devnet/reference-cli.patch`; the migrated
+reference contains that adaptation in committed `historical/reference` source.
