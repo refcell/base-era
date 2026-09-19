@@ -48,55 +48,57 @@
             >Raw evidence ↗</a
           >
           <a
-            href="https://github.com/refcell/base-era/compare/00cca4b99fad0c68901521cedd32b5a13d283c21...main"
-            >Diff from selected Base baseline ↗</a
+            href="https://github.com/refcell/base-era/blob/main/docs/retirement.md"
+            >Deletion experiment ↗</a
           >
         </div>
       </section>
 
       <section id="retirement" aria-labelledby="audit-title">
         <div class="heading">
-          <h2 id="audit-title">What could leave Base trunk?</h2>
+          <h2 id="audit-title">A real deletion diff: ~6k Rust LoC</h2>
           <a
             class="note"
-            href="https://github.com/refcell/base-era/blob/main/docs/history-deletion.md"
-            >Line-by-line audit ↗</a
+            href="https://github.com/refcell/base-era/blob/main/docs/retirement.md"
+            >Full diff + per-file counts ↗</a
           >
         </div>
         <div class="stats">
           <div class="stat">
-            <b>60</b><span>production LoC candidates</span
-            ><small>pre-Isthmus subset</small>
+            <b>5,907</b><span>net Rust lines removed</span
+            ><small>latest-only source experiment</small>
           </div>
           <div class="stat">
-            <b>+96</b><span>conditional production LoC</span
-            ><small>requires a wider boundary</small>
+            <b>2,743</b><span>production Rust lines</span
+            ><small>net reduction</small>
           </div>
           <div class="stat">
-            <b>0</b><span>legacy LoC removed today</span
-            ><small>isolation demonstrated first</small>
+            <b>3,164</b><span>test + benchmark lines</span
+            ><small>net reduction · counted separately</small>
           </div>
         </div>
         <p class="note">
-          Bounded audit of the pinned Base revision, not a whole-trunk estimate
-          or net savings. Physical lines include comments and blanks. Tests are
-          separate: 105 candidate + 392 conditional lines.
+          Fresh Base clone, Beryl-and-later horizon: 6,378 Rust lines deleted,
+          471 added. Physical lines include comments and blanks; bytecode and
+          build metadata are excluded. This is a separate source experiment, not
+          a change to the live demo.
         </p>
         <p>
-          Candidates cover Bedrock parsing, old fee paths and pre-Isthmus block
-          fields. Receipt quirks and the Canyon transition need more host
-          consumers migrated first. Predecessor parsing at the activation block
-          stays.
+          Retires old channel/batch pipelines, upgrade transaction builders, fee
+          and receipt rules, and historical execution/proof assembly. Current
+          rules, old-data decoders, schedules and future forks stay. 648 tests
+          pass; 8 documentation examples remain ignored.
         </p>
         <p class="bottleneck">
           <strong
-            >The value is a repeatable retirement path, not a large deletion
-            claim yet.</strong
+            >Keep the latest client small as the chain accumulates
+            forks.</strong
           >
           Pin an era → route and verify its history → migrate remaining
           consumers → delete superseded host bodies. Repeat at each fork.
-          Historical source and tests remain available with the worker; routing,
-          validation and canonical state stay in Base.
+          Realizing the full estimate requires historical derivation and proof
+          dispatch, beyond this demo’s execution worker. That integration adds
+          code; the deletion candidate is not safe for historical replay.
         </p>
       </section>
 

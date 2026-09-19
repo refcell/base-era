@@ -1,0 +1,837 @@
+   Compiling base-common-evm v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/evm)
+   Compiling base-common-rpc-types v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/rpc-types)
+   Compiling base-proof-executor v0.0.0 (/home/refcell/dev/base-era-retirement/crates/proof/executor)
+   Compiling base-execution-chainspec v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/chainspec)
+   Compiling base-protocol v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/protocol)
+   Compiling base-execution-consensus v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/consensus)
+   Compiling base-execution-evm v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/evm)
+   Compiling base-execution-txpool v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/txpool)
+   Compiling base-execution-payload-builder v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/payload)
+   Compiling base-common-evm2 v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/evm2)
+   Compiling base-execution-rpc v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/rpc)
+   Compiling base-node-core v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/node)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 11.19s
+     Running unittests src/lib.rs (target/debug/deps/base_common_evm-d123c0d2e05cdb80)
+
+running 117 tests
+test api::builder::tests::build_base_accepts_read_only_database_adapters_without_debug ... ok
+test base_time::tests::decode_timestamp_millis_part_reads_only_low_uint16 ... ok
+test base_time::tests::active_transition_rejects_missing_proxy ... ok
+test base_time::tests::active_transition_rejects_codeless_proxy ... ok
+test api::exec::tests::system_call_caller_appears_in_witness ... ok
+test base_time::tests::inactive_transition_is_noop ... ok
+test base_time::tests::timestamp_ms_adds_seconds_and_millis_part ... ok
+test api::default_ctx::tests::default_run_base ... ok
+test base_time::tests::fetch_timestamp_millis_part_reads_slot_zero ... ok
+test base_time::tests::timestamp_ms_matches_solidity_uint64_truncation ... ok
+test base_time::tests::transition_preserves_existing_proxy_upgrade ... ok
+test base_time::tests::selectors_match_solidity_signatures ... ok
+test eip8130::tests::actor_policy_violation_data_is_abi_encoded ... ok
+test base_time::tests::try_fetch_returns_zero_for_unset_storage ... ok
+test api::builder::tests::build_base_does_not_install_beryl_precompiles_before_beryl ... ok
+test eip8130::tests::capped_refund_uses_signed_transaction_level_accounting ... ok
+test base_time::tests::active_transition_rejects_unexpected_proxy_admin ... ok
+test base_time::tests::artifacts_match_canonical_contracts ... ok
+test api::builder::tests::build_base_installs_dynamic_beryl_precompiles ... ok
+test base_time::tests::transition_preserves_linked_canonical_implementation ... ok
+test base_time::tests::active_transition_installs_and_links_implementation ... ok
+test api::builder::tests::build_base_with_activation_admin_address_configures_activation_registry ... ok
+test eip8130::tests::auto_delegate_codeless_sender_delegates_to_default_account ... ok
+test api::builder::tests::build_with_inspector_installs_dynamic_beryl_precompiles ... ok
+test api::builder::tests::cobalt_activation_admin_rotates_through_registry_state ... ok
+test base_time::tests::active_transition_preserves_implementation_prestate ... ok
+test api::builder::tests::beryl_activation_admin_rejects_state_rotation ... ok
+test eip8130::tests::create_rejects_malformed_eip7702_runtime ... ok
+test eip8130::tests::create_rejects_leading_ef_runtime ... ok
+test eip8130::tests::simulate_supports_configured_account_path ... ok
+test eip8130::tests::underfunded_payer_is_rejected ... ok
+test eip8130::tests::db_failure_during_call_propagates_as_error_not_revert ... ok
+test eip8130::tests::matching_chain_id_still_executes ... ok
+test eip8130::tests::eoa_self_pay_transaction_executes_and_charges_sender ... ok
+test eip8130::tests::reverting_call_includes_tx_with_revert_status ... ok
+test eip8130::tests::later_phase_skipped_after_earlier_phase_reverts ... ok
+test eip8130::tests::committed_phase_warms_later_phase ... ok
+test eip8130::tests::two_dimensional_nonce_is_incremented ... ok
+test evm::tests::precompile_jovian_over_max_input::case_1_bn254_pair ... ok
+test eip8130::tests::explicit_zero_delegation_remains_cleared ... ok
+test eip8130::tests::single_phase_call_executes_against_contract_code ... ok
+test eip8130::tests::create_rejects_full_eip7702_designator_runtime ... ok
+test eip8130::tests::simulate_rejects_delegation_over_ordinary_sender_code_and_rolls_back ... ok
+test executor::block_executor::tests::test_jovian_da_footprint_estimation ... ok
+test eip8130::tests::simulate_sender_actor_id_hint_resolves_policy_after_account_changes ... ok
+test evm::tests::precompile_jovian_over_max_input::case_2_bls12_g1_msm ... ok
+test evm::tests::precompile_jovian_at_max_input::case_1_bn254_pair ... ok
+test evm::tests::precompile_jovian_over_max_input::case_3_bls12_g2_msm ... ok
+test eip8130::tests::foreign_chain_id_is_rejected_at_inclusion ... ok
+test executor::block_executor::tests::test_jovian_da_footprint_estimation_out_of_gas ... ok
+test evm::tests::precompile_jovian_over_max_input::case_4_bls12_pairing ... ok
+test executor::block_executor::tests::self_pay_eip8130_block_gas_reservation_is_gas_limit ... ok
+test executor::block_executor::tests::eip8130_block_gas_reservation_includes_payer_auth ... ok
+test factory::tests::create_evm_has_inspect_false ... ok
+test executor::block_executor::tests::test_jovian_da_footprint_estimation_maxed_out_da_footprint ... ok
+test executor::block_executor::tests::test_with_encoded ... ok
+test eip8130::tests::validation_error_discards_warmth ... ok
+test factory::tests::create_evm_with_inspector_has_inspect_true ... ok
+test eip8130::tests::simulate_explicit_zero_delegation_emits_only_clear ... ok
+test eip8130::tests::warmth_does_not_leak_across_transactions ... ok
+test handler::tests::test_azul_tx_gas_limit_cap_rejected ... ok
+test handler::tests::test_commit_mint_value ... ok
+test handler::tests::test_consume_gas ... ok
+test handler::tests::test_consume_gas_deposit_ok_regolith_matches_non_deposit ... ok
+test handler::tests::test_consume_gas_deposit_tx ... ok
+test handler::tests::test_clz_opcode_azul ... ok
+test handler::tests::test_clz_opcode_not_on_jovian ... ok
+test handler::tests::test_consume_gas_with_refund ... ok
+test handler::tests::test_halt_gas_non_deposit ... ok
+test handler::tests::test_jovian_no_tx_gas_limit_cap ... ok
+test handler::tests::test_reservoir_recovered_but_spill_burned_on_halt ... ok
+test handler::tests::test_osaka_opcodes_activated_azul ... ok
+test handler::tests::test_reload_l1_block_info_beryl ... ok
+test handler::tests::test_revert_gas ... ok
+test l1block::tests::operator_fee_charge_returns_zero_when_isthmus_scalars_unset ... ok
+test handler::tests::test_state_gas_propagated_to_parent_on_ok ... ok
+test l1block::tests::calculate_tx_l1_cost_fjord ... ok
+test l1block::tests::test_operator_fee_charge_formulas ... ok
+test l1block::tests::test_operator_fee_refund ... ok
+test precompiles::tests::base_spec_id_selects_azul_osaka_precompile_rules ... ok
+test l1block::tests::test_calculate_tx_l1_cost_fjord ... ok
+test precompiles::tests::base_spec_id_selects_jovian_precompile_limits ... ok
+test transaction::error::tests::test_display_base_errors ... ok
+test transaction::core::tests::from_encoded_eip8130_populates_parts ... ok
+test eip8130::tests::call_warms_coinbase_per_eip3651 ... ok
+test spec::tests::default_base_spec_id ... ok
+test spec::tests::test_base_spec_id_eth_spec_compatibility ... ok
+test eip8130::tests::policy_gate_blocks_call_to_unauthorized_target ... ok
+test transaction::core::tests::test_deposit_transaction_fields ... ok
+test zenith::tests::zenith_inactive_is_a_noop ... ok
+test eip8130::tests::transact_raw_rejects_delegation_over_ordinary_sender_code_without_replacing_it ... ok
+test zenith::tests::existing_code_is_not_overwritten ... ok
+test eip8130::tests::counterfactual_create_then_call_executes_and_is_included ... ok
+test handler::tests::test_azul_deposit_skips_gas_limit_cap ... ok
+test zenith::tests::zenith_active_plants_stub_on_codeless_system_account ... ok
+test handler::tests::non_deposit_tx_error_discards_journal_in_inspector_path ... ok
+test handler::tests::test_azul_tx_gas_limit_at_cap_ok ... ok
+test evm::tests::precompile_jovian_at_max_input::case_4_bls12_pairing ... ok
+test transaction::tests::test_flz_native_evm_parity::case_1_short_hex ... ok
+test eip8130::tests::cross_call_offsetting_refunds_cancel ... ok
+test handler::tests::test_reservoir_spill_recovered_on_revert ... ok
+test eip8130::tests::create_rejects_overwriting_existing_code ... ok
+test handler::tests::nonce_too_low_error_discards_authorizer_warmth_in_inspector_path ... ok
+test eip8130::tests::simulate_estimate_covers_execution_gas_without_a_signature ... ok
+test eip8130::tests::policy_gate_allows_call_to_authorized_target ... ok
+test eip8130::tests::counterfactual_create_executes_and_is_included ... ok
+test transaction::tests::test_flz_native_evm_parity::case_6_base_0x690505 ... ok
+test transaction::tests::test_flz_native_evm_parity::case_5_base_0x112864 ... ok
+test transaction::tests::test_flz_native_evm_parity::case_4_base_0xfaada7 ... ok
+test eip8130::tests::simulate_estimate_covers_gross_gas_when_sstore_refund_earned ... ok
+test transaction::tests::test_flz_native_evm_parity::case_2_sample_contract_call ... ok
+test eip8130::tests::simulate_estimate_covers_63_64_gas_retention_in_nested_calls ... ok
+test transaction::tests::test_flz_native_evm_parity::case_7_base_0x6a38e9 ... ok
+test transaction::tests::test_flz_native_evm_parity::case_3_base_0x5dadeb ... ok
+test eip8130::tests::create_rejects_oversized_runtime ... ok
+test evm::tests::precompile_jovian_at_max_input::case_3_bls12_g2_msm ... ok
+test evm::tests::precompile_jovian_at_max_input::case_2_bls12_g1_msm ... ok
+
+test result: ok. 117 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running unittests src/lib.rs (target/debug/deps/base_common_evm2-8cef91e6b07baa95)
+
+running 23 tests
+test nonce_manager::tests::get_nonce_returns_none_for_protocol_key ... ok
+test nonce_manager::tests::increment_nonce_returns_none_for_protocol_key ... ok
+test precompiles::tests::base_precompiles_install_bn254_and_bls_caps ... ok
+test nonce_manager::tests::get_nonce_is_zero_when_unset ... ok
+test precompiles::tests::bn254_pairing_current_cap_halts_oversized_input ... ok
+test nonce_manager::tests::get_nonce_reads_the_channel_slot ... ok
+test nonce_manager::tests::is_expiring_nonce_seen_respects_recorded_expiry ... ok
+test nonce_manager::tests::increment_nonce_advances_the_channel ... ok
+test precompiles::tests::p256_present_in_current_set ... ok
+test registry::tests::registry_registers_deposit_and_standard_handlers ... ok
+test precompiles::tests::bls_pairing_current_cap_halts_oversized_input ... ok
+test precompiles::tests::cap_constants_match_the_revm_reference ... ok
+test registry::tests::mint_is_credited_and_nonce_bumped ... ok
+test registry::tests::system_transaction_is_rejected_with_full_gas ... ok
+test registry::tests::halted_deposit_is_charged_full_gas_and_keeps_mint ... ok
+test spec::tests::round_trips_the_wrapped_upgrade ... ok
+test registry::tests::deposit_warms_the_coinbase ... ok
+test registry::tests::halted_call_deposit_rolls_back_value_transfer ... ok
+test registry::tests::value_is_transferred_to_target ... ok
+test transaction::tests::deposit_reports_type_byte ... ok
+test registry::tests::create_deposit_deploys_contract ... ok
+test registry::tests::reverted_deposit_reports_actual_gas_and_keeps_mint ... ok
+test transaction::tests::eip8130_reports_type_byte_and_gas_limit ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/block_execution.rs (target/debug/deps/block_execution-f76c4edb3549dc20)
+
+running 8 tests
+test eip8130_block_gas_reservation_includes_payer_auth ... ok
+test rejects_deposit_over_block_gas_limit ... ok
+test azul_enforces_eip7825_per_tx_gas_cap ... ok
+test jovian_rejects_tx_over_da_footprint_budget ... ok
+test rejects_standard_tx_over_block_gas_limit ... ok
+test azul_exempts_deposits_from_the_per_tx_gas_cap ... ok
+test executes_block_of_deposit_then_standard_tx ... ok
+test jovian_accumulates_blob_gas_used ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/block_hooks.rs (target/debug/deps/block_hooks-490e5af791389cf2)
+
+running 6 tests
+test genesis_nonzero_beacon_root_is_rejected ... ok
+test genesis_block_skips_system_calls ... ok
+test missing_beacon_root_is_rejected_post_cancun ... ok
+test block_hashes_system_call_fires_at_beryl ... ok
+test beacon_root_system_call_fires_at_beryl ... ok
+test both_system_calls_fire_at_beryl ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/block_parity.rs (target/debug/deps/block_parity-624b581508d7ec15)
+
+running 1 test
+test block_cumulative_gas_and_success_match_revm ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/deposit_parity.rs (target/debug/deps/deposit_parity-90eedd1aa6f2f55f)
+
+running 9 tests
+test parity_system_transaction_rejected ... ok
+test parity_mint_only_to_eoa ... ok
+test parity_mint_and_value_transfer ... ok
+test parity_call_contract_with_sstore ... ok
+test parity_warm_account_access ... ok
+test parity_halted_call_with_value_rolls_back_transfer ... ok
+test parity_reverted_deposit ... ok
+test parity_create_deposit ... ok
+test parity_halted_deposit ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/standard_fee.rs (target/debug/deps/standard_fee-e5afc9e149e211eb)
+
+running 3 tests
+test underfunded_caller_is_rejected_not_wrapped ... ok
+test fee_distribution_routes_each_fee_to_its_vault ... ok
+test operator_fee_uses_beryl_calculation ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/standard_fee_parity.rs (target/debug/deps/standard_fee_parity-a49ee1718d63b984)
+
+running 2 tests
+test underfunded_caller_is_rejected_not_wrapped ... ok
+test standard_transaction_fee_distribution_matches_revm ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/transition_hooks.rs (target/debug/deps/transition_hooks-d5a636520b3a8137)
+
+running 8 tests
+test base_time_errors_on_missing_proxy ... ok
+test base_time_is_idempotent_when_already_linked ... ok
+test base_time_errors_on_unexpected_proxy_admin ... ok
+test zenith_is_skipped_before_activation ... ok
+test zenith_does_not_overwrite_existing_code ... ok
+test zenith_plants_stub_on_codeless_nonce_manager ... ok
+test base_time_installs_and_links_implementation_on_denim ... ok
+test base_time_errors_on_codeless_proxy ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/transition_parity.rs (target/debug/deps/transition_parity-522eaad26d0ed1af)
+
+running 2 tests
+test zenith_system_account_stub_matches_revm ... ok
+test base_time_predeploy_matches_revm ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/base_common_l1_fees-97188c408c6df310)
+
+running 5 tests
+test params::tests::data_gas_matches_fjord_reference ... ok
+test params::tests::deposit_and_empty_are_fee_exempt ... ok
+test params::tests::jovian_da_footprint_uses_min_size_and_scalar ... ok
+test params::tests::jovian_da_footprint_zero_without_scalar ... ok
+test params::tests::operator_fee_zero_before_isthmus_scalars ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/base_consensus_derive-3062a9d041a67c55)
+
+running 156 tests
+test attributes::stateful::tests::test_derive_deposits_empty ... ok
+test errors::pipeline::tests::test_pipeline_error_kind_source ... ok
+test attributes::stateful::tests::test_prepare_payload_block_mismatch ... ok
+test errors::pipeline::tests::test_pipeline_error_source ... ok
+test errors::pipeline::tests::test_reset_error_kinds ... ok
+test errors::pipeline::tests::test_pipeline_encoding_error_source ... ok
+test attributes::stateful::tests::test_derive_deposits_decoding_errors ... ok
+test attributes::stateful::tests::test_derive_deposits_non_deposit_contract_addr ... ok
+test errors::sources::tests::test_blob_decoding_error_source ... ok
+test attributes::stateful::tests::test_derive_deposits_succeeds ... ok
+test attributes::stateful::tests::test_prepare_payload_block_mismatch_epoch_reset ... ok
+test errors::sources::tests::test_from_blob_provider_error ... ok
+test pipeline::core::tests::test_derivation_pipeline_flush_channel ... ok
+test attributes::stateful::tests::test_prepare_payload_broken_time_invariant ... ok
+test pipeline::core::tests::test_derivation_pipeline_advance_origin ... ok
+test attributes::stateful::tests::test_derive_deposits_non_deposit_events_filtered_out ... ok
+test pipeline::core::tests::test_derivation_pipeline_initial_reset_walks_back ... ok
+test pipeline::core::tests::test_derivation_pipeline_signal_activation ... ok
+test pipeline::core::tests::test_derivation_pipeline_prepared_attributes ... ok
+test pipeline::core::tests::test_derivation_pipeline_signal_reset_missing_sys_config ... ok
+test pipeline::core::tests::test_pipeline_next_attributes_empty ... ok
+test pipeline::core::tests::test_derivation_pipeline_missing_block ... ok
+test pipeline::core::tests::test_derivation_pipeline_signal_reset_ok ... ok
+test attributes::stateful::tests::test_epoch_update_applies_to_parent_system_config_seed ... ok
+test sources::blob_data::tests::test_blob_data_decode_invalid_encoding_version ... ok
+test attributes::stateful::tests::test_prepare_payload_inserts_base_time_update_at_tx_one ... ok
+test sources::blob_data::tests::test_blob_data_decode_invalid_length ... ok
+test attributes::stateful::tests::test_syscfg_update_error_is_nonfatal ... ok
+test sources::blob_data::tests::test_blob_data_decode_missing_data ... ok
+test pipeline::core::tests::test_pipeline_next_attributes_with_peek ... ok
+test attributes::stateful::tests::test_prepare_payload_uses_denim_formula_for_subsequent_block ... ok
+test attributes::stateful::tests::test_denim_gas_transition_applies_after_l1_system_config_updates ... ok
+test sources::blob_data::tests::test_blob_data_decode_invalid_field_element ... ok
+test sources::blob_data::tests::test_decode_field_element_invalid_field_element ... ok
+test sources::blob_data::tests::test_decode_field_element_missing_data ... ok
+test sources::blob_data::tests::test_decode_field_element ... ok
+test sources::blob_data::tests::test_cannot_fill_empty_calldata ... ok
+test sources::blobs::tests::test_blob_source_pipeline_error ... ok
+test sources::blobs::tests::test_load_blobs_chain_provider_empty_txs ... ok
+test sources::blobs::tests::test_load_blobs_chain_provider_err ... ok
+test sources::blob_data::tests::test_reassemble_bytes ... ok
+test sources::blobs::tests::test_load_blobs_reset_error_preserved ... ok
+test sources::blobs::tests::test_load_blobs_open ... ok
+test sources::blobs::tests::test_open_calldata ... ok
+test sources::blob_data::tests::test_fill_oob_index ... ok
+test sources::blobs::tests::test_open_blob_data_decode_missing_data ... ok
+test sources::blob_data::tests::test_fill_blob ... ok
+test sources::blobs::tests::test_open_empty_data_eof ... ok
+test sources::calldata::tests::test_load_calldata_open ... ok
+test sources::calldata::tests::test_clear_calldata ... ok
+test sources::calldata::tests::test_load_calldata_provider_err ... ok
+test sources::calldata::tests::test_load_calldata_wrong_batch_inbox_address ... ok
+test sources::calldata::tests::test_next_err_loading_calldata ... ok
+test sources::ethereum::tests::test_clear_ethereum_data_source ... ok
+test stages::attributes_queue::tests::test_attributes_queue_flush ... ok
+test stages::attributes_queue::tests::test_attributes_queue_reset ... ok
+test stages::attributes_queue::tests::test_create_next_attributes_bad_parent_hash ... ok
+test stages::attributes_queue::tests::test_next_attributes_load_batch_last_in_span ... ok
+test stages::attributes_queue::tests::test_load_batch_last_in_span ... ok
+test stages::batch::batch_stream::tests::test_batch_stream_reset ... ok
+test stages::batch::batch_stream::tests::test_batch_stream_flush ... ok
+test stages::batch::batch_stream::tests::test_past_span_batch ... ok
+test attributes::stateful::tests::test_prepare_payload_uses_only_exact_parent_system_config_seed ... ok
+test sources::calldata::tests::test_load_calldata_wrong_signer ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_advance_epoch ... ok
+test sources::calldata::tests::test_load_calldata_valid_legacy_tx ... ok
+test stages::batch::batch_stream::tests::test_crossing_span_stops_before_first_denim_block ... ok
+test stages::batch::batch_stream::tests::test_span_buffer ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_next_batch_valid ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_origin_behind_advance ... ok
+test stages::batch::batch_stream::tests::test_span_batch_extraction_error_flushes_stage ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_next_batch_sequence_window_expired ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_origin_behind_startup ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_received_span_batch ... ok
+test sources::blobs::tests::test_missed_beacon_slot_triggers_pipeline_reset ... ok
+test stages::batch::batch_validator::tests::test_denim_validator_retries_then_flushes_unknown_parent ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_next_batch_sequence_window_expired_advance_epoch ... ok
+test sources::blob_data::tests::test_fill_zero_blob ... ok
+test stages::batch::batch_validator::tests::test_denim_validator_skips_same_second_stale_batch ... ok
+test sources::calldata::tests::test_load_calldata_valid_eip2930_tx ... ok
+test sources::blobs::tests::test_load_blobs_not_found_triggers_reset ... ok
+test sources::blobs::tests::test_load_blobs_chain_provider_4844_txs_blob_fetch_error ... ok
+test sources::calldata::tests::test_calldata_source_rejects_old_batcher_after_config_update ... ok
+test sources::blobs::tests::test_extract_blob_data_non_batcher_blobs_excluded ... ok
+test sources::calldata::tests::test_load_calldata_eip7702_tx_ignored ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_origin_behind_eof ... ok
+test sources::calldata::tests::test_load_calldata_chain_provider_empty_txs ... ok
+test sources::ethereum::tests::test_open_blob_source ... ok
+test stages::channel::channel_assembler::tests::test_assembler_non_starting_frame ... ok
+test stages::attributes_queue::tests::test_create_next_attributes_preparation_fails ... ok
+test stages::attributes_queue::tests::test_next_attributes_load_batch_eof ... ok
+test stages::channel::channel_assembler::tests::test_assembler_rejects_out_of_order_frame_holocene ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_l1_origin_mismatch ... ok
+test stages::channel::channel_assembler::tests::test_assembler_channel_timeout ... ok
+test sources::calldata::tests::test_load_calldata_blob_tx_calldata_included ... ok
+test stages::batch::batch_stream::tests::test_single_batch_pass_through ... ok
+test stages::batch::batch_validator::tests::test_batch_validator_origin_behind_drain_prev ... ok
+test stages::attributes_queue::tests::test_load_batch_eof ... ok
+test stages::batch::batch_validator::tests::test_pre_denim_validator_rejects_stale_parent_after_past_prefix ... ok
+test stages::channel::channel_assembler::tests::test_assembler_size_limit_exceeded_fjord ... ok
+test stages::batch::batch_stream::tests::test_batch_stream_flush_channel ... ok
+test stages::attributes_queue::tests::test_create_next_attributes_success ... ok
+test stages::channel::channel_reader::tests::test_next_batch_batch_reader_no_data ... ok
+test stages::channel::channel_assembler::tests::test_assembler_already_built ... ok
+test stages::channel::channel_reader::tests::test_next_batch_batch_reader_set_fails ... ok
+test sources::blob_data::tests::test_blob_data_decode ... ok
+test stages::frame_queue::tests::test_frame_queue_single_frame ... ok
+test stages::frame_queue::tests::test_frame_queue_wrong_derivation_version ... ok
+test stages::channel::channel_reader::tests::test_reset_channel_reader ... ok
+test stages::frame_queue::tests::test_frame_queue_empty_bytes ... ok
+test stages::frame_queue::tests::test_frame_queue_frame_too_short ... ok
+test stages::frame_queue::tests::test_holocene_interleaved_valid_channel ... ok
+test stages::frame_queue::tests::test_frame_queue_no_frames_decoded ... ok
+test stages::frame_queue::tests::test_holocene_non_sequential_frames ... ok
+test stages::frame_queue::tests::test_frame_queue_reset ... ok
+test stages::frame_queue::tests::test_holocene_unclosed_channel ... ok
+test stages::frame_queue::tests::test_holocene_unclosed_channel_with_invalid_start ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_activation_clears_stale_data ... ok
+test stages::frame_queue::tests::test_holocene_valid_frames ... ok
+test stages::frame_queue::tests::test_holocene_interleaved_invalid_channel ... ok
+test stages::frame_queue::tests::test_holocene_unstarted_channel ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_activation_signal ... ok
+test stages::frame_queue::tests::test_frame_queue_multiple_frames ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_da_batcher_sender_override_only_affects_da_filter ... ok
+test stages::frame_queue::tests::test_holocene_replace_channel ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_flush_channel ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_origin ... ok
+test stages::frame_queue::tests::test_holocene_unordered_frames ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_reset_clears_stale_data ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_existing_data_errors ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_reset_signal ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_uses_system_config_batcher_address_by_default ... ok
+test stages::traversal::polling::tests::test_l1_traversal ... ok
+test stages::traversal::polling::tests::test_l1_traversal_missing_blocks ... ok
+test stages::traversal::polling::tests::test_l1_traversal_activation_signal ... ok
+test stages::traversal::polling::tests::test_l1_traversal_missing_receipts ... ok
+test stages::frame_queue::tests::test_holocene_single_frame ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_next_data_l1_block_errors ... ok
+test stages::traversal::polling::tests::test_l1_traversal_reorgs ... ok
+test stages::traversal::polling::tests::test_l1_traversal_batcher_address ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_next_data_respect_next ... ok
+test stages::traversal::polling::tests::test_l1_traversal_reset_signal ... ok
+test types::signals::tests::test_activation_signal ... ok
+test types::signals::tests::test_reset_signal ... ok
+test stages::traversal::polling::tests::test_l1_traversal_system_config_updated ... ok
+test stages::traversal::polling::tests::test_l1_traversal_system_config_update_fails ... ok
+test stages::l1_retrieval::tests::test_l1_retrieval_next_data ... ok
+test stages::traversal::polling::tests::test_l1_traversal_flush_channel ... ok
+test sources::blobs::tests::test_load_blobs_overfill_triggers_reset ... ok
+test sources::blobs::tests::test_load_blobs_chain_provider_4844_txs_succeeds ... ok
+test stages::channel::channel_reader::tests::test_next_batch_batch_reader_not_enough_data ... ok
+test sources::ethereum::tests::test_open_ethereum_calldata_source_pre_ecotone ... ok
+test stages::channel::channel_reader::tests::test_flush_channel_reader ... ok
+test stages::batch::batch_validator::tests::test_denim_validator_does_not_retry_reset_class_ancestry_error ... ok
+test stages::channel::channel_reader::tests::test_next_batch_succeeds ... ok
+test stages::channel::channel_reader::tests::test_flush_post_holocene ... ok
+
+test result: ok. 156 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+     Running unittests src/lib.rs (target/debug/deps/base_consensus_upgrades-9479391355f0d06d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/base_execution_consensus-c7d30845efdc38b3)
+
+running 26 tests
+test validation::isthmus::tests::l2tol1_message_passer_no_withdrawals ... ok
+test validation::tests::test_jovian_blob_gas_used_validation_mismatched ... ok
+test validation::tests::test_get_base_fee_holocene_extra_data_set ... ok
+test validation::tests::test_jovian_base_fee_can_decrease_if_above_min_base_fee ... ok
+test validation::tests::test_jovian_blob_gas_used_validation ... ok
+test validation::tests::test_get_base_fee_holocene_extra_data_not_set ... ok
+test validation::tests::test_get_base_fee_holocene_extra_data_set_base_sepolia ... ok
+test validation::tests::test_jovian_min_base_fee_cannot_decrease ... ok
+test validation::tests::validates_base_time_metadata_only_after_activation ... ok
+test validation::tests::test_get_base_fee_holocene_extra_data_set_and_min_base_fee_set ... ok
+test validation::tests::test_get_base_fee_jovian_default_extra_data_and_min_base_fee ... ok
+test validation::tests::test_get_base_fee_pre_holocene ... ok
+test tests::activated_parent_validation_rejects_timestamp_in_past ... ok
+test validation::tests::test_get_base_fee_jovian_extra_data_and_min_base_fee_not_set ... ok
+test validation::tests::body_against_header_isthmus ... ok
+test validation::tests::accepts_matching_precomputed_receipt_root_after_canyon ... ok
+test validation::tests::rejects_invalid_precomputed_receipt_root_after_canyon ... ok
+test tests::test_header_da_footprint_validation ... ok
+test tests::test_header_min_base_fee_validation ... ok
+test tests::test_isthmus_validate_header_rejects_missing_requests_hash ... ok
+test tests::test_block_blob_gas_used_validation_isthmus ... ok
+test tests::test_isthmus_validate_header_accepts_empty_requests_hash ... ok
+test tests::test_block_blob_gas_used_validation_jovian ... ok
+test tests::test_header_min_base_fee_validation_failure ... ok
+test tests::test_block_blob_gas_used_validation_failure_jovian ... ok
+test tests::test_isthmus_validate_header_rejects_non_empty_requests_hash ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.28s
+
+     Running unittests src/lib.rs (target/debug/deps/base_execution_evm-f2d927c7e306d4af)
+
+running 21 tests
+test config::tests::test_block_number_to_index ... ok
+test config::tests::receipts_by_block_hash ... ok
+test config::tests::test_evm_env_uses_azul_for_genesis_chain_spec ... ok
+test config::tests::test_revert_to ... ok
+test config::tests::test_receipts_len ... ok
+test config::tests::test_extend_execution_outcome ... ok
+test l1::tests::parse_l1_info_jovian ... ok
+test l1::tests::test_verify_set_jovian ... ok
+test config::tests::test_get_logs ... ok
+test config::tests::test_initialization ... ok
+test config::tests::test_split_at_execution_outcome ... ok
+test config::tests::test_receipts_by_block ... ok
+test config::tests::test_fill_cfg_and_block_env ... ok
+test config::tests::test_evm_with_env_inspector_and_spec_id ... ok
+test config::tests::test_evm_with_env_and_default_inspector ... ok
+test config::tests::test_evm_with_env_default_spec ... ok
+test config::tests::test_evm_with_spec_id ... ok
+test config::tests::test_evm_with_env_custom_cfg ... ok
+test config::tests::test_evm_with_env_inspector_and_custom_cfg ... ok
+test config::tests::test_evm_with_env_custom_block_and_tx ... ok
+test config::tests::test_evm_with_env_inspector_and_custom_block_tx ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.91s
+
+     Running tests/block_execution.rs (target/debug/deps/block_execution-79e9edc34018a494)
+
+running 3 tests
+test base_deposit_fields_post_canyon ... ok
+test base_time_timestamp_ms_is_visible_to_user_transaction_in_same_block ... ok
+test base_time_millis_part_is_visible_to_user_transaction_in_same_block ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.74s
+
+     Running unittests src/lib.rs (target/debug/deps/base_proof_executor-9364913ebe734d9f)
+
+running 15 tests
+test builder::env::tests::blob_excess_gas_and_price_is_constant ... ok
+test db::tests::test_block_hash_above_range ... ok
+test db::tests::test_block_hash_below_range ... ok
+test errors::tests::invalid_payload_errors_are_deposit_only_retryable ... ok
+test db::tests::test_block_hash_provider_missing_hash ... ok
+test errors::tests::witness_and_internal_errors_are_not_deposit_only_retryable ... ok
+test db::tests::test_trie_db_root_node_ref ... ok
+test db::tests::test_trie_db_storage_roots ... ok
+test db::tests::test_destroyed_accounts_never_in_trie ... ok
+test db::tests::test_trie_db_take_root_node ... ok
+test db::tests::test_destroyed_accounts_removed_from_trie ... ok
+test db::tests::test_destroyed_changed_new_account_never_in_trie ... ok
+test db::tests::test_destroyed_changed_account_storage_wiped_and_reinserted ... ok
+test db::tests::test_destroyed_changed_account_reinserted ... ok
+test db::tests::test_destroyed_changed_account_zeroing_storage_on_empty_trie ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/lib.rs (target/debug/deps/base_protocol-1751ce644d6843c9)
+
+running 243 tests
+test attributes::tests::count_transactions_counts_undecodable_entries ... ok
+test attributes::tests::is_deposits_only_false_for_deposits_then_legacy_then_eip1559 ... ok
+test attributes::tests::is_deposits_only_false_for_empty_tx_bytes ... ok
+test attributes::tests::is_deposits_only_false_for_user_tx_only ... ok
+test attributes::tests::is_deposits_only_false_for_l1_info_deposit_then_user_tx ... ok
+test attributes::tests::is_deposits_only_false_when_first_tx_is_user_then_deposits ... ok
+test attributes::tests::is_deposits_only_true_for_multiple_deposits ... ok
+test attributes::tests::is_deposits_only_true_for_empty_vec ... ok
+test attributes::tests::is_deposits_only_true_for_none ... ok
+test attributes::tests::is_deposits_only_true_for_single_deposit ... ok
+test attributes::tests::test_attributes_with_parent ... ok
+test attributes::tests::test_attributes_with_parent_as_deposits_multi_deposits ... ok
+test attributes::tests::test_attributes_with_parent_as_deposits_no_txs ... ok
+test attributes::tests::test_attributes_with_parent_as_deposits_only ... ok
+test attributes::tests::test_attributes_with_parent_as_deposits_only_deposits ... ok
+test base_time::tests::base_time_update_rejects_invalid_millis_part ... ok
+test attributes::tests::test_attributes_with_parent_as_deposits_no_deposits ... ok
+test base_time::tests::base_time_update_rejects_non_zero_padding ... ok
+test base_time::tests::base_time_update_roundtrips ... ok
+test base_time::tests::base_time_update_builds_deposit_tx ... ok
+test base_time::tests::validates_timestamp_millis_lattice ... ok
+test base_time::tests::skips_schedule_validation_before_denim ... ok
+test base_time::tests::extracts_timestamp_ms ... ok
+test base_time::tests::extracts_valid_base_time_metadata_at_tx_one ... ok
+test batch::bits::tests::bitlist_big_endian_zero_extended ... ok
+test batch::bits::tests::test_span_bitlist_resize::case_1_bitlist_bitlen_empty_extend ... ok
+test batch::bits::tests::test_span_bitlist_resize::case_2_bitlist_bitlen_extend ... ok
+test batch::bits::tests::test_span_bitlist_resize::case_3_bitlist_bitlen_same ... ok
+test batch::bits::tests::test_static_set_get_bits_span_bitlist ... ok
+test batch::core::tests::test_empty_span_batch ... ok
+test base_time::tests::rejects_missing_or_mispositioned_base_time_metadata ... ok
+test batch::core::tests::test_single_batch_encode_decode ... ok
+test batch::payload::tests::test_decode_block_count ... ok
+test batch::core::tests::test_span_batch_encode_decode ... ok
+test base_time::tests::rejects_invalid_base_time_deposit_calldata ... ok
+test batch::payload::tests::test_decode_block_count_errors ... ok
+test batch::payload::tests::test_decode_origin_bits ... ok
+test batch::payload::tests::test_zero_block_count ... ok
+test batch::payload::tests::test_decode_block_tx_counts ... ok
+test batch::prefix::tests::test_decode_parent_check_truncated_input ... ok
+test batch::prefix::tests::test_span_batch_prefix_encoding_roundtrip ... ok
+test batch::inclusion::tests::test_single_batch_with_inclusion_block ... ok
+test batch::r#type::tests::test_batch_type_rlp_roundtrip ... ok
+test batch::r#type::tests::test_invalid_batch_type ... ok
+test batch::prefix::tests::test_decode_l1_origin_check_truncated_input ... ok
+test batch::inclusion::tests::test_span_batch_with_inclusion_block ... ok
+test batch::reader::tests::test_brotli_unsupported_rejected_at_decompress ... ok
+test base_time::tests::rejects_invalid_base_time_deposit_envelope ... ok
+test batch::raw::tests::test_decode_encode_raw_span_batch ... ok
+test batch::single::tests::test_check_batch_accept_7702_post_isthmus ... ok
+test batch::single::tests::test_check_batch_drop_empty_tx ... ok
+test batch::single::tests::test_check_batch_accept_8130_post_zenith ... ok
+test batch::single::tests::test_check_batch_timestamp_holocene_active_drop ... ok
+test batch::single::tests::test_check_batch_drop_7702_pre_isthmus ... ok
+test batch::single::tests::test_check_batch_timestamp_holocene_inactive_future ... ok
+test batch::single::tests::test_check_batch_drop_8130_pre_zenith ... ok
+test batch::single::tests::test_check_batch_drop_2718_deposit ... ok
+test base_time::tests::validates_denim_block_timestamp_against_absolute_schedule ... ok
+test batch::single::tests::test_parent_hash_mismatch ... ok
+test batch::single::tests::test_roundtrip_encoding ... ok
+test batch::single::tests::test_timestamp_future ... ok
+test batch::span::tests::test_append_empty_singular_batch ... ok
+test batch::span::tests::encode_matches_owned_raw_span_batch ... ok
+test batch::single::tests::test_check_batch_drop_non_empty_jovian_transition ... ok
+test batch::single::tests::test_check_batch_succeeds ... ok
+test batch::single::tests::test_check_batch_timestamp_accepts_same_second_in_denim_era ... ok
+test batch::single::tests::test_check_batch_timestamp_accept ... ok
+test batch::single::tests::test_check_batch_timestamp_pre_denim_unchanged ... ok
+test batch::single::tests::test_check_batch_timestamp_holocene_inactive_drop ... ok
+test batch::single::tests::test_check_batch_timestamp_holocene_active_past ... ok
+test batch::single::tests::test_empty_l1_blocks ... ok
+test batch::span::tests::encode_rejects_empty_span_batch ... ok
+test batch::single::tests::test_check_batch_full_txs ... ok
+test batch::span::tests::test_check_batch_delta_inactive ... ok
+test batch::span::tests::test_check_batch_empty_txs ... ok
+test batch::span::tests::test_check_batch_block_timestamp_lt_l1_origin ... ok
+test batch::span::tests::test_check_batch_epoch_hash_mismatch ... ok
+test batch::span::tests::test_check_batch_exceeds_sequencer_time_drift ... ok
+test batch::span::tests::test_check_batch_exceeds_max_seq_drif ... ok
+test batch::span::tests::test_check_batch_failed_to_fetch_l2_block ... ok
+test batch::span::tests::test_check_batch_misaligned_without_overlap ... ok
+test batch::span::tests::test_check_batch_rejects_eip8130_span_post_zenith ... ok
+test batch::span::tests::test_check_parent_hash ... ok
+test batch::span::tests::test_check_batch_valid_with_genesis_epoch ... ok
+test batch::span::tests::test_check_origin_hash ... ok
+test batch::span::tests::test_check_batch_failed_to_fetch_payload ... ok
+test batch::span::tests::test_check_batch_prefix_rejects_first_denim_block_with_nonzero_genesis ... ok
+test batch::span::tests::test_check_batch_misaligned_timestamp ... ok
+test batch::span::tests::test_check_batch_no_new_blocks ... ok
+test batch::span::tests::test_check_batch_parent_hash_fail ... ok
+test batch::span::tests::test_check_batch_with_eip7702_tx ... ok
+test batch::span::tests::test_check_batch_overlapping_blocks_tx_mismatch ... ok
+test batch::span::tests::test_check_batch_with_eip8130_tx ... ok
+test batch::span::tests::test_check_batch_out_of_order ... ok
+test batch::span::tests::test_check_batch_with_deposit_tx ... ok
+test batch::span::tests::test_check_batch_missing_l1_block_input ... ok
+test batch::span::tests::test_check_sequence_window_expired ... ok
+test batch::span::tests::test_check_batch_overlapping_blocks_tx_count_mismatch ... ok
+test batch::span::tests::test_check_batch_failed_to_extract_l2_block_info ... ok
+test batch::span::tests::test_drop_batch_epoch_too_old ... ok
+test batch::span::tests::test_starting_timestamp ... ok
+test batch::transactions::tests::test_decode_eip8130_proof_rejects_oversized_length ... ok
+test batch::transactions::tests::test_decode_eip8130_proof_truncated_length_prefix ... ok
+test batch::span::tests::test_need_more_l1_blocks ... ok
+test batch::span::tests::test_eager_block_missing_origins ... ok
+test batch::span::tests::test_continuing_with_empty_batch ... ok
+test batch::span::tests::test_overlapped_blocks_origin_mismatch ... ok
+test batch::span::tests::test_peek ... ok
+test batch::span::tests::test_starting_epoch_num ... ok
+test batch::span::tests::test_singular_batches_outdated_l1_origin ... ok
+test batch::span::tests::test_singular_batches_missing_l1_origin ... ok
+test batch::transactions::tests::test_decode_tx_sigs_truncated_input ... ok
+test batch::transactions::tests::test_span_batch_transactions_add_eip2930_tx_wrong_chain_id ... ok
+test batch::span::tests::test_final_timestamp ... ok
+test batch::transactions::tests::test_span_batch_transactions_add_empty_txs ... ok
+test batch::span::tests::test_starting_epoch_too_far_ahead ... ok
+test batch::transactions::tests::test_span_batch_transactions_add_tx::case_2_eip1559 ... ok
+test batch::transactions::tests::test_span_batch_transactions_add_tx::case_1_eip2930 ... ok
+test batch::transactions::tests::test_span_batch_transactions_add_tx::case_3_eip7702 ... ok
+test batch::span::tests::test_overlapped_blocks_origin_outdated ... ok
+test batch::tx_data::eip1559::tests::encode_eip1559_tx_data_roundtrip ... ok
+test batch::tx::tests::test_batch_transaction ... ok
+test batch::transactions::tests::test_decode_tx_tos_truncated_input ... ok
+test batch::tx_data::eip7702::tests::encode_eip7702_tx_data_roundtrip ... ok
+test batch::tx_data::eip2930::tests::encode_eip2930_tx_data_roundtrip ... ok
+test batch::tx_data::eip7702::tests::test_eip7702_to_signed_tx ... ok
+test batch::tx_data::eip8130::tests::decode_rejects_authenticator_actor_mismatch ... ok
+test batch::tx_data::eip8130::tests::encode_eip8130_tx_data_roundtrip ... ok
+test batch::tx_data::legacy::tests::encode_legacy_tx_data_roundtrip ... ok
+test batch::validity::tests::test_batch_drop_reason_display ... ok
+test batch::validity::tests::test_batch_validity ... ok
+test batch::tx_data::eip8130::tests::split_auth_is_inverse_of_join_auth ... ok
+test batch::validity::tests::test_batch_validity_display ... ok
+test batch::validity::tests::test_drop_reason ... ok
+test block::tests::test_block_id_bounds ... ok
+test block::tests::test_block_info_display ... ok
+test batch::transactions::tests::test_span_batch_mixed_eip8130_roundtrip ... ok
+test batch::tx_data::eip8130::tests::split_auth_rejects_short_configured_blob ... ok
+test block::tests::test_from_block_error_partial_eq ... ok
+test block::tests::test_is_parent_of ... ok
+test block::tests::test_from_block ... ok
+test channel::tests::test_channel_accessors ... ok
+test block::tests::test_l2_block_info_invalid_genesis_hash ... ok
+test block::tests::test_rpc_block_into_info ... ok
+test channel::tests::test_frame_validity ... ok
+test deposits::tests::test_decode_deposit_incomplete_data ... ok
+test block::tests::test_from_block_and_genesis ... ok
+test deposits::tests::test_decode_deposit_invalid_first_topic ... ok
+test batch::transactions::tests::test_eip8130_span_batch_roundtrip ... ok
+test deposits::tests::test_decode_deposit_empty_succeeds ... ok
+test deposits::tests::test_decode_deposit_full_succeeds ... ok
+test deposits::tests::test_decode_deposit_invalid_from ... ok
+test deposits::tests::test_decode_deposit_invalid_offset ... ok
+test deposits::tests::test_decode_deposit_invalid_to ... ok
+test deposits::tests::test_decode_deposit_invalid_length ... ok
+test deposits::tests::test_decode_deposit_opaque_data_overflow ... ok
+test deposits::tests::test_decode_deposit_invalid_opaque_data_offset ... ok
+test deposits::tests::test_decode_deposit_unaligned_data ... ok
+test deposits::tests::test_decode_deposit_invalid_version ... ok
+test deposits::tests::test_invalid_opaque_data_length ... ok
+test deposits::tests::test_invalid_opaque_data_padding ... ok
+test deposits::tests::test_decode_deposit_padded_overflow ... ok
+test deposits::tests::test_opaque_data_padding_overflow ... ok
+test deposits::tests::test_unmarshal_deposit_version0_invalid_len ... ok
+test deposits::tests::test_unmarshal_v0 ... ok
+test frame::tests::test_data_too_short ... ok
+test frame::tests::test_decode_malicious_data_len ... ok
+test frame::tests::test_decode_many ... ok
+test frame::tests::test_encode_frame_roundtrip ... ok
+test info::bedrock::tests::test_decode_calldata_bedrock_invalid_length ... ok
+test info::bedrock::tests::test_l1_block_info_bedrock_roundtrip_calldata_encoding ... ok
+test info::ecotone::tests::test_decode_calldata_ecotone_invalid_length ... ok
+test info::ecotone::tests::test_l1_block_info_ecotone_roundtrip_calldata_encoding ... ok
+test info::isthmus::tests::test_decode_calldata_isthmus_invalid_length ... ok
+test info::jovian::tests::test_decode_calldata_jovian_invalid_length ... ok
+test info::isthmus::tests::test_l1_block_info_isthmus_roundtrip_calldata_encoding ... ok
+test info::jovian::tests::test_l1_block_info_jovian_roundtrip_calldata_encoding ... ok
+test info::jovian::tests::test_function_selector ... ok
+test info::variant::tests::test_batcher_address ... ok
+test info::variant::tests::test_bedrock_l1_block_info_tx_roundtrip ... ok
+test info::variant::tests::test_blob_base_fee ... ok
+test info::variant::tests::test_blob_base_fee_scalar ... ok
+test info::variant::tests::test_decode_calldata_invalid_selector ... ok
+test info::variant::tests::test_ecotone_l1_block_info_tx_roundtrip ... ok
+test info::variant::tests::test_empty_scalars ... ok
+test info::variant::tests::test_isthmus_l1_block_info_tx_roundtrip ... ok
+test info::variant::tests::test_l1_base_fee ... ok
+test info::variant::tests::test_l1_block_info_id ... ok
+test info::variant::tests::test_l1_block_info_missing_selector ... ok
+test info::variant::tests::test_l1_block_info_sequence_number ... ok
+test info::variant::tests::test_l1_block_info_tx_block_hash ... ok
+test info::variant::tests::test_l1_block_info_tx_invalid_len ... ok
+test frame::tests::test_decode_exceeds_max_data_len ... ok
+test info::variant::tests::test_l1_block_info_with_sequence_number ... ok
+test info::variant::tests::test_l1_fee_overhead ... ok
+test info::variant::tests::test_l1_fee_scalar ... ok
+test info::variant::tests::test_operator_fee_constant ... ok
+test info::variant::tests::test_operator_fee_scalar ... ok
+test info::variant::tests::test_try_new_latest_same_second_boundary_uses_jovian ... ok
+test info::variant::tests::test_try_new_latest_scalars ... ok
+test info::variant::tests::test_try_new_latest_uses_live_pectra_blob_schedule ... ok
+test batch::bits::tests::test_span_bitlist_bitlen ... ok
+test info::variant::tests::test_try_new_latest_with_optional_prague_fee_fork::case_1_fork_active ... ok
+test info::variant::tests::test_try_new_latest_before_pectra_blob_schedule ... ok
+test output_root::tests::test_decode_output_root ... ok
+test output_root::tests::test_decode_output_root_bad_version ... ok
+test output_root::tests::test_decode_output_root_wrong_length ... ok
+test output_root::tests::test_encode_output_root ... ok
+test sync::tests::test_sync_status_eq ... ok
+test info::variant::tests::test_try_new_latest_honors_runtime_pectra_blob_schedule ... ok
+test sync::tests::test_sync_status_clone ... ok
+test info::variant::tests::test_try_new_latest_with_optional_prague_fee_fork::case_2_fork_inactive ... ok
+test sync::tests::test_sync_status_default ... ok
+test output_root::tests::test_hash_output_root ... ok
+test info::variant::tests::test_try_new_latest_fields ... ok
+test info::variant::tests::test_try_new_with_deposit_tx ... ok
+test utils::tests::test_read_tx_data_truncated_payload ... ok
+test utils::tests::test_read_tx_data_exceeds_max_span_batch_elements ... ok
+test info::variant::tests::test_try_new_latest_with_optional_prague_fee_fork::case_4_fork_inactive_wrong_params - should panic ... ok
+test info::variant::tests::test_try_new_latest_with_optional_prague_fee_fork::case_3_fork_active_wrong_params - should panic ... ok
+test utils::tests::test_to_system_config_malformed_payload_transaction ... ok
+test utils::tests::test_to_system_config_from_genesis ... ok
+test utils::tests::test_to_system_config_invalid_genesis_hash ... ok
+test utils::tests::test_constructs_jovian_system_config_from_payload ... ok
+test utils::tests::test_to_system_config_missing_system_config_genesis ... ok
+test utils::tests::test_to_system_config_empty_txs ... ok
+test utils::tests::test_constructs_isthmus_system_config ... ok
+test utils::tests::test_constructs_ecotone_system_config ... ok
+test utils::tests::test_to_system_config_non_deposit ... ok
+test utils::tests::test_constructs_bedrock_system_config ... ok
+test batch::bits::tests::test_span_bitlist_bitlen_shrink ... ok
+test batch::reader::tests::test_brotli_supported_attempts_brotli_decode ... ok
+test batch::span::tests::test_check_batches_is_empty ... ok
+test brotli::tests::test_brotli_decompress ... ok
+test brotli::tests::test_decompress_batch_brotli ... ok
+test brotli::tests::test_brotli_truncation_instead_of_rejection ... ok
+test batch::reader::tests::test_zlib_truncation_instead_of_rejection ... ok
+test brotli::tests::test_brotli_buffer_doubling_regression ... ok
+test batch::element::tests::test_span_batch_element_from_single_batch ... ok
+test batch::bits::tests::test_encode_decode_roundtrip_span_bitlist ... ok
+test batch::reader::tests::test_batch_reader_fjord ... ok
+test batch::reader::tests::test_batch_reader ... ok
+test batch::reader::tests::test_zlib_truncation_yields_decodable_batches ... ok
+
+test result: ok. 243 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.26s
+
+   Doc-tests base_common_evm
+
+running 1 test
+test crates/common/evm/src/../README.md - (line 23) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.09s; merged doctests compilation took 0.09s
+   Doc-tests base_common_evm2
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests base_common_l1_fees
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests base_consensus_derive
+
+running 3 tests
+test crates/consensus/derive/src/../README.md - (line 21) ... ignored
+test crates/consensus/derive/src/errors/pipeline.rs - errors::pipeline::PipelineError::crit (line 282) ... ignored
+test crates/consensus/derive/src/errors/pipeline.rs - errors::pipeline::PipelineError::temp (line 302) ... ignored
+
+test result: ok. 0 passed; 0 failed; 3 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.08s; merged doctests compilation took 0.08s
+   Doc-tests base_consensus_upgrades
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests base_execution_consensus
+
+running 1 test
+test crates/execution/consensus/src/../README.md - (line 21) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.08s; merged doctests compilation took 0.08s
+   Doc-tests base_execution_evm
+
+running 1 test
+test crates/execution/evm/src/../README.md - (line 22) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.09s; merged doctests compilation took 0.09s
+   Doc-tests base_proof_executor
+
+running 1 test
+test crates/proof/executor/src/../README.md - (line 25) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.09s; merged doctests compilation took 0.09s
+   Doc-tests base_protocol
+
+running 1 test
+test crates/consensus/protocol/src/../README.md - (line 24) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+all doctests ran in 0.08s; merged doctests compilation took 0.08s

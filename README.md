@@ -18,11 +18,12 @@ path: freeze a reviewed implementation, route its history to a pinned worker, mi
 consumers, then remove superseded host code. History stays executable; the current implementation
 has less historical behavior to maintain.
 
-The [bounded source audit](docs/history-deletion.md) identifies **60 gross production lines** as
-pre-Isthmus extraction candidates and **96 more conditional lines** requiring a wider boundary.
-Dedicated tests are separate (105 candidate / 392 conditional lines). **Zero legacy lines have
-been removed today.** These are physical-line inventories at the pinned Base revision, not net
-savings or a whole-trunk estimate. Source-copy pruning is not historical-logic retirement.
+A [fresh-clone deletion experiment](docs/retirement.md) removes **5,907 net Rust lines** from Base:
+**2,743 production + 3,164 test/benchmark lines**, including comments and blanks. The actual diff,
+per-file counts and checks are published. This Beryl-and-later candidate retires historical
+execution **and derivation**, with a conditional native-proof reduction; realizing it requires
+additional historical dispatch beyond this demo. It is not safe for historical replay and is
+**not applied to the running demo**. Source-copy pruning is not counted as history retirement.
 
 ## Status
 

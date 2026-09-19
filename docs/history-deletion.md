@@ -1,8 +1,12 @@
 # Conditional pre-Isthmus extraction candidates
 
+> Archived narrow audit. The [fresh-clone deletion experiment](retirement.md) supersedes this
+> as the repository-wide sizing exercise. These old counts cover a smaller horizon and scope;
+> do not add them to the new diff totals.
+
 ## Result
 
-No source has been removed: **actual removed = 0 lines**.
+At the time of this range audit, no source had been removed: **actual removed = 0 lines**.
 
 Against the frozen revision below, this bounded audit found **60 gross production lines** that are
 plausible pre-Isthmus-only extraction candidates. It separately identifies **105 gross lines of

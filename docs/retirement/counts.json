@@ -1,0 +1,1097 @@
+{
+  "base": "c8701553d151e3baf6bbe15712c8b95f2bfe7bbe",
+  "candidate": "266499898288a0b8a6168fe0d86483372a803f62",
+  "candidate_tree": "6d7bce3adb4947a41c6d9d4544415ca0a35a4153",
+  "patch_sha256": "abeb3b9305e47bb9b3c060e773ea1042d7470210dcc92b69801e2e6887d57688",
+  "counting": "Physical diff lines, including comments/blanks. Rust syntax under cfg(test), test_utils, tests and benches is separate. Not integration-adjusted savings; no historical worker added by this patch.",
+  "totals": {
+    "docs_and_build_metadata": {
+      "added": 19,
+      "removed": 52,
+      "net_removed": 33
+    },
+    "rust_production": {
+      "added": 260,
+      "removed": 3003,
+      "net_removed": 2743
+    },
+    "rust_tests_and_benches": {
+      "added": 211,
+      "removed": 3375,
+      "net_removed": 3164
+    },
+    "embedded_artifacts": {
+      "added": 0,
+      "removed": 27,
+      "net_removed": 27
+    }
+  },
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "counts": {
+        "docs_and_build_metadata": {
+          "added": 0,
+          "removed": 8
+        }
+      },
+      "bytes_removed_net": 147
+    },
+    {
+      "path": "crates/common/evm/src/canyon.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 52
+        }
+      },
+      "bytes_removed_net": 5417
+    },
+    {
+      "path": "crates/common/evm/src/executor/block_executor.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 33
+        }
+      },
+      "bytes_removed_net": 1174
+    },
+    {
+      "path": "crates/common/evm/src/handler.rs",
+      "counts": {
+        "rust_production": {
+          "added": 6,
+          "removed": 14
+        },
+        "rust_tests_and_benches": {
+          "added": 31,
+          "removed": 96
+        }
+      },
+      "bytes_removed_net": 2598
+    },
+    {
+      "path": "crates/common/evm/src/l1block.rs",
+      "counts": {
+        "rust_production": {
+          "added": 12,
+          "removed": 53
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 182
+        }
+      },
+      "bytes_removed_net": 9548
+    },
+    {
+      "path": "crates/common/evm/src/lib.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 3
+        }
+      },
+      "bytes_removed_net": 54
+    },
+    {
+      "path": "crates/common/evm/src/zenith.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 4
+        }
+      },
+      "bytes_removed_net": 153
+    },
+    {
+      "path": "crates/common/evm2/src/canyon.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 62
+        }
+      },
+      "bytes_removed_net": 5581
+    },
+    {
+      "path": "crates/common/evm2/src/executor.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 25
+        }
+      },
+      "bytes_removed_net": 906
+    },
+    {
+      "path": "crates/common/evm2/src/handler.rs",
+      "counts": {
+        "rust_production": {
+          "added": 2,
+          "removed": 11
+        }
+      },
+      "bytes_removed_net": 474
+    },
+    {
+      "path": "crates/common/evm2/src/lib.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 3
+        }
+      },
+      "bytes_removed_net": 37
+    },
+    {
+      "path": "crates/common/evm2/src/precompiles.rs",
+      "counts": {
+        "rust_production": {
+          "added": 25,
+          "removed": 102
+        },
+        "rust_tests_and_benches": {
+          "added": 15,
+          "removed": 55
+        }
+      },
+      "bytes_removed_net": 5077
+    },
+    {
+      "path": "crates/common/evm2/src/registry.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 6,
+          "removed": 16
+        }
+      },
+      "bytes_removed_net": 720
+    },
+    {
+      "path": "crates/common/evm2/src/transition.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 9
+    },
+    {
+      "path": "crates/common/evm2/tests/block_execution.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 6,
+          "removed": 33
+        }
+      },
+      "bytes_removed_net": 1161
+    },
+    {
+      "path": "crates/common/evm2/tests/block_hooks.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 11,
+          "removed": 44
+        }
+      },
+      "bytes_removed_net": 1488
+    },
+    {
+      "path": "crates/common/evm2/tests/block_parity.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 1,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 44
+    },
+    {
+      "path": "crates/common/evm2/tests/deposit_parity.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 3,
+          "removed": 4
+        }
+      },
+      "bytes_removed_net": 200
+    },
+    {
+      "path": "crates/common/evm2/tests/standard_fee.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 14,
+          "removed": 49
+        }
+      },
+      "bytes_removed_net": 1800
+    },
+    {
+      "path": "crates/common/evm2/tests/standard_fee_parity.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 3,
+          "removed": 7
+        }
+      },
+      "bytes_removed_net": 350
+    },
+    {
+      "path": "crates/common/evm2/tests/transition_hooks.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 3,
+          "removed": 37
+        }
+      },
+      "bytes_removed_net": 1516
+    },
+    {
+      "path": "crates/common/evm2/tests/transition_parity.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 4,
+          "removed": 28
+        }
+      },
+      "bytes_removed_net": 1082
+    },
+    {
+      "path": "crates/common/genesis/src/rollup.rs",
+      "counts": {
+        "rust_production": {
+          "added": 4,
+          "removed": 12
+        }
+      },
+      "bytes_removed_net": 225
+    },
+    {
+      "path": "crates/common/l1-fees/README.md",
+      "counts": {
+        "docs_and_build_metadata": {
+          "added": 2,
+          "removed": 2
+        }
+      },
+      "bytes_removed_net": 0
+    },
+    {
+      "path": "crates/common/l1-fees/src/lib.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 4
+        }
+      },
+      "bytes_removed_net": 67
+    },
+    {
+      "path": "crates/common/l1-fees/src/params.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 64
+        },
+        "rust_tests_and_benches": {
+          "added": 4,
+          "removed": 12
+        }
+      },
+      "bytes_removed_net": 2989
+    },
+    {
+      "path": "crates/consensus/derive/Cargo.toml",
+      "counts": {
+        "docs_and_build_metadata": {
+          "added": 0,
+          "removed": 13
+        }
+      },
+      "bytes_removed_net": 269
+    },
+    {
+      "path": "crates/consensus/derive/benches/batch_queue.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 49
+        }
+      },
+      "bytes_removed_net": 1702
+    },
+    {
+      "path": "crates/consensus/derive/benches/batch_queue_iai.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 60
+        }
+      },
+      "bytes_removed_net": 2494
+    },
+    {
+      "path": "crates/consensus/derive/src/attributes/stateful.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 44
+        },
+        "rust_tests_and_benches": {
+          "added": 9,
+          "removed": 5
+        }
+      },
+      "bytes_removed_net": 1075
+    },
+    {
+      "path": "crates/consensus/derive/src/lib.rs",
+      "counts": {
+        "rust_production": {
+          "added": 4,
+          "removed": 4
+        }
+      },
+      "bytes_removed_net": 77
+    },
+    {
+      "path": "crates/consensus/derive/src/pipeline/builder.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 7
+        }
+      },
+      "bytes_removed_net": -41
+    },
+    {
+      "path": "crates/consensus/derive/src/pipeline/core.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 3,
+          "removed": 3
+        }
+      },
+      "bytes_removed_net": 60
+    },
+    {
+      "path": "crates/consensus/derive/src/pipeline/types.rs",
+      "counts": {
+        "rust_production": {
+          "added": 3,
+          "removed": 3
+        }
+      },
+      "bytes_removed_net": -4
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/batch/batch_provider.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 207
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 245
+        }
+      },
+      "bytes_removed_net": 18036
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/batch/batch_queue.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 500
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 732
+        }
+      },
+      "bytes_removed_net": 50802
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/batch/batch_stream.rs",
+      "counts": {
+        "rust_production": {
+          "added": 5,
+          "removed": 29
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 34
+        }
+      },
+      "bytes_removed_net": 2432
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/batch/batch_validator.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 70,
+          "removed": 0
+        }
+      },
+      "bytes_removed_net": -2829
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/batch/mod.rs",
+      "counts": {
+        "rust_production": {
+          "added": 4,
+          "removed": 7
+        }
+      },
+      "bytes_removed_net": 8
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/channel/channel_assembler.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 5
+        },
+        "rust_tests_and_benches": {
+          "added": 1,
+          "removed": 0
+        }
+      },
+      "bytes_removed_net": 145
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/channel/channel_bank.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 261
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 343
+        }
+      },
+      "bytes_removed_net": 24633
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/channel/channel_provider.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 187
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 212
+        }
+      },
+      "bytes_removed_net": 15677
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/channel/channel_reader.rs",
+      "counts": {
+        "rust_production": {
+          "added": 2,
+          "removed": 10
+        }
+      },
+      "bytes_removed_net": 377
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/channel/mod.rs",
+      "counts": {
+        "rust_production": {
+          "added": 6,
+          "removed": 9
+        }
+      },
+      "bytes_removed_net": 106
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/frame_queue.rs",
+      "counts": {
+        "rust_production": {
+          "added": 4,
+          "removed": 10
+        },
+        "rust_tests_and_benches": {
+          "added": 1,
+          "removed": 0
+        }
+      },
+      "bytes_removed_net": 135
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/mod.rs",
+      "counts": {
+        "rust_production": {
+          "added": 5,
+          "removed": 20
+        }
+      },
+      "bytes_removed_net": 491
+    },
+    {
+      "path": "crates/consensus/derive/src/stages/traversal/polling.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 10
+        }
+      },
+      "bytes_removed_net": 576
+    },
+    {
+      "path": "crates/consensus/protocol/src/info/variant.rs",
+      "counts": {
+        "rust_production": {
+          "added": 22,
+          "removed": 82
+        },
+        "rust_tests_and_benches": {
+          "added": 24,
+          "removed": 20
+        }
+      },
+      "bytes_removed_net": 2166
+    },
+    {
+      "path": "crates/consensus/upgrades/Cargo.toml",
+      "counts": {
+        "docs_and_build_metadata": {
+          "added": 4,
+          "removed": 15
+        }
+      },
+      "bytes_removed_net": 412
+    },
+    {
+      "path": "crates/consensus/upgrades/README.md",
+      "counts": {
+        "docs_and_build_metadata": {
+          "added": 9,
+          "removed": 14
+        }
+      },
+      "bytes_removed_net": -138
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ecotone_tx_0.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 2886
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ecotone_tx_1.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 8244
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ecotone_tx_2.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 242
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ecotone_tx_3.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 243
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ecotone_tx_4.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 181
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ecotone_tx_5.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 346
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/eip2935_isthmus.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 185
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/eip4788_ecotone.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 213
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/fjord_tx_0.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 12470
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/fjord_tx_1.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 242
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/fjord_tx_2.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 180
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/gpo_ecotone.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 8107
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/gpo_fjord.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 12333
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/gpo_isthmus.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 14521
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_0.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 3622
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_1.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 14658
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_2.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 4534
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_3.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 242
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_4.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 242
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_5.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 242
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_6.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 180
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/isthmus_tx_7.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 318
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/jovian-gas-price-oracle-deployment.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 15762
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/jovian-l1-block-deployment.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 3692
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/l1_block_ecotone.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 2749
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/l1_block_isthmus.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 3485
+    },
+    {
+      "path": "crates/consensus/upgrades/src/bytecode/ofv_isthmus.hex",
+      "counts": {
+        "embedded_artifacts": {
+          "added": 0,
+          "removed": 1
+        }
+      },
+      "bytes_removed_net": 4397
+    },
+    {
+      "path": "crates/consensus/upgrades/src/ecotone.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 184
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 50
+        }
+      },
+      "bytes_removed_net": 9709
+    },
+    {
+      "path": "crates/consensus/upgrades/src/fjord.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 111
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 43
+        }
+      },
+      "bytes_removed_net": 5885
+    },
+    {
+      "path": "crates/consensus/upgrades/src/forks.rs",
+      "counts": {
+        "rust_production": {
+          "added": 17,
+          "removed": 22
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 22
+        }
+      },
+      "bytes_removed_net": 769
+    },
+    {
+      "path": "crates/consensus/upgrades/src/isthmus.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 225
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 54
+        }
+      },
+      "bytes_removed_net": 11402
+    },
+    {
+      "path": "crates/consensus/upgrades/src/jovian.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 149
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 43
+        }
+      },
+      "bytes_removed_net": 7380
+    },
+    {
+      "path": "crates/consensus/upgrades/src/lib.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 45
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 2
+        }
+      },
+      "bytes_removed_net": 1262
+    },
+    {
+      "path": "crates/consensus/upgrades/src/test_utils.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 61
+        }
+      },
+      "bytes_removed_net": 2403
+    },
+    {
+      "path": "crates/consensus/upgrades/src/utils.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 20
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 27
+        }
+      },
+      "bytes_removed_net": 1466
+    },
+    {
+      "path": "crates/execution/consensus/src/lib.rs",
+      "counts": {
+        "rust_production": {
+          "added": 29,
+          "removed": 61
+        },
+        "rust_tests_and_benches": {
+          "added": 1,
+          "removed": 156
+        }
+      },
+      "bytes_removed_net": 7385
+    },
+    {
+      "path": "crates/execution/consensus/src/proof.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 59
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 426
+        }
+      },
+      "bytes_removed_net": 26617
+    },
+    {
+      "path": "crates/execution/consensus/src/validation/canyon.rs",
+      "counts": {
+        "rust_production": {
+          "added": 0,
+          "removed": 41
+        }
+      },
+      "bytes_removed_net": 1354
+    },
+    {
+      "path": "crates/execution/consensus/src/validation/mod.rs",
+      "counts": {
+        "rust_production": {
+          "added": 11,
+          "removed": 52
+        },
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 33
+        }
+      },
+      "bytes_removed_net": 2945
+    },
+    {
+      "path": "crates/execution/evm/src/build.rs",
+      "counts": {
+        "rust_production": {
+          "added": 12,
+          "removed": 35
+        }
+      },
+      "bytes_removed_net": 833
+    },
+    {
+      "path": "crates/execution/evm/src/l1.rs",
+      "counts": {
+        "rust_production": {
+          "added": 2,
+          "removed": 18
+        },
+        "rust_tests_and_benches": {
+          "added": 1,
+          "removed": 127
+        }
+      },
+      "bytes_removed_net": 7801
+    },
+    {
+      "path": "crates/execution/evm/tests/block_execution.rs",
+      "counts": {
+        "rust_tests_and_benches": {
+          "added": 0,
+          "removed": 64
+        }
+      },
+      "bytes_removed_net": 2013
+    },
+    {
+      "path": "crates/execution/flashblocks/src/state_builder.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 6
+        }
+      },
+      "bytes_removed_net": 186
+    },
+    {
+      "path": "crates/proof/executor/README.md",
+      "counts": {
+        "docs_and_build_metadata": {
+          "added": 4,
+          "removed": 0
+        }
+      },
+      "bytes_removed_net": -293
+    },
+    {
+      "path": "crates/proof/executor/src/builder/assemble.rs",
+      "counts": {
+        "rust_production": {
+          "added": 10,
+          "removed": 56
+        }
+      },
+      "bytes_removed_net": 1864
+    },
+    {
+      "path": "crates/proof/executor/src/builder/env.rs",
+      "counts": {
+        "rust_production": {
+          "added": 8,
+          "removed": 35
+        }
+      },
+      "bytes_removed_net": 1460
+    },
+    {
+      "path": "crates/proof/executor/src/util.rs",
+      "counts": {
+        "rust_production": {
+          "added": 1,
+          "removed": 46
+        }
+      },
+      "bytes_removed_net": 1662
+    }
+  ]
+}

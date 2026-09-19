@@ -1,0 +1,763 @@
+    Checking libc v0.2.188
+    Checking serde_core v1.0.229
+    Checking zeroize v1.9.0
+    Checking portable-atomic v1.14.0
+    Checking once_cell v1.21.4
+    Checking subtle v2.6.1
+    Checking generic-array v0.14.7
+    Checking log v0.4.33
+    Checking getrandom v0.2.17
+    Checking memchr v2.8.3
+    Checking rand_core v0.6.4
+    Checking crypto-common v0.1.7
+    Checking block-buffer v0.10.4
+    Checking serde v1.0.229
+    Checking digest v0.10.7
+    Checking thiserror v2.0.19
+    Checking getrandom v0.3.4
+    Checking hashbrown v0.17.1
+    Checking tracing-core v0.1.36
+    Checking bytes v1.12.1
+    Checking smallvec v1.15.2
+    Checking tracing v0.1.44
+    Checking rand_core v0.9.5
+    Checking indexmap v2.14.0
+    Checking sha2 v0.10.9
+    Checking rand_chacha v0.9.0
+    Checking rand v0.9.5
+    Checking der v0.7.10
+    Checking hmac v0.12.1
+    Checking serdect v0.2.0
+    Checking signature v2.2.0
+    Checking ff v0.13.1
+    Checking crypto-bigint v0.5.5
+    Checking group v0.13.0
+    Checking spki v0.7.3
+    Checking rfc6979 v0.4.0
+    Checking pkcs8 v0.10.2
+    Checking lock_api v0.4.14
+    Checking sec1 v0.7.3
+    Checking rand_core v0.10.1
+   Compiling getrandom v0.4.3
+    Checking parking_lot_core v0.9.12
+    Checking arrayvec v0.7.8
+    Checking derive_more v2.1.1
+    Checking const-hex v1.19.1
+    Checking elliptic-curve v0.13.8
+    Checking alloy-rlp v0.3.16
+    Checking either v1.16.0
+    Checking rand_chacha v0.3.1
+    Checking ecdsa v0.16.9
+    Checking rand v0.8.7
+    Checking serde_json v1.0.151
+    Checking k256 v0.13.4
+    Checking ruint v1.19.0
+    Checking secp256k1 v0.31.1
+   Compiling num-traits v0.2.19
+    Checking parking_lot v0.12.5
+    Checking futures-core v0.3.33
+    Checking alloy-primitives v1.6.1
+   Compiling darling_core v0.23.0
+    Checking bitflags v2.13.1
+    Checking errno v0.3.14
+    Checking signal-hook-registry v1.4.8
+    Checking mio v1.2.2
+    Checking socket2 v0.6.5
+    Checking slab v0.4.12
+    Checking tokio v1.53.1
+    Checking futures-channel v0.3.33
+    Checking futures-io v0.3.33
+    Checking futures-task v0.3.33
+    Checking futures-util v0.3.33
+   Compiling darling_macro v0.23.0
+   Compiling darling v0.23.0
+   Compiling serde_with_macros v3.21.0
+    Checking serde_with v3.21.0
+    Checking itertools v0.14.0
+    Checking alloy-eip7928 v0.4.5
+    Checking percent-encoding v2.3.2
+    Checking alloy-eip7702 v0.6.3
+    Checking alloy-eip2930 v0.2.3
+    Checking num_cpus v1.17.0
+    Checking threadpool v1.8.1
+    Checking secp256k1-sys v0.10.1
+   Compiling c-kzg v2.1.8
+    Checking blst v0.3.16
+    Checking secp256k1 v0.30.0
+    Checking alloy-eip2124 v0.2.0
+    Checking aws-lc-sys v0.43.0
+    Checking ethereum_serde_utils v0.8.1
+    Checking untrusted v0.7.1
+    Checking ethereum_ssz v0.10.4
+    Checking aws-lc-rs v1.17.3
+   Compiling ethereum_ssz_derive v0.10.4
+    Checking alloy-serde v2.4.1
+    Checking alloy-eips v2.4.1
+    Checking nybbles v0.4.8
+    Checking alloy-trie v0.9.5
+    Checking icu_normalizer v2.0.1
+   Compiling alloy-sol-type-parser v1.6.1
+    Checking winnow v1.0.4
+   Compiling alloy-json-abi v1.6.1
+    Checking idna_adapter v1.2.1
+    Checking form_urlencoded v1.2.2
+   Compiling alloy-tx-macros v2.4.1
+    Checking idna v1.1.0
+   Compiling alloy-sol-macro-input v1.6.1
+   Compiling alloy-sol-macro-expander v1.6.1
+    Checking alloy-consensus v2.4.1
+    Checking url v2.5.8
+   Compiling zstd-sys v2.0.16+zstd.1.5.7
+    Checking ahash v0.8.12
+    Checking num-integer v0.1.46
+    Checking num-bigint v0.4.8
+   Compiling alloy-sol-macro v1.6.1
+    Checking alloy-sol-types v1.6.1
+   Compiling zstd-safe v7.2.4
+    Checking tokio-util v0.7.19
+    Checking bitvec v1.1.1
+    Checking futures-executor v0.3.33
+    Checking revm-primitives v42.0.0
+    Checking alloy-network-primitives v2.4.1
+    Checking alloy-consensus-any v2.4.1
+    Checking nonmax v0.5.5
+    Checking alloy-rpc-types-eth v2.4.1
+    Checking revm-bytecode v42.0.0
+    Checking revm-state v42.0.0
+    Checking crossbeam-epoch v0.9.20
+    Checking futures v0.3.33
+    Checking hashbrown v0.14.5
+    Checking ark-std v0.6.0
+    Checking http v1.4.2
+    Checking ark-serialize v0.6.0
+   Compiling ark-ff-macros v0.6.0
+    Checking alloy-genesis v2.4.1
+    Checking dashmap v6.2.1
+    Checking revm-database-interface v42.0.0
+    Checking ark-ff v0.6.0
+    Checking revm-context-interface v42.0.0
+    Checking num-rational v0.4.2
+    Checking num-iter v0.1.46
+    Checking raw-cpuid v11.6.0
+    Checking num-complex v0.4.6
+    Checking parity-scale-codec v3.7.5
+    Checking num v0.4.3
+    Checking quanta v0.12.6
+    Checking crossbeam-deque v0.8.7
+    Checking primeorder v0.13.6
+    Checking ark-poly v0.6.0
+    Checking p256 v0.13.2
+    Checking rayon-core v1.13.0
+    Checking ark-ec v0.6.0
+    Checking aurora-engine-modexp v1.2.0
+    Checking revm-context v42.0.0
+    Checking rayon v1.12.0
+    Checking ark-bls12-381 v0.6.0
+    Checking zstd v0.13.3
+    Checking reth-zstd-compressors v0.6.0
+    Checking reth-codecs v0.6.0
+    Checking ark-bn254 v0.6.0
+    Checking revm-interpreter v42.0.0
+    Checking revm-precompile v42.0.1
+    Checking reth-primitives-traits v0.6.0
+    Checking curve25519-dalek v4.1.3
+    Checking revm-handler v42.0.1
+    Checking revm-database v42.0.0
+    Checking revm-inspector v42.0.1
+    Checking ed25519 v2.2.3
+    Checking pin-project v1.1.13
+    Checking ed25519-dalek v2.2.0
+    Checking alloy-chains v0.2.36
+    Checking revm v42.0.1
+    Checking tokio-stream v0.1.18
+    Checking alloy-hardforks v0.4.7
+    Checking ipnet v2.12.0
+    Checking fnv v1.0.7
+    Checking colorchoice v1.0.5
+    Checking anstyle v1.0.14
+    Checking utf8parse v0.2.2
+    Checking anstyle-query v1.1.5
+    Checking anstyle-parse v1.0.0
+    Checking is_terminal_polyfill v1.70.2
+    Checking reth-trie-common v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking keccak v0.1.6
+    Checking anstream v1.0.0
+    Checking strsim v0.11.1
+    Checking clap_lex v1.1.0
+    Checking sha3 v0.10.9
+    Checking clap_builder v4.6.5
+    Checking time-core v0.1.9
+    Checking powerfmt v0.2.0
+    Checking rustc-hash v2.1.3
+    Checking deranged v0.5.8
+    Checking num-conv v0.2.2
+    Checking alloy-evm v0.38.0
+    Checking time v0.3.55
+    Checking clap v4.6.5
+   Compiling ring v0.17.14
+    Checking reth-stages-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-ethereum-primitives v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-static-file-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking enr v0.13.0
+    Checking reth-prune-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking untrusted v0.9.0
+    Checking httparse v1.10.1
+    Checking reth-storage-errors v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking simple_asn1 v0.6.4
+    Checking pem v3.0.6
+    Checking tower-service v0.3.3
+    Checking tower-layer v0.3.3
+    Checking jsonwebtoken v10.4.0
+    Checking reth-network-peers v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking openssl-probe v0.2.1
+    Checking http-body v1.1.0
+    Checking reth-ethereum-forks v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking hdrhistogram v7.6.0
+    Checking alloy-rpc-types-engine v2.4.1
+    Checking sync_wrapper v1.0.2
+    Checking rustls-pki-types v1.15.0
+    Checking tower v0.5.3
+    Checking reth-chainspec v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-db-models v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking http-body-util v0.1.4
+    Checking reth-db-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-execution-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking atomic-waker v1.1.2
+    Checking try-lock v0.2.5
+    Checking httpdate v1.0.3
+   Compiling rustls v0.23.43
+    Checking want v0.3.1
+    Checking h2 v0.4.15
+    Checking brotli v8.0.4
+    Checking rustls-native-certs v0.8.4
+    Checking reth-execution-errors v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking sha1_smol v1.0.1
+    Checking uuid v1.24.0
+    Checking reth-metrics v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking hyper v1.11.0
+    Checking rustls-webpki v0.103.13
+    Checking hyper-util v0.1.20
+    Checking aho-corasick v1.1.4
+    Checking lazy_static v1.5.0
+    Checking simd-adler32 v0.3.10
+    Checking regex-syntax v0.8.11
+    Checking miniz_oxide v0.8.9
+   Compiling prost-derive v0.14.4
+    Checking tokio-rustls v0.26.4
+    Checking regex-automata v0.4.16
+    Checking data-encoding v2.11.0
+    Checking crc32fast v1.5.0
+    Checking prost v0.14.4
+    Checking reth-consensus v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking flate2 v1.1.9
+    Checking ryu v1.0.23
+    Checking hyper-rustls v0.27.9
+    Checking reth-tokio-util v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking compression-core v0.4.32
+    Checking compression-codecs v0.4.38
+    Checking unicase v2.9.0
+    Checking mime v0.3.17
+    Checking async-compression v0.4.42
+    Checking mime_guess v2.0.5
+    Checking reth-errors v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking http-range-header v0.4.2
+    Checking reth-storage-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking tower-http v0.6.11
+    Checking sharded-slab v0.1.7
+    Checking matchers v0.2.0
+    Checking tracing-log v0.2.0
+    Checking tracing-serde v0.2.0
+    Checking thread_local v1.1.10
+    Checking nu-ansi-term v0.50.3
+    Checking serde_urlencoded v0.7.1
+    Checking tracing-subscriber v0.3.23
+    Checking rustls-platform-verifier v0.7.0
+    Checking encoding_rs v0.8.35
+    Checking typeid v1.0.3
+    Checking fixed-cache v0.1.10
+   Compiling openssl-sys v0.9.117
+    Checking alloy-json-rpc v2.4.1
+    Checking reqwest v0.13.4
+    Checking futures-utils-wasm v0.1.0
+    Checking reth-evm v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-payload-primitives v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking crossbeam-channel v0.5.16
+   Compiling openssl v0.10.81
+   Compiling openssl-macros v0.1.1
+    Checking futures-timer v3.0.4
+    Checking slotmap v1.1.1
+    Checking alloy-signer v2.4.1
+    Checking alloy-rpc-types-any v2.4.1
+    Checking bs58 v0.5.1
+    Checking iana-time-zone v0.1.65
+   Compiling native-tls v0.2.18
+    Checking indenter v0.3.4
+    Checking reth-trie-sparse v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking eyre v0.6.12
+    Checking chrono v0.4.45
+    Checking alloy-network v2.4.1
+    Checking opentelemetry v0.32.0
+    Checking hkdf v0.12.4
+    Checking reth-trie v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking sha1 v0.10.7
+   Compiling nom v7.1.3
+   Compiling itertools v0.13.0
+    Checking tracing-futures v0.2.5
+    Checking thread-priority v3.1.1
+   Compiling cexpr v0.6.0
+    Checking foreign-types-shared v0.1.1
+    Checking const-str v0.4.3
+    Checking foreign-types v0.3.2
+    Checking reth-chain-state v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base256emoji v1.0.2
+   Compiling bindgen v0.72.1
+    Checking reth-tasks v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking data-encoding-macro v0.1.20
+    Checking multihash v0.19.5
+    Checking reth-fs-util v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-x v0.2.11
+    Checking base45 v3.2.0
+    Checking asn1_der v0.7.7
+    Checking multibase v0.9.3
+    Checking libp2p-identity v0.2.14
+    Checking opentelemetry-http v0.32.0
+    Checking hyper-timeout v0.5.2
+    Checking tonic v0.14.6
+    Checking multiaddr v0.18.2
+   Compiling itertools v0.10.5
+    Checking hashbrown v0.16.1
+    Checking jsonrpsee-types v0.26.0
+    Checking crossbeam-queue v0.3.13
+    Checking tonic-prost v0.14.6
+    Checking opentelemetry_sdk v0.32.1
+    Checking prost-types v0.14.4
+    Checking tonic-types v0.14.6
+   Compiling reth-mdbx-sys v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking alloy-rpc-types-debug v2.4.1
+    Checking memmap2 v0.9.11
+    Checking tinyvec_macros v0.1.1
+    Checking symlink v0.1.0
+    Checking tinyvec v1.12.0
+    Checking tracing-appender v0.2.5
+    Checking inotify-sys v0.1.8
+    Checking tracing-opentelemetry v0.33.0
+    Checking opentelemetry-proto v0.32.0
+    Checking anyhow v1.0.104
+    Checking same-file v1.0.6
+    Checking opentelemetry-semantic-conventions v0.32.1
+    Checking walkdir v2.5.0
+    Checking inotify v0.11.4
+    Checking opentelemetry-otlp v0.32.0
+    Checking tracing-samply v0.1.5
+   Compiling librocksdb-sys v0.17.3+10.4.2
+    Checking lz4-sys v1.11.1+lz4-1.10.0
+    Checking rolling-file v0.2.0
+    Checking reth-payload-builder-primitives v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-tracing-otlp v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking tracing-journald v0.3.2
+    Checking tracing-logfmt v0.3.7
+    Checking tracing-chrome v0.7.2
+    Checking notify-types v2.1.0
+    Checking bincode v1.3.3
+    Checking lz4_flex v0.12.2
+    Checking notify v8.2.0
+    Checking reth-nippy-jar v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-tracing v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-engine-primitives v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking libz-sys v1.1.29
+    Checking bzip2-sys v0.1.13+1.0.8
+    Checking tokio-native-tls v0.3.1
+    Checking alloy-transport v2.4.1
+    Checking webpki-roots v1.0.9
+    Checking sysinfo v0.38.4
+    Checking page_size v0.6.0
+    Checking webpki-roots v0.26.11
+    Checking reth-trie-db v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking tungstenite v0.29.0
+    Checking reth-libmdbx v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking opentelemetry v0.31.0
+    Checking reth-db v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking inout v0.1.4
+    Checking bimap v0.6.3
+    Checking interprocess v2.4.2
+    Checking alloy-pubsub v2.4.1
+    Checking cipher v0.4.4
+    Checking tokio-tungstenite v0.29.0
+    Checking reth-storage-overlay v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-node-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-eth-wire-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-net-banlist v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking humantime v2.4.0
+    Checking humantime-serde v1.1.1
+    Checking opentelemetry-http v0.31.0
+    Checking tracing-opentelemetry v0.32.1
+    Checking hyper-tls v0.6.0
+    Checking tagptr v0.2.0
+    Checking alloy-transport-http v2.4.1
+    Checking moka v0.12.15
+    Checking reth-network-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking alloy-transport-ws v2.4.1
+    Checking alloy-transport-ipc v2.4.1
+    Checking ctr v0.9.2
+    Checking aes v0.8.4
+    Checking jsonrpsee-core v0.26.0
+    Checking universal-hash v0.5.1
+    Checking opaque-debug v0.3.1
+   Compiling crunchy v0.2.4
+    Checking polyval v0.6.2
+    Checking alloy-rpc-client v2.4.1
+    Checking alloy-rpc-types-trace v2.4.1
+    Checking hashbrown v0.13.2
+    Checking schnellru v0.2.4
+    Checking ghash v0.5.1
+    Checking reth-rpc-traits v0.6.0
+    Checking rand_xoshiro v0.7.0
+    Checking aead v0.5.2
+    Checking resolv-conf v0.7.6
+    Checking aes-gcm v0.10.3
+    Checking reth-rpc-convert v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking uint v0.10.0
+   Compiling aquamarine v0.6.0
+    Checking hashlink v0.11.1
+    Checking delay_map v0.4.1
+    Checking more-asserts v0.3.1
+    Checking reth-network-p2p v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-revm v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking safe_arch v0.7.4
+    Checking bitmaps v3.2.1
+    Checking wide v0.7.33
+    Checking imbl-sized-chunks v0.1.3
+    Checking toml_parser v1.1.2+spec-1.1.0
+    Checking serde_spanned v1.1.1
+    Checking toml_datetime v0.7.5+spec-1.1.0
+    Checking winnow v0.7.15
+    Checking archery v1.2.2
+    Checking toml_writer v1.1.2+spec-1.1.0
+    Checking imbl v7.0.1
+    Checking reth-evm-ethereum v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking toml v0.9.12+spec-1.1.0
+    Checking reth-transaction-pool v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-config v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+   Compiling bon-macros v3.9.3
+    Checking reth-ethereum-engine-primitives v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking alloy-rpc-types v2.4.1
+    Checking chacha20 v0.10.1
+    Checking rand v0.10.2
+    Checking prefix-trie v0.8.4
+    Checking alloy-rpc-types-admin v2.4.1
+    Checking spin v0.10.1
+    Checking base-common-genesis v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/genesis)
+   Compiling bon v3.9.3
+   Compiling vergen-lib v10.0.1
+    Checking reth-network-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking hickory-proto v0.26.1
+   Compiling tikv-jemalloc-sys v0.6.1+5.3.0-1-ge13ca993e8ccb9ba9847cc330696e02839f328f7
+    Checking thiserror v1.0.69
+    Checking hickory-net v0.26.1
+   Compiling git2 v0.21.0
+   Compiling vergen v10.0.1
+    Checking discv5 v0.10.4 (https://github.com/sigp/discv5?rev=7663c00#7663c00e)
+    Checking base-common-consensus v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/consensus)
+    Checking concat-kdf v0.1.0
+    Checking if-addrs v0.14.0
+    Checking linked-hash-map v0.5.6
+    Checking linked_hash_set v0.1.6
+    Checking reth-net-nat v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-ecies v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+   Compiling vergen-git2 v10.0.1
+    Checking hickory-resolver v0.26.1
+    Checking reth-dns-discovery v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+   Compiling reth-node-core v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-eth-wire v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-discv4 v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-discv5 v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-rpc-server-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking revm-inspectors v0.42.2
+    Checking soketto v0.8.1
+    Checking rustls-platform-verifier v0.5.3
+    Checking dirs-sys-next v0.1.2
+    Checking dirs-next v2.0.0
+    Checking reth-rpc-eth-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-network v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking lru v0.18.2
+   Compiling rustix v1.1.4
+   Compiling toml_edit v0.25.13+spec-1.1.0
+    Checking ethereum_hashing v0.8.0
+    Checking linux-raw-sys v0.12.1
+    Checking route-recognizer v0.3.1
+    Checking jsonrpsee-server v0.26.0
+    Checking tree_hash v0.12.1
+   Compiling proc-macro-crate v3.5.0
+    Checking jsonrpsee-http-client v0.26.0
+    Checking jsonrpsee-client-transport v0.26.0
+    Checking base-common-chains v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/chains)
+   Compiling tree_hash_derive v0.12.1
+    Checking alloy-rpc-types-beacon v2.4.1
+    Checking jsonrpsee-ws-client v0.26.0
+   Compiling jsonrpsee-proc-macros v0.26.0
+    Checking jsonrpsee-wasm-client v0.26.0
+    Checking jsonrpsee v0.26.0
+    Checking async-stream v0.3.6
+    Checking fastrand v2.5.0
+    Checking alloy-provider v2.4.1
+   Compiling base-precompile-macros v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/precompile-macros)
+    Checking base-precompile-storage v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/precompile-storage)
+    Checking base-common-rpc-types-engine v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/rpc-types-engine)
+    Checking base-common-eip8130 v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/eip8130)
+    Checking base-common-precompiles v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/precompiles)
+   Compiling ambassador v0.4.2
+    Checking base-execution-eip8130 v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/eip8130)
+    Checking base-common-l1-fees v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/l1-fees)
+    Checking miniz_oxide v0.9.1
+    Checking base-protocol v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/protocol)
+    Checking base-common-evm v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/evm)
+    Checking alloy-dyn-abi v1.6.1
+    Checking base-common-rpc-types v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/rpc-types)
+    Checking alloy-rpc-types-mev v2.4.1
+    Checking ripemd v0.1.3
+    Checking base64 v0.21.7
+    Checking bech32 v0.9.1
+    Checking coins-core v0.12.0
+    Checking reth-exex-types v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking coins-bip32 v0.12.0
+    Checking reth-consensus-common v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking pbkdf2 v0.12.2
+    Checking coins-bip39 v0.12.0
+    Checking alloy-signer-local v2.4.1
+    Checking lru v0.16.4
+    Checking procfs-core v0.18.0
+    Checking left-right v0.11.8
+    Checking hashbag v0.1.13
+    Checking sketches-ddsketch v0.3.1
+   Compiling metrics-exporter-prometheus v0.18.3
+    Checking metrics-util v0.20.4
+    Checking evmap v11.0.0
+    Checking procfs v0.18.0
+    Checking tempfile v3.27.0
+    Checking backon v1.6.0
+    Checking alloy-rpc-types-txpool v2.4.1
+    Checking alloy-rpc-types-anvil v2.4.1
+    Checking rmp v0.8.15
+    Checking rmp-serde v1.3.1
+    Checking reth-etl v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking metrics-process v2.4.3
+    Checking reth-era v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-era-downloader v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking foldhash v0.1.5
+    Checking hashbrown v0.15.5
+    Checking diff v0.1.13
+    Checking debug-helper v0.3.14
+    Checking yansi v1.0.1
+    Checking pretty_assertions v1.4.1
+    Checking boyer-moore-magiclen v0.2.24
+    Checking hashlink v0.10.0
+    Checking reth-ipc v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-rpc-layer v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking ringbuffer v0.16.0
+    Checking reth-node-metrics v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-execution-chainspec v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/chainspec)
+    Checking fdlimit v0.3.0
+    Checking reth-node-ethstats v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-downloaders v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-execution-consensus v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/consensus)
+    Checking base-retry v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/retry)
+    Checking reth-payload-validator v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking concurrent-queue v2.5.0
+    Checking parking v2.2.1
+    Checking unty v0.0.4
+    Checking bincode v2.0.1
+    Checking event-listener v5.4.1
+    Checking base-upgrade-signal v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/upgrade-signal)
+    Checking base-bundles v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/bundles)
+    Checking base-observability-events v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/observability-events)
+    Checking quick-protobuf v0.8.1
+    Checking web-time v1.1.0
+    Checking unsigned-varint v0.7.2
+    Checking multistream-select v0.13.0
+    Checking reth-payload-util v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking rw-stream-sink v0.4.0
+    Checking libp2p-core v0.43.2
+    Checking base-common-network v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/network)
+   Compiling crossbeam-utils v0.8.22
+   Compiling signal-hook v0.3.18
+   Compiling libp2p-swarm-derive v0.35.1
+    Checking unicode-segmentation v1.13.3
+    Checking unicode-width v0.2.2
+    Checking libp2p-swarm v0.47.1
+    Checking castaway v0.2.4
+   Compiling strum_macros v0.28.0
+   Compiling litrs v1.0.0
+    Checking utf-8 v0.7.6
+   Compiling cfg_aliases v0.2.2
+   Compiling instability v0.3.12
+   Compiling nix v0.30.1
+    Checking tungstenite v0.28.0
+   Compiling document-features v0.2.12
+    Checking strum v0.28.0
+    Checking compact_str v0.9.1
+    Checking signal-hook-mio v0.2.5
+    Checking unicode-truncate v2.0.1
+    Checking kasuari v0.4.12
+    Checking asynchronous-codec v0.7.0
+    Checking netlink-packet-core v0.8.1
+   Compiling futures-sink v0.3.33
+   Compiling indoc v2.0.7
+    Checking ratatui-core v0.1.2
+    Checking tikv-jemallocator v0.6.1
+    Checking reth-cli-util v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking crossterm v0.29.0
+    Checking tokio-tungstenite v0.28.0
+    Checking netlink-sys v0.8.8
+    Checking netlink-proto v0.12.0
+   Compiling futures-intrusive v0.5.0
+   Compiling unicode-normalization v0.1.25
+    Checking netlink-packet-route v0.28.0
+    Checking quick-protobuf-codec v0.3.1
+    Checking event-listener-strategy v0.5.4
+    Checking base-common-flashblocks v0.0.0 (/home/refcell/dev/base-era-retirement/crates/common/flashblocks)
+   Compiling snow v0.9.6
+    Checking line-clipping v0.3.7
+   Compiling enum-as-inner v0.6.1
+   Compiling blake3 v1.8.5
+    Checking nohash-hasher v0.2.0
+   Compiling prometheus-client v0.23.1
+   Compiling unicode-bidi v0.3.18
+   Compiling unicode-properties v0.1.4
+   Compiling base64 v0.22.1
+   Compiling sqlx-core v0.8.6
+    Checking rtnetlink v0.20.0
+   Compiling stringprep v0.1.5
+    Checking hickory-proto v0.25.2
+    Checking ratatui-widgets v0.3.2
+    Checking async-channel v2.5.0
+    Checking ratatui-crossterm v0.1.2
+    Checking xattr v1.6.1
+    Checking reth-cli-runner v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking futures-bounded v0.2.4
+    Checking regex v1.13.1
+    Checking hashlink v0.9.1
+   Compiling atoi v2.0.0
+   Compiling md-5 v0.10.6
+    Checking filetime v0.2.29
+   Compiling prometheus-client-derive-encode v0.4.2
+    Checking constant_time_eq v0.4.2
+   Compiling byteorder v1.5.0
+   Compiling object v0.37.3
+   Compiling home v0.5.12
+   Compiling whoami v1.6.1
+   Compiling dotenvy v0.15.7
+    Checking hex_fmt v0.3.0
+    Checking dtoa v1.0.11
+    Checking libp2p-gossipsub v0.49.5
+   Compiling sqlx-postgres v0.8.6
+    Checking tar v0.4.46
+    Checking reth-cli v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking libp2p-identify v0.47.0
+    Checking hickory-resolver v0.25.2
+    Checking ratatui v0.30.2
+    Checking if-watch v3.2.2
+    Checking yamux v0.12.1
+    Checking yamux v0.13.10
+    Checking comfy-table v7.2.2
+    Checking libp2p-ping v0.47.0
+    Checking lz4 v1.28.1
+    Checking x25519-dalek v2.0.1
+    Checking gimli v0.32.3
+    Checking option-ext v0.2.0
+    Checking human_bytes v0.4.3
+    Checking dirs-sys v0.5.0
+    Checking addr2line v0.25.1
+    Checking libp2p-noise v0.46.1
+    Checking libp2p-metrics v0.17.0
+    Checking libp2p-yamux v0.47.0
+    Checking libp2p-tcp v0.44.1
+    Checking libp2p-dns v0.44.0
+   Compiling sqlx-macros-core v0.8.6
+    Checking libp2p-connection-limits v0.6.0
+    Checking libp2p-allow-block-list v0.6.0
+    Checking reth-ethereum-consensus v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking arc-swap v1.9.2
+    Checking rustc-demangle v0.1.28
+    Checking base-ring-buffer v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/ring-buffer)
+    Checking backtrace v0.3.76
+    Checking base-builder-publish v0.0.0 (/home/refcell/dev/base-era-retirement/crates/builder/publish)
+    Checking libp2p v0.56.0
+   Compiling sqlx-macros v0.8.6
+    Checking dirs v6.0.0
+    Checking alloy-contract v2.4.1
+    Checking base-consensus-derive v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/derive)
+    Checking discv5 v0.10.4
+   Compiling redb v2.6.3
+    Checking base-consensus-providers v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/providers)
+    Checking base-consensus-peers v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/peers)
+    Checking sqlx v0.8.6
+    Checking base-shadow-indexer-db v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/shadow-indexer-db)
+    Checking base-consensus-engine v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/engine)
+    Checking base-consensus-disc v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/disc)
+   Compiling serde_repr v0.1.21
+    Checking base-consensus-gossip v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/gossip)
+    Checking base-consensus-safedb v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/safedb)
+    Checking base-consensus-sources v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/sources)
+    Checking base-health v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/health)
+    Checking base-jwt v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/jwt)
+    Checking base-consensus-rpc v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/rpc)
+    Checking base-consensus-node v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/service)
+    Checking rocksdb v0.24.0
+    Checking reth-provider v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-trie-parallel v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-execution-cache v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-prune v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-static-file v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-payload-builder v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-era-utils v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-engine-local v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-basic-payload-builder v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-stages-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-db-common v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-engine-tree v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-execution-trie v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/trie)
+    Checking reth-node-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-rpc-eth-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-exex v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-stages v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-engine-util v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-consensus-debug-client v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-execution-exex v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/exex)
+    Checking reth-node-events v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-rpc-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-execution-evm v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/evm)
+    Checking base-execution-eip8130-rpc v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/eip8130-rpc)
+    Checking base-execution-txpool v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/txpool)
+    Checking reth-ethereum-payload-builder v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-cli-utils v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/cli)
+    Checking base-consensus-cli v0.0.0 (/home/refcell/dev/base-era-retirement/crates/consensus/cli)
+    Checking base-execution-payload-builder v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/payload)
+    Checking reth-rpc-engine-api v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-invalid-block-hooks v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-consensus v0.0.0 (/home/refcell/dev/base-era-retirement/bin/consensus)
+    Checking reth-rpc v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-rpc-builder v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-node-builder v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-execution-rpc v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/rpc)
+    Checking reth-cli-commands v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking reth-node-ethereum v2.5.2 (https://github.com/base/reth?tag=base-v2.5.2.6#5877708b)
+    Checking base-node-core v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/node)
+    Checking base-flashblocks v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/flashblocks)
+    Checking base-node-runner v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/runner)
+    Checking base-reth-cli v0.0.0 (/home/refcell/dev/base-era-retirement/crates/utilities/reth-cli)
+    Checking base-builder-core v0.0.0 (/home/refcell/dev/base-era-retirement/crates/builder/core)
+    Checking base-metering v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/metering)
+    Checking base-execution-eip8130-rpc-node v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/eip8130-rpc-node)
+    Checking base-proofs-extension v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/proofs)
+    Checking base-txpool-tracing v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/txpool-tracing)
+    Checking base-txpool-rpc v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/txpool-rpc)
+    Checking base-shadow-indexer v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/shadow-indexer)
+    Checking base-builder-metering v0.0.0 (/home/refcell/dev/base-era-retirement/crates/builder/metering)
+    Checking base-flashblocks-node v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/flashblocks-node)
+    Checking base-tx-forwarding v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/tx-forwarding)
+    Checking base-builder-multiplex v0.0.0 (/home/refcell/dev/base-era-retirement/crates/builder/multiplex)
+    Checking base-execution-cli v0.0.0 (/home/refcell/dev/base-era-retirement/crates/execution/cli)
+    Checking base-builder-cli v0.0.0 (/home/refcell/dev/base-era-retirement/crates/builder/cli)
+    Checking base-reth-node v0.0.0 (/home/refcell/dev/base-era-retirement/bin/node)
+    Checking base-builder-bin v0.0.0 (/home/refcell/dev/base-era-retirement/bin/builder)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4m 53s

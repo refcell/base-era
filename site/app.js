@@ -36,7 +36,7 @@ fetch("./data/evidence.json")
       `${data.provenance.date} · Recorded local acceptance run. Full results and methodology in the raw evidence.`;
     document.querySelector("#header-status").textContent =
       data.provenance.status === "migrated-pass"
-        ? "Acceptance passed"
+        ? "Live demo acceptance passed"
         : "Source-spike evidence";
   })
   .catch(() => {
