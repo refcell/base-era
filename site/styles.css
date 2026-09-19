@@ -228,6 +228,28 @@ tbody th {
 .columns > * {
   min-width: 0;
 }
+.captures figure {
+  margin: 0;
+}
+.captures img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background: #111217;
+  border: 1px solid var(--line);
+}
+.captures figcaption {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.captures strong {
+  display: block;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
 .accent {
   color: var(--blue);
 }
