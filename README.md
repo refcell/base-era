@@ -39,6 +39,10 @@ Historical calls now take **10.53 ms instead of 2.34 s (223× faster)**; estimat
 These gains combine persistent isolated workers, configuration caching and optimized compilation.
 The optimized in-process reference is still faster. See [measurements and limitations](docs/history-performance.md).
 
+**Operational screenshots:** [actual node/worker logs](site/media/execution-logs-cutover.png)
+and [live Base Control Grafana capture](site/media/base-control-dashboard.png).
+The [capture notes](site/media/README.md) include raw evidence, reproduction commands and scope.
+
 ## Run it
 
 Requires x86-64 Linux with Landlock ABI 3+, Docker, Rust 1.96, Foundry `cast`, `just`, and a native build

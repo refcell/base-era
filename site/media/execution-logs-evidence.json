@@ -1,0 +1,75 @@
+{
+  "capturedAt": "2026-09-19T00:22:18.012746+00:00",
+  "sourceRun": "target/demo-one-command-20260918T-demo-571833",
+  "contract": "0x420000000000000000000000000000000000000f",
+  "selector": "0xb54501bc",
+  "function": "GasPriceOracle.isIsthmus()",
+  "blocks": [
+    {
+      "number": 19,
+      "era": "holocene",
+      "hash": "0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+      "parentHash": "0xbd37850a30b083b6826c4cc40cd8b1733051ca3f785c0f9a99592d72a69ad56a",
+      "builderStateRoot": "0x1ab4727cc9c4dd9c1feb2757b4230bfcc6f37de96acb8010e94fcf65f1f87636",
+      "verifierHash": "0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+      "verifierStateRoot": "0x1ab4727cc9c4dd9c1feb2757b4230bfcc6f37de96acb8010e94fcf65f1f87636",
+      "builderVerifierHashAndStateMatch": true,
+      "expected": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "httpMs": 11.114545,
+      "params": [
+        {
+          "to": "0x420000000000000000000000000000000000000f",
+          "data": "0xb54501bc"
+        },
+        {
+          "blockHash": "0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+          "requireCanonical": true
+        }
+      ],
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "worker": {
+        "requestId": "rpc-605792-7-0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+        "workerPid": 607443,
+        "era": "holocene",
+        "artifact": "0xdd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff",
+        "configuration": "0x84437f455af000fa18d2cf7faa4580cefed571d69d9b97579e17513599c705a6",
+        "binding": "0x89c81147a776c6252bc4e261bfa81e6472796de1d8ed5470e586d5a4b40bf2d6",
+        "elapsedUs": 725,
+        "stateReads": 12,
+        "readBytes": 2598,
+        "requestBytes": 2000
+      }
+    },
+    {
+      "number": 20,
+      "era": "isthmus",
+      "hash": "0x9458e08fa33aef76398c9b6916b749a02a8a8eb0b27fd326a8ec6f135f6c1d5d",
+      "parentHash": "0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0",
+      "builderStateRoot": "0x9b283deaa6bc50e28ef8cc3bf67f2c467382e1c31d373b3731c48d13049234ac",
+      "verifierHash": "0x9458e08fa33aef76398c9b6916b749a02a8a8eb0b27fd326a8ec6f135f6c1d5d",
+      "verifierStateRoot": "0x9b283deaa6bc50e28ef8cc3bf67f2c467382e1c31d373b3731c48d13049234ac",
+      "builderVerifierHashAndStateMatch": true,
+      "expected": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "httpMs": 0.624884,
+      "params": [
+        {
+          "to": "0x420000000000000000000000000000000000000f",
+          "data": "0xb54501bc"
+        },
+        {
+          "blockHash": "0x9458e08fa33aef76398c9b6916b749a02a8a8eb0b27fd326a8ec6f135f6c1d5d",
+          "requireCanonical": true
+        }
+      ],
+      "result": "0x0000000000000000000000000000000000000000000000000000000000000001",
+      "worker": null
+    }
+  ],
+  "checks": {
+    "block19ReturnsFalse": true,
+    "block20ReturnsTrue": true,
+    "bothBuilderVerifierHashAndStateMatch": true,
+    "historicalRequestBoundToBlock19Hash": true
+  },
+  "methodology": "Fresh builder eth_call requests used EIP-1898 blockHash objects with requireCanonical=true. Builder/verifier block hash and stateRoot were fetched and asserted equal first. Block 19 was warmed once; reported HTTP timings are single loopback observations, not benchmarks. Block 20 executes natively, so no historical-worker interval is expected."
+}

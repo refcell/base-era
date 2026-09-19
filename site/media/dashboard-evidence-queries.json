@@ -1,0 +1,203 @@
+[
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "avg(up{job=~\"l2_builder|l2_verifier\"})",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.957,
+              "1"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "60 * sum(rate(reth_base_builder_total_block_built_duration_count{job=\"l2_builder\"}[1m]))",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.964,
+              "300"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "1 - (sum(rate(reth_rpc_server_calls_failed_total{job=\"l2_builder\"}[1m])) / sum(rate(reth_rpc_server_calls_started_total{job=\"l2_builder\"}[1m])))",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.970,
+              "1"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "max(reth_base_builder_total_block_built_duration{job=\"l2_builder\",quantile=\"0.5\"})",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.978,
+              "0.0009683664017195745"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "max(reth_base_builder_total_block_built_duration{job=\"l2_builder\",quantile=\"0.9\"})",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.984,
+              "0.001205935062598573"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "max(reth_base_builder_total_block_built_duration{job=\"l2_builder\",quantile=\"0.99\"})",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.990,
+              "0.0016129345996709463"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:36Z",
+    "query": "sum(rate(reth_base_builder_total_block_built_duration_count{job=\"l2_builder\"}[1m]))",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778376.997,
+              "5"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:37Z",
+    "query": "max(reth_base_builder_payload_num_tx_gauge{job=\"l2_builder\"})",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778377.008,
+              "1"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:37Z",
+    "query": "sum(rate(reth_rpc_server_calls_started_total{job=\"l2_builder\"}[1m]))",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {},
+            "value": [
+              1789778377.019,
+              "1.5"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "queried_at_utc": "2026-09-19T00:39:37Z",
+    "query": "max by(job) (scrape_duration_seconds{job=~\"l2_builder|l2_verifier\"})",
+    "response": {
+      "status": "success",
+      "data": {
+        "resultType": "vector",
+        "result": [
+          {
+            "metric": {
+              "job": "l2_builder"
+            },
+            "value": [
+              1789778377.028,
+              "0.016955566"
+            ]
+          },
+          {
+            "metric": {
+              "job": "l2_verifier"
+            },
+            "value": [
+              1789778377.028,
+              "0.017649078"
+            ]
+          }
+        ]
+      }
+    }
+  }
+]

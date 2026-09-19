@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Execution cutover logs</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #080b10; color: #d7dee9; font: 18px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  main { width: 1520px; margin: 0 auto; padding: 38px 44px; }
+  h1 { margin: 0 0 6px; color: #fff; font-size: 27px; }
+  .label { color: #f3b35b; font-weight: 700; letter-spacing: .08em; }
+  .dim { color: #8491a5; }
+  .panel { margin-top: 24px; padding: 22px 26px; border: 1px solid #293242; border-radius: 10px; background: #0d121a; }
+  .line { margin: 5px 0; }
+  .ok { color: #67d391; font-weight: 700; }
+  .cyan { color: #63c7e8; }
+  .hash { color: #b8c3d4; overflow-wrap: anywhere; }
+  .raw { font-size: 14px; line-height: 1.4; color: #b8c3d4; overflow-wrap: anywhere; }
+  .title { color: #f2f5f8; font-weight: 700; margin-bottom: 9px; }
+</style>
+<main>
+  <h1>Holocene → Isthmus: hash-bound execution evidence</h1>
+  <div class="label">FORMATTED VIEW OF ACTUAL RPC + NODE/WORKER LOG OUTPUT</div>
+  <div class="dim">captured 2026-09-19T00:22:18Z · GasPriceOracle.isIsthmus() · selector 0xb54501bc</div>
+
+  <section class="panel">
+    <div class="title">$ eth_call — EIP-1898 blockHash, requireCanonical=true</div>
+    <div class="line"><span class="cyan">block 19 · HOLOCENE</span>  result …0000 <span class="ok">FALSE ✓</span> · HTTP 11.115 ms</div>
+    <div class="line hash">hash  0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0</div>
+    <div class="line hash">state 0x1ab4727cc9c4dd9c1feb2757b4230bfcc6f37de96acb8010e94fcf65f1f87636</div>
+    <div class="line"><span class="cyan">block 20 · ISTHMUS</span>   result …0001 <span class="ok">TRUE ✓</span> · HTTP 0.625 ms</div>
+    <div class="line hash">hash  0x9458e08fa33aef76398c9b6916b749a02a8a8eb0b27fd326a8ec6f135f6c1d5d</div>
+    <div class="line hash">state 0x9b283deaa6bc50e28ef8cc3bf67f2c467382e1c31d373b3731c48d13049234ac</div>
+    <div class="line ok">builder == verifier: hash + stateRoot at both blocks ✓</div>
+  </section>
+
+  <section class="panel">
+    <div class="title">historical worker · correlated by request ID + block hash</div>
+    <div class="line hash">request rpc-605792-7-0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0</div>
+    <div class="line">worker_pid=<span class="cyan">607443</span> · era=<span class="cyan">holocene</span> · elapsed_us=<span class="cyan">725</span></div>
+    <div class="line">completed reads=<span class="cyan">12</span> · read_bytes=2598 · request_bytes=2000</div>
+    <div class="line hash">artifact 0xdd10457c1cf8e3b80a34ca4589777401255aba3fe7e6bdf77e88eed5d892efff</div>
+    <div class="line hash">binding  0x89c81147a776c6252bc4e261bfa81e6472796de1d8ed5470e586d5a4b40bf2d6</div>
+  </section>
+
+  <section class="panel raw">
+    <div class="title">ACTUAL NODE LOG EXCERPT (verbatim)</div>
+    <div>2026-09-18T22:48:05.025167Z&nbsp; INFO build_on{parent_num=19 l1_origin_num=9}: upgrades: Activated upgrade block_number=20 upgrade="isthmus"</div>
+    <div>2026-09-18T22:48:07.002462Z&nbsp; INFO engine: Enqueuing external unsafe payload block_number=20 block_hash=0x9458e08fa33aef76398c9b6916b749a02a8a8eb0b27fd326a8ec6f135f6c1d5d parent_hash=0x2f9639b8b5d04eed30a7051729ae341b57d5760aebfe18403cc7459cc4af93b0</div>
+    <div>2026-09-18T22:48:07.006760Z&nbsp; INFO reth_node_events::node: Block added to canonical chain number=20 hash=0x9458e08fa33aef76398c9b6916b749a02a8a8eb0b27fd326a8ec6f135f6c1d5d peers=0 txs=9 gas_used=2.75Mgas gas_throughput=708.50Mgas/second gas_limit=60.00Mgas full=4.6% base_fee=0.92Gwei blobs=0 excess_blobs=0 elapsed=3.877061ms</div>
+  </section>
+</main>
+</html>
