@@ -7,9 +7,7 @@ The current node executes current-era blocks locally and delegates historical ex
 independently built, pinned worker processes. The node remains responsible for canonical state,
 forkchoice, validation, commits and reorgs.
 
-This explores the versioned-execution direction described in
-[EIP-4444](https://eips.ethereum.org/EIPS/eip-4444#full-syncing-from-genesis).
-It is **not** an Era/Era1 archive-format implementation or an official Base project.
+This is **not** an official Base project.
 
 ## Why
 
@@ -18,12 +16,21 @@ path: freeze a reviewed implementation, route its history to a pinned worker, mi
 consumers, then remove superseded host code. History stays executable; the current implementation
 has less historical behavior to maintain.
 
-A [fresh-clone deletion experiment](docs/retirement.md) removes **5,907 net Rust lines** from Base:
-**2,743 production + 3,164 test/benchmark lines**, including comments and blanks. The actual diff,
-per-file counts and checks are published. This Beryl-and-later candidate retires historical
-execution **and derivation**, with a conditional native-proof reduction; realizing it requires
-additional historical dispatch beyond this demo. It is not safe for historical replay and is
-**not applied to the running demo**. Source-copy pruning is not counted as history retirement.
+A separate [latest-only source experiment](docs/retirement.md) identifies **~5.9k net Rust lines
+potentially removable from Base: ~2.7k production and ~3.2k tests/benchmarks**. Most savings are in
+historical derivation, so realizing the full reduction requires more than this execution-worker demo.
+
+[EIP-4444](https://eips.ethereum.org/EIPS/eip-4444#full-syncing-from-genesis) already discusses
+removing historical code from ordinary clients and using a specialized sync client that combines
+older execution engines. Base Era explores a concrete version-isolated worker boundary for
+preserving historical execution. It is not an Era/Era1 archive implementation or state expiry;
+those address historical-data distribution and active-state growth, respectively.
+
+The measured reduction is **5,907 net Rust lines: 2,743 production + 3,164 test/benchmark lines**,
+including comments and blanks. The actual diff, per-file counts and checks are published. This
+Beryl-and-later candidate includes a conditional native-proof reduction and needs additional
+historical derivation/proof dispatch, which will add code. It is not safe for historical replay and
+is **not applied to the running demo**. Source-copy pruning is not counted as history retirement.
 
 ## Status
 
