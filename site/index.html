@@ -102,59 +102,7 @@
         </p>
       </section>
 
-      <section id="evidence" aria-labelledby="devnet-title">
-        <div class="heading">
-          <h2 id="devnet-title">Devnet: execution logs + Base Control</h2>
-          <a
-            class="note"
-            href="https://github.com/refcell/base-era/tree/main/site/media#technical-evidence--recommended-pair"
-            >Capture notes + reproduce ↗</a
-          >
-        </div>
-        <div class="columns captures">
-          <figure>
-            <a href="./media/execution-logs-cutover.png">
-              <img
-                src="./media/execution-logs-cutover.png"
-                alt="Recorded Holocene and Isthmus calls with matching block hashes and state roots, worker PID, artifact digest and actual cutover logs"
-                width="1600"
-                height="1200"
-                loading="lazy"
-              />
-            </a>
-            <figcaption>
-              <strong>Historical execution, correlated end to end.</strong>
-              Hash-bound calls return false at block 19 and true at block 20.
-              Builder/verifier hashes and state roots match at both heights.
-              Formatted actual output, not a live terminal.
-              <a href="./media/execution-logs-cutover.png">Full-size logs ↗</a>
-              · <a href="./media/execution-logs-evidence.json">RPC evidence</a>
-              · <a href="./media/execution-logs-evidence.worker.log">Raw worker logs</a>
-            </figcaption>
-          </figure>
-          <figure>
-            <a href="./media/base-control-dashboard.png">
-              <img
-                src="./media/base-control-dashboard.png"
-                alt="Actual Grafana Base Control capture showing populated build cycle, latency, payload, RPC and scrape-health panels over a three-minute UTC window"
-                width="1600"
-                height="2200"
-                loading="lazy"
-              />
-            </a>
-            <figcaption>
-              <strong>Base Control, backed by real Prometheus scrapes.</strong>
-              Captured from the running devnet. The two EL instances share a
-              metrics recorder; global counters are read once, not doubled.
-              Telemetry shows liveness, not consensus correctness.
-              <a href="./media/base-control-dashboard.png">Full dashboard ↗</a>
-              · <a href="./media/dashboard-evidence-queries.json">Raw queries</a>
-            </figcaption>
-          </figure>
-        </div>
-      </section>
-
-      <section id="historical-call">
+      <section id="evidence">
         <div class="heading">
           <h2>A historical call, through the worker</h2>
           <a class="note" href="./data/historical-call.json"
